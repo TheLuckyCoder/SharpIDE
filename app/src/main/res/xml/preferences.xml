@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="Editor">
+        <EditTextPreference
+            android:title="@string/pref_font_size"
+            android:summary="@string/pref_font_size_desc"
+            android:key="font_size"
+            android:defaultValue="16"
+            android:dialogTitle="@string/pref_font_size"
+            android:inputType="number" />
+        <EditTextPreference
+            android:title="@string/pref_font_style"
+            android:summary="@string/pref_font_style_desc"
+            android:key="font_style"
+            android:dialogTitle="@string/pref_font_size"
+            android:inputType="number"
+            android:enabled="false" />
+        <CheckBoxPreference
+            android:title="@string/pref_line_numbers"
+            android:defaultValue="true"
+            android:enabled="false" />
+        <CheckBoxPreference
+            android:title="@string/pref_symbols_bar"
+            android:defaultValue="true"
+            android:key="show_symbol_bar"/>
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Application">
+        <CheckBoxPreference
+            android:title="Confirm exit from app"
+            android:defaultValue="true"
+            android:key="quit_confirm" />
+    </PreferenceCategory>
+</PreferenceScreen>

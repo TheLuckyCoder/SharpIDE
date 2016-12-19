@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "410506729528",
+    "firebase_url": "https://scriptcraft-f4d92.firebaseio.com",
+    "project_id": "scriptcraft-f4d92",
+    "storage_bucket": "scriptcraft-f4d92.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:410506729528:android:e3923f014d4487ba",
+        "android_client_info": {
+          "package_name": "net.theluckycoder.scriptcraft"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "410506729528-01fgnafnlcgo74v41ebmmfhpg5e3qqhb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk1phEwIiJRditGBBZ_wc_hRqCt3MJ0UU"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

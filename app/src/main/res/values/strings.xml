@@ -1,0 +1,42 @@
+<resources>
+    <string name="app_name" translatable="false">ScriptCraft</string>
+
+    <string name="file_script">New Script</string>
+    <string name="file_info">File Information</string>
+    <string name="file_save">Save Script</string>
+    <string name="file_saved">Script Saved</string>
+    <string name="choose_file">Choose a script</string>
+    <string name="file_name">File Name</string>
+    <string name="new_file_created">New file created</string>
+    <string name="create_new_file">"Create New File: "</string>
+    <string name="loading_file">Loading File…</string>
+    <string name="invalid_file_name">Invalid File name</string>
+    <string name="open_script">Open Script</string>
+    <string name="action_close">Close</string>
+    <string name="no_file_open">No file open</string>
+    <string name="error_empty_file">File is empty</string>
+    <string name="texture_names">MCPE Texture Names</string>
+    <string name="modpe_functions">ModPE Functions</string>
+    <string name="obfuscation">Obfuscation</string>
+    <string name="import_script">Import Script</string>
+    <string name="select_file">Select File</string>
+    <string name="obfuscate">Obfuscate</string>
+    <string name="mod_obfuscated">Script obfuscated</string>
+    <string name="obfuscation_desc">All spaces and single line comments will be removed from the file.</string>
+    <string name="directory">Directory:</string>
+    <string name="instructions">&#009;<![CDATA[Go to menu -> New Script]]></string>
+
+    <string name="pref_font_size">Editor Font Size</string>
+    <string name="pref_font_size_desc">Specify the font size of the editor</string>
+    <string name="settings">Settings</string>
+    <string name="pref_font_style">Editor Font Style</string>
+    <string name="pref_font_style_desc">Specify the font style of the editor</string>
+    <string name="exit_confirmation">Are you sure you want to quit?</string>
+    <string name="pref_line_numbers">Show line numbers</string>
+    <string name="pref_symbols_bar">Show symbols bar while writing</string>
+    <string name="replace_all">Replace All</string>
+    <string name="text_to_replace">Text to replace</string>
+    <string name="text_to_replace_with">Text to replace with</string>
+    <string name="new_file_js">New File.js</string>
+
+</resources>
