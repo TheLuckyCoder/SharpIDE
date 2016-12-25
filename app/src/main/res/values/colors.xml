@@ -4,8 +4,9 @@
     <color name="colorPrimaryDark">#0097A7</color>
     <color name="colorAccent">#FFC107</color>
 
-    <color name="syntax_number">#448AFF</color>
-    <color name="syntax_keyword">#FF9100</color>
-    <color name="syntax_builtin">#66cccc</color>
-    <color name="syntax_comment">#a7adba</color>
+    <color name="syntax_number">#C62828</color>
+    <color name="syntax_keyword">#ff2c82c8</color>
+    <color name="syntax_class">#FF8000</color>
+    <color name="syntax_comment">#808080</color>
+    <color name="syntax_string">#ff009b00</color>
 </resources>

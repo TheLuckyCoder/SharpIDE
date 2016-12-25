@@ -6,7 +6,7 @@
     android:layout_height="match_parent"
     android:padding="@dimen/activity_margin"
     android:orientation="vertical"
-    tools:context="net.theluckycoder.scriptcraft.ObfuscationActivity">
+    tools:context="net.theluckycoder.scriptcraft.MinifyActivity">
 
     <TextView
         android:text="@string/obfuscation_desc"
@@ -25,7 +25,7 @@
     <Button
         style="@style/Widget.AppCompat.Button.Colored"
         android:id="@+id/obfuscateBtn"
-        android:text="@string/obfuscate"
+        android:text="@string/action_minify"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:onClick="obfuscate"

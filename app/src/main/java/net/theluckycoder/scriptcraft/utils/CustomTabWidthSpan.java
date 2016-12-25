@@ -7,19 +7,22 @@ import android.text.style.ReplacementSpan;
 
 public class CustomTabWidthSpan extends ReplacementSpan {
 
-    private int tabWidth = 0;
+    private int tabWidth = 10;
 
     public CustomTabWidthSpan(int tabWidth){
         this.tabWidth=tabWidth;
     }
 
+
     @Override
-    public int getSize(@NonNull Paint p1, CharSequence p2, int p3, int p4, Paint.FontMetricsInt p5) {
+    public int getSize(@NonNull Paint paint, CharSequence text, int start, int end, Paint.FontMetricsInt fm) {
         return tabWidth;
     }
 
     @Override
-    public void draw(@NonNull Canvas p1, CharSequence p2, int p3, int p4, float p5, int p6, int p7, int p8, @NonNull Paint p9) {
+    public void draw(@NonNull Canvas canvas, CharSequence text, int start, int end, float x, int top, int y, int bottom, @NonNull Paint paint) {
 
     }
+
+
 }

@@ -1,36 +1,32 @@
 package net.theluckycoder.scriptcraft;
 
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import net.theluckycoder.scriptcraft.utils.FileChooser;
 import net.theluckycoder.scriptcraft.utils.Util;
 
 import java.io.File;
-import java.util.List;
 
-public class ObfuscationActivity extends AppCompatActivity {
+public class MinifyActivity extends AppCompatActivity {
 
     private String modName, modPath, modContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_obfuscation);
+        setContentView(R.layout.activity_minify);
         if (getSupportActionBar() != null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        //Create Mod Maker folder
+        //Create main folder
         Util.verifyStoragePermissions(this);
-        new File(Util.mainFolder).mkdir();
+        Util.makeFolder(Util.mainFolder);
 
         //Init AdMob
         /*AdView mAdView = (AdView) findViewById(R.id.adView);
@@ -53,11 +49,13 @@ public class ObfuscationActivity extends AppCompatActivity {
     }
 
     public void obfuscate(View view) {
+        Util.makeFolder(Util.minifyFolder);
         final File file = new File(Util.mainFolder + modName);
         try {
             modContent = Util.loadFile(modPath);
         } catch (Exception e) {
             Log.e("Error: ", e.getMessage(), e);
+            Toast.makeText(this, R.string.error_empty_file, Toast.LENGTH_SHORT).show();
         }
 
         if (modContent == null) {
@@ -65,24 +63,14 @@ public class ObfuscationActivity extends AppCompatActivity {
             return;
         }
 
-        modContent = modContent.replaceAll("//.*?\n", "").replace("\r", "").replace("\n", "").replace("\t", "").replace(" ", "");
+        modContent = modContent.replaceAll("/\\*.*\\*/", "").replaceAll("//.*(?=\\n)", "");
+        modContent = modContent.replace("\r", "").replace("\n", "").replace("\t", "");
 
-        Util.saveFile(file, modContent.split(System.getProperty("line.separator")));
+        File newFile = new File(Util.minifyFolder + file.getName());
 
-        Snackbar.make(view, R.string.mod_obfuscated, Snackbar.LENGTH_LONG)
-                .setAction(R.string.import_script, new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        Intent importMod = new Intent(Intent.ACTION_VIEW);
-                        importMod.setDataAndType(Uri.fromFile(file), "application/js"); // Open the created file with its default application
+        Util.saveFile(newFile, modContent.split(System.getProperty("line.separator")));
 
-                        PackageManager pm = getPackageManager();
-                        List<ResolveInfo> apps = pm.queryIntentActivities(importMod, PackageManager.MATCH_DEFAULT_ONLY);
-
-                        if (apps.size() > 0)
-                            startActivity(importMod);
-                    }
-                }).show();
+        Toast.makeText(this, R.string.file_minified, Toast.LENGTH_LONG).show();
     }
 
     @Override

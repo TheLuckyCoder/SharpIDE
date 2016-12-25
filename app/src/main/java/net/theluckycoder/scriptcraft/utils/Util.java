@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 
 public class Util {
     public static final String mainFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ScriptCraft/";
+    public static final String minifyFolder = mainFolder + "Minify/";
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
 
@@ -115,5 +116,9 @@ public class Util {
                 Log.e("IOException", e.getMessage(), e);
             }
         }
+    }
+
+    public static void makeFolder(String folderPath) {
+        new File(folderPath).mkdir();
     }
 }

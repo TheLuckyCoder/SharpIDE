@@ -26,35 +26,32 @@ import net.theluckycoder.scriptcraft.R;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+
 public class CodeEditText extends AppCompatEditText {
 
     private static final Pattern PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b");
-    private static final Pattern PATTERN_BUILTIN_CLASSES = Pattern.compile(
+    private static final Pattern PATTERN_CLASSES = Pattern.compile(
             "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
                     "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
                     "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
                     "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
-                    "Reflect|Proxy|Intl|" +
-                    "ChatColor|ItemCategory|ParticleType|EntityType|EntityRenderType|" +
-                    "ArmorType|MobEffect|DimensionId|BlockFace|Enchantment|EnchantType" +
-                    "BlockRenderLayer|ModPE|Level|Player|Entity|Item|Block|Server)\\b",
+                    "Reflect|Proxy|Intl)\\b",
             Pattern.MULTILINE);
     private static final Pattern PATTERN_KEYWORDS = Pattern.compile(
-            "\\b(for|do|while|foreach|return|if|else|" +
-                "else if|try|catch|finally|function|var|" +
-                "switch|true|false|null|this|self|case|" +
-                "break|run|new|default" +
-                ")\\b");
+            "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
+                    "else|export|extends|finally|for|function|if|import|in|instanceof|" +
+                    "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
+                    "null|true|false)\\b");
     private static final Pattern PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*");
-
     private Context context;
     public static final transient Paint paint = new Paint();
     private Layout layout;
     private final Handler updateHandler = new Handler();
     private OnTextChangedListener onTextChangedListener;
-    private final int updateDelay = 1000;
+    private final int updateDelay = 500;
     private boolean modified = true;
-    private int colorNumber, colorKeyword, colorBuiltin, colorComment;
+    private int colorNumber, colorKeyword, colorBuiltin, colorComment, colorString;
     private final Runnable updateRunnable =
             new Runnable() {
                 @Override
@@ -167,20 +164,33 @@ public class CodeEditText extends AppCompatEditText {
         paint.setStyle(Paint.Style.FILL);
         paint.setAntiAlias(true);
         paint.setColor(Color.parseColor("#bbbbbb"));
-        paint.setTextSize(getPixels(14));
+        paint.setTextSize(Integer.parseInt(getDefaultSharedPreferences(context).getString("font_size", "16")));
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 layout = getLayout();
             }
         });
+        //TODO: Font
+        /*String typeface = PreferenceManager.getDefaultSharedPreferences(context).getString("font_type", "normal");
+        if (typeface.matches("normal"))
+            paint.setTypeface(Typeface.DEFAULT);
+        else if (typeface.matches("bold"))
+            paint.setTypeface(Typeface.DEFAULT_BOLD);
+        else if (typeface.matches("serif"))
+            paint.setTypeface(Typeface.SERIF);
+        else if (typeface.equals("sans-serif"))
+            paint.setTypeface(Typeface.SANS_SERIF);
+        else if (typeface.equals("monospace"))
+            paint.setTypeface(Typeface.MONOSPACE);*/
     }
 
     private void setSyntaxColors(Context context) {
         colorNumber = ContextCompat.getColor(context, R.color.syntax_number);
         colorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword);
-        colorBuiltin = ContextCompat.getColor(context, R.color.syntax_builtin);
+        colorBuiltin = ContextCompat.getColor(context, R.color.syntax_class);
         colorComment = ContextCompat.getColor(context, R.color.syntax_comment);
+        colorString = ContextCompat.getColor(context, R.color.syntax_string);
     }
 
     private void cancelUpdate() {
@@ -205,7 +215,7 @@ public class CodeEditText extends AppCompatEditText {
             for (Matcher m = PATTERN_NUMBERS.matcher(e); m.find(); )
                 e.setSpan(new ForegroundColorSpan(colorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            for (Matcher m = PATTERN_BUILTIN_CLASSES.matcher(e); m.find(); )
+            for (Matcher m = PATTERN_CLASSES.matcher(e); m.find(); )
                 e.setSpan(new ForegroundColorSpan(colorBuiltin), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
             for (Matcher m = PATTERN_KEYWORDS.matcher(e); m.find(); )
@@ -219,7 +229,7 @@ public class CodeEditText extends AppCompatEditText {
                 ForegroundColorSpan spans[] = e.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
                 for(ForegroundColorSpan span : spans)
                     e.removeSpan(span);
-                e.setSpan(new ForegroundColorSpan(Color.parseColor("#81C784")), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                e.setSpan(new ForegroundColorSpan(colorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
 
             for (Matcher m = PATTERN_COMMENTS.matcher(e); m.find(); ) {
@@ -319,7 +329,6 @@ public class CodeEditText extends AppCompatEditText {
     protected void onDraw(Canvas canvas) {
         int padding = (int) getPixels(getDigitCount() * 10 + 10);
         setPadding(padding, 0, 0, 0);
-
 
         int scrollY = getScrollY();
         int firstLine = layout.getLineForVertical(scrollY), lastLine;

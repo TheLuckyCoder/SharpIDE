@@ -1,11 +1,10 @@
 package net.theluckycoder.scriptcraft;
 
 import android.app.ProgressDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -18,6 +17,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.AppCompatDelegate;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.Spannable;
@@ -27,8 +27,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
 import android.widget.LinearLayout;
@@ -55,15 +53,19 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.List;
 import java.util.regex.Pattern;
+
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, TextWatcher {
 
+    static { AppCompatDelegate.setCompatVectorFromResourcesEnabled(true); }
+
     private InterstitialAd mInterstitialAd;
     private CodeEditText contentView;
     private InteractiveScrollView scrollView;
+    private LinearLayout startLayout;
     private Toolbar toolbar;
 
     private File file;
@@ -77,12 +79,16 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         setTheme(R.style.AppTheme_NoActionBar);
+        if (getDefaultSharedPreferences(this).getBoolean("light_theme", true))
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        else
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        toolbar.setSubtitle(R.string.no_file_open);
 
+        //Set up navigation drawer
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawer, toolbar, 0, 0);
         drawer.addDrawerListener(toggle);
@@ -91,9 +97,10 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+
+        //Set up ads
         mInterstitialAd = new InterstitialAd(this);
         mInterstitialAd.setAdUnitId("ca-app-pub-1279472163660969/4393673534");
-
         mInterstitialAd.setAdListener(new AdListener() {
             @Override
             public void onAdClosed() {
@@ -102,7 +109,10 @@ public class MainActivity extends AppCompatActivity
         });
         requestNewInterstitial();
 
+
+        //Set up Views
         contentView = (CodeEditText) findViewById(R.id.fileContent);
+        startLayout = (LinearLayout) findViewById(R.id.startLayout);
 
         LinearLayout symbolLayout = (LinearLayout) findViewById(R.id.symbolLayout);
         View.OnClickListener symbolClickListener = new View.OnClickListener() {
@@ -114,13 +124,11 @@ public class MainActivity extends AppCompatActivity
         for (int i = 0; i < symbolLayout.getChildCount(); i++)
             symbolLayout.getChildAt(i).setOnClickListener(symbolClickListener);
 
-        scrollView = (InteractiveScrollView) findViewById(R.id.scrollView);
+        scrollView = (InteractiveScrollView) findViewById(R.id.mainScrollView);
         scrollView.setOnBottomReachedListener(null);
         scrollView.setOnScrollListener((OnScrollListener) fileChangeListener);
 
         //Load preferences
-        contentView.setTextSize(Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("font_size", "16")));
-
         final HorizontalScrollView symbolScrollView = (HorizontalScrollView) findViewById(R.id.symbolScrollView);
         contentView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -131,7 +139,17 @@ public class MainActivity extends AppCompatActivity
         });
 
         Util.verifyStoragePermissions(this);
-        new File(Util.mainFolder).mkdir();
+        Util.makeFolder(Util.mainFolder);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        contentView.setTextSize(Integer.parseInt(getDefaultSharedPreferences(this).getString("font_size", "16")));
+        if (getDefaultSharedPreferences(this).getBoolean("light_theme", true))
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
+        else
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
     }
 
     @Override
@@ -170,15 +188,29 @@ public class MainActivity extends AppCompatActivity
             saveFile();
         } else if (id == R.id.action_open) {
             final Context context = this;
-            new File(Util.mainFolder).mkdir();
+            Util.makeFolder(Util.mainFolder);
             FileChooser filechooser = new FileChooser(this);
             filechooser.setFileListener(new FileChooser.FileSelectedListener() {
                 @Override public void fileSelected(final File newFile) {
-                    if (newFile.length() >= 20971520) { //If file is bigger than 20 MB
-                        Toast.makeText(context, "File is too big", Toast.LENGTH_LONG).show();
+                    if (newFile.length() >= 20971520) { // if file is bigger than 20 MB
+                        Toast.makeText(context, R.string.file_too_big, Toast.LENGTH_LONG).show();
                         return;
                     }
-                    file = newFile;
+                    if (!isChanged())
+                        file = newFile;
+                    else {
+                        AlertDialog.Builder confirmDialog = new AlertDialog.Builder(MainActivity.this);
+                        confirmDialog.setTitle("File has been modified");
+                        confirmDialog.setMessage("Are you sure that you want to discard the changes?");
+                        confirmDialog.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                file = newFile;
+                            }
+                        });
+                        confirmDialog.setNegativeButton(android.R.string.no, null);
+                        confirmDialog.show();
+                    }
                     new DocumentLoader().execute();
                 }
             });
@@ -222,22 +254,6 @@ public class MainActivity extends AppCompatActivity
                 builder.setNeutralButton(R.string.action_close, null);
                 builder.show();
             }
-        } else if (id == R.id.action_import) {
-            Intent importMod = new Intent(Intent.ACTION_VIEW);
-            importMod.setDataAndType(Uri.fromFile(file), "application/js"); // Open the created file with its default application
-
-            PackageManager pm = getPackageManager();
-            List<ResolveInfo> apps = pm.queryIntentActivities(importMod, PackageManager.MATCH_DEFAULT_ONLY);
-
-            if (apps.size() > 0) {
-                try {
-                    startActivity(importMod);
-                } catch (Exception e) {
-                    Log.e("Exception", e.getMessage(), e);
-                    Toast.makeText(this, "Something went wrong", Toast.LENGTH_SHORT).show();
-                }
-            } else
-                Toast.makeText(this, "There are no apps available", Toast.LENGTH_SHORT).show();
         } else if (id == R.id.action_replace_all) {
             LayoutInflater inflater = this.getLayoutInflater();
             final View dialogView = inflater.inflate(R.layout.dialog_replace, null);
@@ -256,6 +272,11 @@ public class MainActivity extends AppCompatActivity
             });
             builder.setNegativeButton(android.R.string.cancel, null);
             builder.show();
+        } else if (id == R.id.action_share_code) {
+            Intent intent = new Intent("android.intent.action.SEND");
+            intent.setType("plain/text");
+            intent.putExtra(Intent.EXTRA_TEXT, contentView.getText().toString());
+            startActivity(Intent.createChooser(intent, getString(R.string.action_share_code)));
         }
 
         return super.onOptionsItemSelected(item);
@@ -265,34 +286,23 @@ public class MainActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
 
-        if (id == R.id.nav_functions) {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-            dialog.setTitle(R.string.modpe_functions);
-            dialog.setNegativeButton(R.string.action_close, null);
-
-            WebView mWebView = new WebView(this);
-            mWebView.loadUrl("file:///android_asset/dump.txt");
-
-            dialog.setView(mWebView);
-            dialog.show();
-        } else if (id == R.id.nav_textures) {
-            AlertDialog.Builder dialog = new AlertDialog.Builder(this);
-            dialog.setTitle(R.string.texture_names);
-
-            WebView mWebView = new WebView(this);
-            mWebView.loadUrl("http://zhuoweizhang.net/mcpetexturenames/");
-            mWebView.getSettings().setJavaScriptEnabled(true);
-            mWebView.getSettings().setCacheMode(WebSettings.LOAD_CACHE_ELSE_NETWORK);
-            mWebView.getSettings().setAppCacheEnabled(true);
-
-            dialog.setView(mWebView);
-            dialog.setNegativeButton(R.string.action_close, null);
-            dialog.show();
-        } else if (id == R.id.nav_obfuscation) {
-            startActivity(new Intent(MainActivity.this, ObfuscationActivity.class));
+        if (id == R.id.nav_minify) {
+            startActivity(new Intent(MainActivity.this, MinifyActivity.class));
         } else if (id == R.id.nav_settings) {
             startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+        } else if (id == R.id.nav_rate) {
+            Uri uri = Uri.parse("market://details?id=" + this.getPackageName());
+            Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+            // To count with Play market backstack, After pressing back button,
+            // to taken back to our application, we need to add following flags to intent.
+            goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY | Intent.FLAG_ACTIVITY_MULTIPLE_TASK);
+            try {
+                startActivity(goToMarket);
+            } catch (ActivityNotFoundException e) {
+                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=" + this.getPackageName())));
+            }
         }
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -300,7 +310,6 @@ public class MainActivity extends AppCompatActivity
     }
 
     private String getFileSize() {
-        String modifiedFileSize;
         double fileSize;
         if (file == null)
             return null;
@@ -308,17 +317,15 @@ public class MainActivity extends AppCompatActivity
             fileSize = (double) file.length(); //in Bytes
 
             if (fileSize < 1024) {
-                modifiedFileSize = String.valueOf(fileSize).concat("B");
+                return String.valueOf(fileSize).concat("B");
             } else if (fileSize > 1024 && fileSize < (1024 * 1024)) {
-                modifiedFileSize = String.valueOf(Math.round((fileSize / 1024 * 100.0)) / 100.0).concat("KB");
+                return String.valueOf(Math.round((fileSize / 1024 * 100.0)) / 100.0).concat("KB");
             } else {
-                modifiedFileSize = String.valueOf(Math.round((fileSize / (1024 * 1204) * 100.0)) / 100.0).concat("MB");
+                return String.valueOf(Math.round((fileSize / (1024 * 1204) * 100.0)) / 100.0).concat("MB");
             }
         } else {
-            modifiedFileSize = "Unknown";
+            return null;
         }
-
-        return modifiedFileSize;
     }
 
     private String getFileInfo() {
@@ -329,9 +336,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     private boolean isChanged() {
-        if (FILE_CONTENT == null) {
+        if (FILE_CONTENT == null)
             return false;
-        }
 
         if (FILE_CONTENT.length() >= CHUNK && FILE_CONTENT.substring(0, loaded.length()).equals(currentBuffer))
             return false;
@@ -388,6 +394,8 @@ public class MainActivity extends AppCompatActivity
         if (isFileChangeListenerAttached()) fileChangeListener.onFileOpen();
 
         toolbar.setSubtitle(file.getName());
+        scrollView.setVisibility(View.VISIBLE);
+        startLayout.setVisibility(View.GONE);
 
         if (mInterstitialAd.isLoaded()) mInterstitialAd.show();
     }
@@ -396,7 +404,7 @@ public class MainActivity extends AppCompatActivity
         if (isChanged())
             new DocumentSaver().execute();
         else
-            Toast.makeText(getApplicationContext(), "No change in file", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(), R.string.no_change_in_file, Toast.LENGTH_SHORT).show();
     }
 
     private void onPostSave() {
@@ -539,7 +547,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     private void requestNewInterstitial() {
-        AdRequest adRequest = new AdRequest.Builder().build();
+        AdRequest adRequest = new AdRequest.Builder()
+                .addTestDevice("1D2C48C858485B39625FBB7EB09AD847")
+                .build();
 
         mInterstitialAd.loadAd(adRequest);
     }

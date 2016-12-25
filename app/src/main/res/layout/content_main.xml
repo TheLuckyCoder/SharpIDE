@@ -8,17 +8,19 @@
     tools:context="net.theluckycoder.scriptcraft.MainActivity"
     tools:showIn="@layout/activity_main">
 
+    <include layout="@layout/layout_start" />
+
     <net.theluckycoder.scriptcraft.component.InteractiveScrollView
-        android:id="@+id/scrollView"
+        android:id="@+id/mainScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="50dp">
+        android:layout_marginBottom="50dp"
+        android:visibility="gone">
 
         <net.theluckycoder.scriptcraft.component.CodeEditText
             android:id="@+id/fileContent"
             android:background="@android:color/transparent"
             android:focusable="false"
-            android:text="@string/instructions"
             android:imeOptions="flagNoExtractUi"
             android:inputType="textVisiblePassword|textMultiLine"
             android:layout_width="match_parent"
