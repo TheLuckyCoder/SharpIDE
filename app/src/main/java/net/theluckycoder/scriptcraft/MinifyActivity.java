@@ -1,5 +1,6 @@
 package net.theluckycoder.scriptcraft;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -8,10 +9,15 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
-import net.theluckycoder.scriptcraft.utils.FileChooser;
+import com.nbsp.materialfilepicker.MaterialFilePicker;
+import com.nbsp.materialfilepicker.ui.FilePickerActivity;
+
 import net.theluckycoder.scriptcraft.utils.Util;
 
 import java.io.File;
+import java.util.regex.Pattern;
+
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class MinifyActivity extends AppCompatActivity {
 
@@ -38,14 +44,12 @@ public class MinifyActivity extends AppCompatActivity {
     }
 
     public void selectMod(View view) {
-        FileChooser filechooser = new FileChooser(this);
-        filechooser.setFileListener(new FileChooser.FileSelectedListener() {
-            @Override public void fileSelected(final File file) {
-                modName = file.getName();
-                modPath = file.getPath();
-                findViewById(R.id.obfuscateBtn).setEnabled(true);
-            }
-        });
+        new MaterialFilePicker()
+                .withActivity(this)
+                .withRequestCode(1)
+                .withFilter(Pattern.compile(".*\\.js$")) // Filtering files and directories by file name using regexp
+                .withHiddenFiles(getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
+                .start();
     }
 
     public void obfuscate(View view) {
@@ -63,13 +67,20 @@ public class MinifyActivity extends AppCompatActivity {
             return;
         }
 
+        // uniform line endings, make them all line feed
+        modContent = modContent.replace("\r\n", "\n").replace("\r", "\n");
+        // strip leading & trailing whitespace
+        modContent = modContent.replace(" \n", "\n").replace("\n ", "\n");
+        // collapse consecutive line feeds into just 1
+        modContent = modContent.replaceAll("/\n+/", "\n");
+        // remove comments
         modContent = modContent.replaceAll("/\\*.*\\*/", "").replaceAll("//.*(?=\\n)", "");
-        modContent = modContent.replace("\r", "").replace("\n", "").replace("\t", "");
+        modContent = modContent.replace(" + ", "+").replace(" - ", "-").replace(" = ", "=").replace("if ", "if").replace("( ", "(");
+        // remove the new lines and tabs
+        modContent = modContent.replace("\n", "").replace("\t", "");
 
         File newFile = new File(Util.minifyFolder + file.getName());
-
         Util.saveFile(newFile, modContent.split(System.getProperty("line.separator")));
-
         Toast.makeText(this, R.string.file_minified, Toast.LENGTH_LONG).show();
     }
 
@@ -83,5 +94,18 @@ public class MinifyActivity extends AppCompatActivity {
                 return super.onOptionsItemSelected(item);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 1 && resultCode == RESULT_OK) {
+            String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
+            File file = new File(filePath);
+            modName = file.getName();
+            modPath = file.getPath();
+            findViewById(R.id.obfuscateBtn).setEnabled(true);
+        }
     }
 }

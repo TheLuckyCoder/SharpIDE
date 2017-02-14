@@ -119,6 +119,7 @@ public class Util {
     }
 
     public static void makeFolder(String folderPath) {
+        //noinspection ResultOfMethodCallIgnored
         new File(folderPath).mkdir();
     }
 }

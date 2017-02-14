@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:title="@string/group_files"
+        android:checkableBehavior="none">
+        <menu>
+            <item
+                android:id="@+id/menu_save"
+                android:icon="@drawable/ic_save"
+                android:title="@string/save_file" />
+            <item
+                android:id="@+id/menu_open"
+                android:icon="@drawable/ic_open"
+                android:title="@string/open_file" />
+            <item
+                android:id="@+id/menu_new"
+                android:icon="@drawable/ic_new_file"
+                android:title="@string/new_file" />
+            <item
+                android:id="@+id/menu_file_info"
+                android:icon="@drawable/ic_info_outline"
+                android:title="@string/file_info" />
+        </menu>
+    </item>
+    <item
+        android:title="@string/group_tools"
+        android:checkableBehavior="none">
+        <menu>
+            <item
+                android:id="@+id/menu_replace_all"
+                android:title="@string/replace_all" />
+            <item
+                android:id="@+id/menu_minify"
+                android:title="@string/minify_tool" />
+        </menu>
+    </item>
+    <item
+        android:title="@string/group_app"
+        android:checkableBehavior="none">
+        <menu>
+            <item
+                android:id="@+id/menu_rate"
+                android:icon="@drawable/ic_rate_review"
+                android:title="@string/action_rate" />
+            <item
+                android:id="@+id/menu_settings"
+                android:icon="@drawable/ic_settings"
+                android:title="@string/settings" />
+        </menu>
+    </item>
+</menu>

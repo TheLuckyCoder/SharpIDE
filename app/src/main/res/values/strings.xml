@@ -1,11 +1,10 @@
 <resources>
     <string name="app_name" translatable="false">ScriptCraft</string>
 
-    <string name="new_file">Create New File</string>
+    <string name="new_file">New File</string>
     <string name="file_info">File Information</string>
     <string name="save_file">Save File</string>
-    <string name="file_saved">Script Saved</string>
-    <string name="choose_file">Choose a file</string>
+    <string name="file_saved">File Saved</string>
     <string name="file_name">File Name</string>
     <string name="new_file_created">New file created</string>
     <string name="create_new_file">"Create New File: "</string>
@@ -18,14 +17,12 @@
     <string name="minify_tool">Minify Tool</string>
     <string name="select_file">Select File</string>
     <string name="action_minify">Minify</string>
-    <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file.</string>
+    <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file. Also some of the whitespaces</string>
     <string name="directory">Directory:</string>
 
     <string name="pref_font_size">Editor Font Size</string>
     <string name="pref_font_size_desc">Specify the font size of the editor</string>
     <string name="settings">Settings</string>
-    <string name="pref_font_type">Editor Font</string>
-    <string name="pref_font_type_desc">Specify the font of the editor</string>
     <string name="exit_confirmation">Are you sure you want to quit?</string>
     <string name="pref_line_numbers">Show line numbers</string>
     <string name="pref_symbols_bar">Show symbols bar while writing</string>
@@ -37,6 +34,15 @@
     <string name="no_change_in_file">No change in file</string>
     <string name="file_minified">Minified file saved in ScriptCraft/Minify folder</string>
     <string name="action_rate">Rate App</string>
-    <string name="action_share_code">Share Code</string>
+    <string name="pref_hidden_files">Show hidden files</string>
+    <string name="pref_hidden_files_desc">Show hidden files and folders when choosing a file</string>
+    <string name="file_modified">File has been modified</string>
+    <string name="pref_quit_confirm">Confirm exit from app</string>
+    <string name="pref_load_last_file">Load last opened file</string>
+    <string name="pref_category_general">General</string>
+    <string name="pref_category_editor">Editor</string>
+    <string name="group_files">Files</string>
+    <string name="group_tools">Tools</string>
+    <string name="group_app">App</string>
 
 </resources>

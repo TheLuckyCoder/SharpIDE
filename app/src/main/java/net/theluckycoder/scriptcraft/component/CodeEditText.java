@@ -18,7 +18,9 @@ import android.text.TextWatcher;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
+import android.view.KeyEvent;
 import android.view.ViewTreeObserver;
 
 import net.theluckycoder.scriptcraft.R;
@@ -30,26 +32,26 @@ import static android.preference.PreferenceManager.getDefaultSharedPreferences;
 
 public class CodeEditText extends AppCompatEditText {
 
-    private static final Pattern PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b");
-    private static final Pattern PATTERN_CLASSES = Pattern.compile(
+    private final Pattern PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b");
+    private final Pattern PATTERN_CLASSES = Pattern.compile(
             "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
                     "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
                     "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
                     "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
                     "Reflect|Proxy|Intl)\\b",
             Pattern.MULTILINE);
-    private static final Pattern PATTERN_KEYWORDS = Pattern.compile(
+    private final Pattern PATTERN_KEYWORDS = Pattern.compile(
             "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
                     "else|export|extends|finally|for|function|if|import|in|instanceof|" +
                     "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
                     "null|true|false)\\b");
-    private static final Pattern PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*");
+    private final Pattern PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*");
     private Context context;
-    public static final transient Paint paint = new Paint();
+    private final transient Paint paint = new Paint();
     private Layout layout;
     private final Handler updateHandler = new Handler();
     private OnTextChangedListener onTextChangedListener;
-    private final int updateDelay = 500;
+    private final int updateDelay = 1000;
     private boolean modified = true;
     private int colorNumber, colorKeyword, colorBuiltin, colorComment, colorString;
     private final Runnable updateRunnable =
@@ -65,6 +67,7 @@ public class CodeEditText extends AppCompatEditText {
                     highlightWithoutChange(e);
                 }
             };
+    private BackPressedListener mOnImeBack;
 
     public CodeEditText(Context context) {
         super(context);
@@ -164,25 +167,13 @@ public class CodeEditText extends AppCompatEditText {
         paint.setStyle(Paint.Style.FILL);
         paint.setAntiAlias(true);
         paint.setColor(Color.parseColor("#bbbbbb"));
-        paint.setTextSize(Integer.parseInt(getDefaultSharedPreferences(context).getString("font_size", "16")));
+        paint.setTextSize(getPixels(Integer.parseInt(getDefaultSharedPreferences(context).getString("font_size", "15"))));
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {
                 layout = getLayout();
             }
         });
-        //TODO: Font
-        /*String typeface = PreferenceManager.getDefaultSharedPreferences(context).getString("font_type", "normal");
-        if (typeface.matches("normal"))
-            paint.setTypeface(Typeface.DEFAULT);
-        else if (typeface.matches("bold"))
-            paint.setTypeface(Typeface.DEFAULT_BOLD);
-        else if (typeface.matches("serif"))
-            paint.setTypeface(Typeface.SERIF);
-        else if (typeface.equals("sans-serif"))
-            paint.setTypeface(Typeface.SANS_SERIF);
-        else if (typeface.equals("monospace"))
-            paint.setTypeface(Typeface.MONOSPACE);*/
     }
 
     private void setSyntaxColors(Context context) {
@@ -203,54 +194,54 @@ public class CodeEditText extends AppCompatEditText {
         modified = true;
     }
 
-    private Editable highlight(Editable e) {
+    private Editable highlight(Editable editable) {
         try {
             // don't use e.clearSpans() because it will
             // remove too much
-            clearSpans(e);
+            clearSpans(editable);
 
-            if (e.length() == 0)
-                return e;
+            if (editable.length() == 0)
+                return editable;
 
-            for (Matcher m = PATTERN_NUMBERS.matcher(e); m.find(); )
-                e.setSpan(new ForegroundColorSpan(colorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            for (Matcher m = PATTERN_NUMBERS.matcher(editable); m.find(); )
+                editable.setSpan(new ForegroundColorSpan(colorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            for (Matcher m = PATTERN_CLASSES.matcher(e); m.find(); )
-                e.setSpan(new ForegroundColorSpan(colorBuiltin), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            for (Matcher m = PATTERN_CLASSES.matcher(editable); m.find(); )
+                editable.setSpan(new ForegroundColorSpan(colorBuiltin), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            for (Matcher m = PATTERN_KEYWORDS.matcher(e); m.find(); )
-                e.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            for (Matcher m = PATTERN_KEYWORDS.matcher(editable); m.find(); )
+                editable.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            for(Matcher m = Pattern.compile("\\$\\w+").matcher(e); m.find(); ) {
-                e.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+            for(Matcher m = Pattern.compile("\\$\\w+").matcher(editable); m.find(); ) {
+                editable.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
 
-            for(Matcher m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(e); m.find(); ) {
-                ForegroundColorSpan spans[] = e.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
+            for(Matcher m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable); m.find(); ) {
+                ForegroundColorSpan spans[] = editable.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
                 for(ForegroundColorSpan span : spans)
-                    e.removeSpan(span);
-                e.setSpan(new ForegroundColorSpan(colorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    editable.removeSpan(span);
+                editable.setSpan(new ForegroundColorSpan(colorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
 
-            for (Matcher m = PATTERN_COMMENTS.matcher(e); m.find(); ) {
-                ForegroundColorSpan spans[] = e.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
+            for (Matcher m = PATTERN_COMMENTS.matcher(editable); m.find(); ) {
+                ForegroundColorSpan spans[] = editable.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
                 for(ForegroundColorSpan span : spans)
-                    e.removeSpan(span);
-                e.setSpan(new ForegroundColorSpan(colorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    editable.removeSpan(span);
+                editable.setSpan(new ForegroundColorSpan(colorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
             }
-        } catch (IllegalStateException ise) {
-            ise.printStackTrace();
+        } catch (IllegalStateException e) {
+            Log.e("IllegalStateException", e.getMessage(), e);
             // raised by Matcher.start()/.end() when
             // no successful match has been made what
             // shouldn't ever happen because of find()
         }
 
-        return e;
+        return editable;
     }
 
-    private CharSequence autoIndent(CharSequence source, Spanned dest, int dstart, int dend) {
+    private CharSequence autoIndent(CharSequence source, Spanned dest, int dStart, int dEnd) {
         String indent = "";
-        int iStart = dstart - 1;
+        int iStart = dStart - 1;
 
         // find start of this line
         boolean dataBefore = false;
@@ -282,18 +273,18 @@ public class CodeEditText extends AppCompatEditText {
 
         // copy indent of this line into the next
         if (iStart > -1) {
-            char charAtCursor = dest.charAt(dstart);
+            char charAtCursor = dest.charAt(dStart);
             int iEnd;
 
             for (iEnd = ++iStart;
-                 iEnd < dend;
+                 iEnd < dEnd;
                  ++iEnd) {
                 char c = dest.charAt(iEnd);
 
                 // auto expand comments
                 if (charAtCursor != '\n' &&
                         c == '/' &&
-                        iEnd + 1 < dend &&
+                        iEnd + 1 < dEnd &&
                         dest.charAt(iEnd) == c) {
                     iEnd += 2;
                     break;
@@ -349,7 +340,6 @@ public class CodeEditText extends AppCompatEditText {
         }
 
         super.onDraw(canvas);
-
     }
 
     private void drawLineNumber(Canvas canvas, Layout layout, int positionY, int line) {
@@ -363,5 +353,21 @@ public class CodeEditText extends AppCompatEditText {
 
     public interface OnTextChangedListener {
         void onTextChanged(String text);
+    }
+
+    /*** Keyboard checking ***/
+    @Override
+    public boolean onKeyPreIme(int keyCode, KeyEvent event) {
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && event.getAction() == KeyEvent.ACTION_UP)
+            if (mOnImeBack != null) mOnImeBack.onImeBack();
+        return super.dispatchKeyEvent(event);
+    }
+
+    public void setBackPressedListener(BackPressedListener listener) {
+        mOnImeBack = listener;
+    }
+
+    public interface BackPressedListener {
+        void onImeBack();
     }
 }

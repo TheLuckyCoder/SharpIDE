@@ -1,35 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="General">
+    <PreferenceCategory android:title="@string/pref_category_general">
         <CheckBoxPreference
-            android:title="Confirm exit from app"
+            android:title="@string/pref_load_last_file"
+            android:defaultValue="true"
+            android:key="load_last_file" />
+        <CheckBoxPreference
+            android:title="@string/pref_quit_confirm"
             android:defaultValue="true"
             android:key="quit_confirm" />
         <CheckBoxPreference
-            android:title="Use Light Theme"
-            android:summary="Please note that this feature is still in development. It might not work as intended"
-            android:defaultValue="true"
-            android:key="light_theme" />
+            android:title="@string/pref_hidden_files"
+            android:summary="@string/pref_hidden_files_desc"
+            android:key="show_hidden_files"
+            android:defaultValue="false" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="Editor">
+    <PreferenceCategory android:title="@string/pref_category_editor">
         <EditTextPreference
             android:title="@string/pref_font_size"
             android:summary="@string/pref_font_size_desc"
             android:icon="@drawable/ic_pref_font_size"
             android:key="font_size"
-            android:defaultValue="16"
+            android:defaultValue="15"
             android:dialogTitle="@string/pref_font_size"
             android:inputType="number" />
-        <ListPreference
-            android:title="@string/pref_font_type"
-            android:summary="@string/pref_font_type_desc"
-            android:icon="@drawable/ic_pref_font"
-            android:key="font_type"
-            android:dialogTitle="@string/pref_font_type"
-            android:defaultValue="normal"
-            android:entries="@array/font"
-            android:enabled="false"
-            android:entryValues="@array/font_entry" />
         <CheckBoxPreference
             android:title="@string/pref_line_numbers"
             android:icon="@drawable/ic_pref_line_numbers"
@@ -38,6 +32,6 @@
         <CheckBoxPreference
             android:title="@string/pref_symbols_bar"
             android:defaultValue="true"
-            android:key="show_symbol_bar"/>
+            android:key="show_symbols_bar" />
     </PreferenceCategory>
 </PreferenceScreen>
