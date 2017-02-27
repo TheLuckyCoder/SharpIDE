@@ -46,12 +46,14 @@ public class CodeEditText extends AppCompatEditText {
                     "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
                     "null|true|false)\\b");
     private final Pattern PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*");
+    private final Pattern PATTERN_SYMBOLS = Pattern.compile("[\\+\\-\\*&\\^!:/\\|\\?<>=;,]");
+
     private Context context;
     private final transient Paint paint = new Paint();
     private Layout layout;
     private final Handler updateHandler = new Handler();
     private OnTextChangedListener onTextChangedListener;
-    private final int updateDelay = 1000;
+    private final int updateDelay = 500;
     private boolean modified = true;
     private int colorNumber, colorKeyword, colorBuiltin, colorComment, colorString;
     private final Runnable updateRunnable =
@@ -212,11 +214,13 @@ public class CodeEditText extends AppCompatEditText {
             for (Matcher m = PATTERN_KEYWORDS.matcher(editable); m.find(); )
                 editable.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-            for(Matcher m = Pattern.compile("\\$\\w+").matcher(editable); m.find(); ) {
+            for (Matcher m = PATTERN_SYMBOLS.matcher(editable); m.find(); )
                 editable.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-            }
 
-            for(Matcher m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable); m.find(); ) {
+            for (Matcher m = Pattern.compile("\\$\\w+").matcher(editable); m.find(); )
+                editable.setSpan(new ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+
+            for (Matcher m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable); m.find(); ) {
                 ForegroundColorSpan spans[] = editable.getSpans(m.start(), m.end(), ForegroundColorSpan.class);
                 for(ForegroundColorSpan span : spans)
                     editable.removeSpan(span);

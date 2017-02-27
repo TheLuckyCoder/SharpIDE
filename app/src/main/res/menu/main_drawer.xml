@@ -28,9 +28,11 @@
         <menu>
             <item
                 android:id="@+id/menu_replace_all"
+                android:icon="@drawable/ic_find_replace"
                 android:title="@string/replace_all" />
             <item
                 android:id="@+id/menu_minify"
+                android:icon="@drawable/ic_minify"
                 android:title="@string/minify_tool" />
         </menu>
     </item>

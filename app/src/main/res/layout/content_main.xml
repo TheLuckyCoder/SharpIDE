@@ -47,7 +47,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="{"/>
+                android:text="{" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -56,7 +56,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="}"/>
+                android:text="}" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -65,7 +65,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="("/>
+                android:text="(" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -74,7 +74,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text=")"/>
+                android:text=")" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -83,7 +83,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text=";"/>
+                android:text=";" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -92,7 +92,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text=","/>
+                android:text="," />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -101,7 +101,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="="/>
+                android:text="=" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -110,7 +110,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="&quot;"/>
+                android:text="&quot;" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -119,7 +119,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="|"/>
+                android:text="|" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -128,7 +128,7 @@
                 android:background="?selectableItemBackgroundBorderless"
                 android:clickable="true"
                 android:padding="10dp"
-                android:text="&amp;"/>
+                android:text="&amp;" />
 
             <TextView
                 android:layout_width="wrap_content"
@@ -156,6 +156,7 @@
                 android:clickable="true"
                 android:padding="10dp"
                 android:text="]" />
+
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

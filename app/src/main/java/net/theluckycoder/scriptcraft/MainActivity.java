@@ -56,6 +56,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.regex.Pattern;
 
+import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener, TextWatcher {
 
@@ -111,9 +113,9 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         // Load preferences
-        contentView.setTextSize(Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(this).getString("font_size", "16")));
-        if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("load_last_file", true)) {
-            String lastFilePath = PreferenceManager.getDefaultSharedPreferences(this).getString("last_file_path", "");
+        contentView.setTextSize(Integer.parseInt(getDefaultSharedPreferences(this).getString("font_size", "16")));
+        if (getDefaultSharedPreferences(this).getBoolean("load_last_file", true)) {
+            String lastFilePath = getDefaultSharedPreferences(this).getString("last_file_path", "");
             File lastFile = new File(lastFilePath);
             if (!lastFilePath.equals("") && lastFile.isFile()) {
                 currentFile = lastFile;
@@ -126,18 +128,12 @@ public class MainActivity extends AppCompatActivity
 
 
         // Setup keyboard checker
-        /*contentView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-
-            }
-        });*/
-        contentView.setBackPressedListener(new CodeEditText.BackPressedListener() {
+        /*contentView.setBackPressedListener(new CodeEditText.BackPressedListener() {
             @Override
             public void onImeBack() {
                 symbolLayout.setVisibility(View.GONE);
             }
-        });
+        });*/
 
         // Setup ads
         mInterstitialAd = new InterstitialAd(this);
@@ -157,7 +153,7 @@ public class MainActivity extends AppCompatActivity
         if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else {
-            if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("quit_confirm", true)) {
+            if (getDefaultSharedPreferences(this).getBoolean("quit_confirm", true)) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.app_name);
                 builder.setMessage(R.string.exit_confirmation);
@@ -196,7 +192,7 @@ public class MainActivity extends AppCompatActivity
 
                 if (isFileChangeListenerAttached()) fileChangeListener.onFileChanged(isChanged());
             }
-        }, 1000);
+        }, 500);
     }
 
     @Override
@@ -291,7 +287,7 @@ public class MainActivity extends AppCompatActivity
                 .withActivity(this)
                 .withRequestCode(1)
                 .withFilter(Pattern.compile(".*\\.js$")) // Filtering files and directories by currentFile name using regexp
-                .withHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
+                .withHiddenFiles(getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
                 .start();
     }
 
@@ -362,12 +358,14 @@ public class MainActivity extends AppCompatActivity
     private void loadDocument(final String fileContent) {
         scrollView.smoothScrollTo(0, 0);
 
+        final boolean showSymbolBar = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).getBoolean("show_symbols_bar", true);
+
         contentView.setFocusable(false);
         contentView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 contentView.setFocusableInTouchMode(true);
-                if (PreferenceManager.getDefaultSharedPreferences(MainActivity.this).getBoolean("show_symbols_bar", true))
+                if (showSymbolBar)
                     symbolScrollView.setVisibility(View.VISIBLE);
             }
         });
@@ -465,13 +463,13 @@ public class MainActivity extends AppCompatActivity
                 Log.e("FileNotFoundException", e.getMessage(), e);
             }
 
-            return "\n";
+            return "";
         }
 
         @Override
         protected void onPostExecute(String s) {
             loadDocument(s);
-            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
+            SharedPreferences.Editor editor = getDefaultSharedPreferences(MainActivity.this).edit();
             editor.putString("last_file_path", currentFile.getAbsolutePath());
             editor.apply();
             progressDialog.dismiss();
