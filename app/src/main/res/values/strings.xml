@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name" translatable="false">ScriptCraft</string>
+    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1279472163660969/8935487535</string>
 
     <string name="new_file">New File</string>
     <string name="file_info">File Information</string>

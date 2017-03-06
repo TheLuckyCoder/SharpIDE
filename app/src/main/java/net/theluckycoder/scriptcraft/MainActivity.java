@@ -2,7 +2,6 @@ package net.theluckycoder.scriptcraft;
 
 import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -71,6 +70,7 @@ public class MainActivity extends AppCompatActivity
 
     private InterstitialAd mInterstitialAd;
     private File currentFile;
+    @SuppressWarnings("unused")
     private FileChangeListener fileChangeListener;
     private final int CHUNK = 20000;
     private String FILE_CONTENT, currentBuffer;
@@ -83,6 +83,16 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
         toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        Uri data = getIntent().getData();
+        if (data != null) {
+            try {
+                currentFile = new File(data.getPath());
+                new DocumentLoader().execute();
+            } catch (Exception e) {
+                Log.e("Bad Data", e.getMessage(), e);
+            }
+        }
 
         // Setup Views
         contentView = (CodeEditText) findViewById(R.id.fileContent);
@@ -204,35 +214,7 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.menu_open) {
             openFileClick(item.getActionView());
         } else if (id == R.id.menu_new) {
-            final Context context = this;
-
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.create_new_file);
-
-            View root = getLayoutInflater().inflate(R.layout.dialog_new_file, null);
-            builder.setView(root);
-
-            final EditText etFileName = (EditText) root.findViewById(R.id.file_name);
-
-            builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-
-                    if (!Pattern.compile("[_a-zA-Z0-9 \\-\\.]+").matcher(etFileName.getText().toString()).matches()) {
-                        Toast.makeText(context, R.string.invalid_file_name, Toast.LENGTH_SHORT).show();
-                        return;
-                    }
-
-                    File newFile = new File(Util.mainFolder + etFileName.getText().toString());
-                    if (!newFile.exists()) {
-                        Util.createFile(newFile);
-                        Toast.makeText(context, R.string.new_file_created, Toast.LENGTH_SHORT).show();
-                    }
-                    currentFile = newFile;
-                    new DocumentLoader().execute();
-                }
-            });
-            builder.show();
+            newFileClick(item.getActionView());
         } else if (id == R.id.menu_file_info) {
             if (currentFile == null) {
                 Toast.makeText(this, R.string.no_file_open, Toast.LENGTH_SHORT).show();
@@ -244,23 +226,27 @@ public class MainActivity extends AppCompatActivity
                 builder.show();
             }
         } else if (id == R.id.menu_replace_all) {
-            LayoutInflater inflater = this.getLayoutInflater();
-            final View dialogView = inflater.inflate(R.layout.dialog_replace, null);
-            AlertDialog.Builder builder = new AlertDialog.Builder(this);
-            builder.setTitle(R.string.replace_all);
-            builder.setView(dialogView);
-            builder.setPositiveButton(R.string.replace_all, new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialogInterface, int i) {
-                    EditText findText = (EditText) dialogView.findViewById(R.id.findText);
-                    EditText replaceText = (EditText) dialogView.findViewById(R.id.replaceText);
-                    String newText = contentView.getText().toString().replace(findText.getText().toString(), replaceText.getText().toString());
-                    contentView.setText(newText);
-                    if (mInterstitialAd.isLoaded()) mInterstitialAd.show();
-                }
-            });
-            builder.setNegativeButton(android.R.string.cancel, null);
-            builder.show();
+            if (currentFile == null) {
+                Toast.makeText(this, R.string.no_file_open, Toast.LENGTH_SHORT).show();
+            } else {
+                LayoutInflater inflater = this.getLayoutInflater();
+                final View dialogView = inflater.inflate(R.layout.dialog_replace, null);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle(R.string.replace_all);
+                builder.setView(dialogView);
+                builder.setPositiveButton(R.string.replace_all, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        EditText findText = (EditText) dialogView.findViewById(R.id.findText);
+                        EditText replaceText = (EditText) dialogView.findViewById(R.id.replaceText);
+                        String newText = contentView.getText().toString().replace(findText.getText().toString(), replaceText.getText().toString());
+                        contentView.setText(newText);
+                        if (mInterstitialAd.isLoaded()) mInterstitialAd.show();
+                    }
+                });
+                builder.setNegativeButton(android.R.string.cancel, null);
+                builder.show();
+            }
         } else if (id == R.id.menu_minify) {
             startActivity(new Intent(MainActivity.this, MinifyActivity.class));
         } else if (id == R.id.menu_settings) {
@@ -279,6 +265,36 @@ public class MainActivity extends AppCompatActivity
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    public void newFileClick(View view) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle(R.string.create_new_file);
+
+        View root = getLayoutInflater().inflate(R.layout.dialog_new_file, null);
+        builder.setView(root);
+
+        final EditText etFileName = (EditText) root.findViewById(R.id.file_name);
+
+        builder.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+                if (!Pattern.compile("[_a-zA-Z0-9 \\-.]+").matcher(etFileName.getText().toString()).matches()) {
+                    Toast.makeText(MainActivity.this, R.string.invalid_file_name, Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                File newFile = new File(Util.mainFolder + etFileName.getText().toString());
+                if (!newFile.exists()) {
+                    Util.createFile(newFile);
+                    Toast.makeText(MainActivity.this, R.string.new_file_created, Toast.LENGTH_SHORT).show();
+                }
+                currentFile = newFile;
+                new DocumentLoader().execute();
+            }
+        });
+        builder.show();
     }
 
     public void openFileClick(View view) {
@@ -302,7 +318,7 @@ public class MainActivity extends AppCompatActivity
 
     private String getFileSize() {
         double fileSize;
-        if (currentFile != null && currentFile.isFile()) {
+        if (currentFile.isFile()) {
             fileSize = (double) currentFile.length(); //in Bytes
 
             if (fileSize < 1024)
@@ -311,15 +327,12 @@ public class MainActivity extends AppCompatActivity
                 return String.valueOf(Math.round((fileSize / 1024 * 100.0)) / 100.0).concat("KB");
             else
                 return String.valueOf(Math.round((fileSize / (1024 * 1204) * 100.0)) / 100.0).concat("MB");
-        } else
-            return null;
+        }
+        return null;
     }
 
     private String getFileInfo() {
-        if (getFileSize() == null)
-            return null;
-        else
-            return "Size : " + getFileSize() + "\n" + "Path : " + currentFile.getPath() + "\n";
+        return "Size : " + getFileSize() + "\n" + "Path : " + currentFile.getPath() + "\n";
     }
 
     private boolean isChanged() {

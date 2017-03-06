@@ -1,5 +1,6 @@
 package net.theluckycoder.scriptcraft.listener;
 
+@SuppressWarnings("ALL")
 public interface FileChangeListener {
 
     void onFileOpen();

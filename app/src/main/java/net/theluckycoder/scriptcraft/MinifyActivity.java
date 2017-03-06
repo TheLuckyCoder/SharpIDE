@@ -9,6 +9,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 import com.nbsp.materialfilepicker.MaterialFilePicker;
 import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
@@ -35,12 +37,11 @@ public class MinifyActivity extends AppCompatActivity {
         Util.makeFolder(Util.mainFolder);
 
         //Init AdMob
-        /*AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdView mAdView = (AdView) findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder()
-                .addTestDevice("A5E8BADC6DE99FBFFF54FEB0BD30A4B1")
                 .setRequestAgent("android_studio:ad_template")
                 .build();
-        mAdView.loadAd(adRequest);*/
+        mAdView.loadAd(adRequest);
     }
 
     public void selectMod(View view) {
