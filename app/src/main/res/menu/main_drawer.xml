@@ -27,6 +27,10 @@
         android:checkableBehavior="none">
         <menu>
             <item
+                android:id="@+id/menu_run"
+                android:icon="@drawable/ic_run"
+                android:title="@string/action_run" />
+            <item
                 android:id="@+id/menu_replace_all"
                 android:icon="@drawable/ic_find_replace"
                 android:title="@string/replace_all" />

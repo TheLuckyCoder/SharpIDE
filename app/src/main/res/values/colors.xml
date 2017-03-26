@@ -9,4 +9,9 @@
     <color name="syntax_class">#FF8000</color>
     <color name="syntax_comment">#808080</color>
     <color name="syntax_string">#ff009b00</color>
+
+    <color name="color_intro_first">#039BE5</color>
+    <color name="color_intro_dark_first">#0277BD</color>
+    <color name="color_permissions">#FFEB3B</color>
+    <color name="color_dark_permissions">#FBC02D</color>
 </resources>

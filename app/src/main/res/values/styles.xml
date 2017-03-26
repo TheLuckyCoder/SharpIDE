@@ -1,11 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="AppTheme.Launcher" parent="Theme.AppCompat.Light">
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="android:colorBackground">@color/colorPrimary</item>
-    </style>
-
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>

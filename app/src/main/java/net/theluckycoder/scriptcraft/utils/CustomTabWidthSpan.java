@@ -5,7 +5,7 @@ import android.graphics.Paint;
 import android.support.annotation.NonNull;
 import android.text.style.ReplacementSpan;
 
-public class CustomTabWidthSpan extends ReplacementSpan {
+public final class CustomTabWidthSpan extends ReplacementSpan {
 
     public CustomTabWidthSpan(){}
 

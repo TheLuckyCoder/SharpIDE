@@ -2,6 +2,7 @@ package net.theluckycoder.scriptcraft;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -19,11 +20,9 @@ import net.theluckycoder.scriptcraft.utils.Util;
 import java.io.File;
 import java.util.regex.Pattern;
 
-import static android.preference.PreferenceManager.getDefaultSharedPreferences;
+public final class MinifyActivity extends AppCompatActivity {
 
-public class MinifyActivity extends AppCompatActivity {
-
-    private String modName, modPath, modContent;
+    private String fileName, filePath, fileContent;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,40 +48,40 @@ public class MinifyActivity extends AppCompatActivity {
                 .withActivity(this)
                 .withRequestCode(1)
                 .withFilter(Pattern.compile(".*\\.js$")) // Filtering files and directories by file name using regexp
-                .withHiddenFiles(getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
+                .withHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
                 .start();
     }
 
     public void obfuscate(View view) {
         Util.makeFolder(Util.minifyFolder);
-        final File file = new File(Util.mainFolder + modName);
+        final File file = new File(Util.mainFolder + fileName);
         try {
-            modContent = Util.loadFile(modPath);
+            fileContent = Util.loadFile(filePath);
         } catch (Exception e) {
             Log.e("Error: ", e.getMessage(), e);
             Toast.makeText(this, R.string.error_empty_file, Toast.LENGTH_SHORT).show();
         }
 
-        if (modContent == null) {
+        if (fileContent == null) {
             Snackbar.make(view, R.string.error_empty_file, Snackbar.LENGTH_SHORT).show();
             return;
         }
 
         // uniform line endings, make them all line feed
-        modContent = modContent.replace("\r\n", "\n").replace("\r", "\n");
+        fileContent = fileContent.replace("\r\n", "\n").replace("\r", "\n");
         // strip leading & trailing whitespace
-        modContent = modContent.replace(" \n", "\n").replace("\n ", "\n");
+        fileContent = fileContent.replace(" \n", "\n").replace("\n ", "\n");
         // collapse consecutive line feeds into just 1
-        modContent = modContent.replaceAll("/\n+/", "\n");
+        fileContent = fileContent.replaceAll("/\n+/", "\n");
         // remove comments
-        modContent = modContent.replaceAll("/\\*.*\\*/", "").replaceAll("//.*(?=\\n)", "");
-        modContent = modContent.replace(" + ", "+").replace(" - ", "-").replace(" = ", "=").replace("if ", "if").replace("( ", "(");
+        fileContent = fileContent.replaceAll("/\\*.*\\*/", "").replaceAll("//.*(?=\\n)", "");
+        fileContent = fileContent.replace(" + ", "+").replace(" - ", "-").replace(" = ", "=").replace("if ", "if").replace("( ", "(");
         // remove the new lines and tabs
-        modContent = modContent.replace("\n", "").replace("\t", "");
+        fileContent = fileContent.replace("\n", "").replace("\t", "");
 
         File newFile = new File(Util.minifyFolder + file.getName());
-        Util.saveFile(newFile, modContent.split(System.getProperty("line.separator")));
-        Toast.makeText(this, R.string.file_minified, Toast.LENGTH_LONG).show();
+        Util.saveFile(newFile, fileContent.split(System.getProperty("line.separator")));
+        Toast.makeText(this, R.string.file_minify_ready, Toast.LENGTH_LONG).show();
     }
 
     @Override
@@ -104,8 +103,8 @@ public class MinifyActivity extends AppCompatActivity {
         if (requestCode == 1 && resultCode == RESULT_OK) {
             String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
             File file = new File(filePath);
-            modName = file.getName();
-            modPath = file.getPath();
+            fileName = file.getName();
+            this.filePath = file.getPath();
             findViewById(R.id.obfuscateBtn).setEnabled(true);
         }
     }

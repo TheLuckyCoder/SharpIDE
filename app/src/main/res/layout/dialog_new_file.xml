@@ -24,6 +24,6 @@
         android:padding="16dp"
         android:background="#dddddd"
         android:textSize="16sp"
-        android:text="/sdcard/ScriptCraft/" />
+        android:text="/sdcard/SharpIDE/" />
 
 </LinearLayout>

@@ -1,11 +1,11 @@
 package net.theluckycoder.scriptcraft.component;
 
-
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.AppCompatEditText;
 import android.text.Editable;
@@ -28,9 +28,7 @@ import net.theluckycoder.scriptcraft.R;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static android.preference.PreferenceManager.getDefaultSharedPreferences;
-
-public class CodeEditText extends AppCompatEditText {
+public final class CodeEditText extends AppCompatEditText {
 
     private final Pattern PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b");
     private final Pattern PATTERN_CLASSES = Pattern.compile(
@@ -169,7 +167,7 @@ public class CodeEditText extends AppCompatEditText {
         paint.setStyle(Paint.Style.FILL);
         paint.setAntiAlias(true);
         paint.setColor(Color.parseColor("#bbbbbb"));
-        paint.setTextSize(getPixels(Integer.parseInt(getDefaultSharedPreferences(context).getString("font_size", "15"))));
+        paint.setTextSize(getPixels(Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "15"))));
         getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
             public void onGlobalLayout() {

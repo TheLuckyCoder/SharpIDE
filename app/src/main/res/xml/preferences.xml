@@ -26,11 +26,13 @@
             android:inputType="number" />
         <CheckBoxPreference
             android:title="@string/pref_line_numbers"
+            android:summary="@string/pref_line_numbers_desc"
             android:icon="@drawable/ic_pref_line_numbers"
             android:defaultValue="true"
             android:enabled="false" />
         <CheckBoxPreference
             android:title="@string/pref_symbols_bar"
+            android:summary="@string/pref_symbols_bar_desc"
             android:icon="@drawable/ic_symbols"
             android:defaultValue="true"
             android:key="show_symbols_bar" />

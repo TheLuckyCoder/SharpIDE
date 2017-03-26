@@ -8,7 +8,7 @@ import android.widget.ScrollView;
 import net.theluckycoder.scriptcraft.listener.OnBottomReachedListener;
 import net.theluckycoder.scriptcraft.listener.OnScrollListener;
 
-public class InteractiveScrollView extends ScrollView {
+public final class InteractiveScrollView extends ScrollView {
 
     private OnBottomReachedListener onBottomReachedListener;
     private OnScrollListener onScrollListener;

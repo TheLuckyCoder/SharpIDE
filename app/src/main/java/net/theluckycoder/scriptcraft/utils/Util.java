@@ -15,10 +15,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 
-public class Util {
-    public static final String mainFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/ScriptCraft/";
+public final class Util {
+
+    public static final String mainFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SharpIDE/";
     public static final String minifyFolder = mainFolder + "Minify/";
+    public static final String hiddenFolder = mainFolder + ".hidden/";
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
 
@@ -44,22 +47,19 @@ public class Util {
                 for (int i = 0; i < data.length; i++) {
                     if (fos != null)
                         fos.write(data[i].getBytes());
-                    if (i < data.length-1) {
+                    if (i < data.length - 1) {
                         if (fos != null)
                             fos.write("\n".getBytes());
                     }
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.e("IOException", e.getMessage(), e);
             }
-        }
-        finally {
+        } finally {
             try {
                 if (fos != null)
                     fos.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.e("IOException", e.getMessage(), e);
             }
         }
@@ -102,19 +102,32 @@ public class Util {
                             fos.write("\n".getBytes());
                     }
                 }
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.e("IOException", e.getMessage(), e);
             }
-        }
-        finally {
+        } finally {
             try {
                 if (fos != null)
                     fos.close();
-            }
-            catch (IOException e) {
+            } catch (IOException e) {
                 Log.e("IOException", e.getMessage(), e);
             }
+        }
+    }
+
+    public static void copyFile(File src, File dest) throws IOException {
+        if (src.getAbsoluteFile().toString().equals(dest.getAbsolutePath())) {
+            // Do nothing
+            Log.e("Copy File Error", "Same file");
+        } else {
+            InputStream inputStream = new FileInputStream(src);
+            OutputStream outputStream = new FileOutputStream(dest);
+            byte[] buff = new byte[1024];
+            int len;
+            while ((len=inputStream.read(buff)) > 0)
+                outputStream.write(buff, 0, len);
+            inputStream.close();
+            outputStream.close();
         }
     }
 

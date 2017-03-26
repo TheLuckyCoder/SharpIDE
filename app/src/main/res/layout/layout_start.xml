@@ -9,15 +9,6 @@
 
     <Button
         style="@style/Widget.AppCompat.Button.Borderless"
-        android:text="@string/new_file"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="18sp"
-        android:onClick="newFileClick"
-        android:textColor="#757575" />
-
-    <Button
-        style="@style/Widget.AppCompat.Button.Borderless"
         android:text="@string/no_file_open"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
