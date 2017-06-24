@@ -2,6 +2,7 @@ package net.theluckycoder.scriptcraft.utils;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
@@ -15,15 +16,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 
 public final class Util {
 
     public static final String mainFolder = Environment.getExternalStorageDirectory().getAbsolutePath() + "/SharpIDE/";
     public static final String minifyFolder = mainFolder + "Minify/";
-    public static final String hiddenFolder = mainFolder + ".hidden/";
 
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    public static final int REQUEST_EXTERNAL_STORAGE = 10;
 
     public static void verifyStoragePermissions(Activity activity) {
         // Check if we have write permission
@@ -115,24 +114,14 @@ public final class Util {
         }
     }
 
-    public static void copyFile(File src, File dest) throws IOException {
-        if (src.getAbsoluteFile().toString().equals(dest.getAbsolutePath())) {
-            // Do nothing
-            Log.e("Copy File Error", "Same file");
-        } else {
-            InputStream inputStream = new FileInputStream(src);
-            OutputStream outputStream = new FileOutputStream(dest);
-            byte[] buff = new byte[1024];
-            int len;
-            while ((len=inputStream.read(buff)) > 0)
-                outputStream.write(buff, 0, len);
-            inputStream.close();
-            outputStream.close();
-        }
+    public static void saveFileInternally(Context context, String fileName, String data) throws IOException {
+        FileOutputStream fOut = context.openFileOutput(fileName, Context.MODE_PRIVATE);
+        fOut.write(data.getBytes());
+        fOut.close();
     }
 
     public static void makeFolder(String folderPath) {
         //noinspection ResultOfMethodCallIgnored
-        new File(folderPath).mkdir();
+        new File(folderPath).mkdirs();
     }
 }

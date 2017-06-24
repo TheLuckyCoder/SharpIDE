@@ -1,14 +1,14 @@
 package net.theluckycoder.scriptcraft.component;
 
 import android.content.Context;
+import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
 import android.view.View;
-import android.widget.ScrollView;
 
 import net.theluckycoder.scriptcraft.listener.OnBottomReachedListener;
 import net.theluckycoder.scriptcraft.listener.OnScrollListener;
 
-public final class InteractiveScrollView extends ScrollView {
+public final class InteractiveScrollView extends NestedScrollView {
 
     private OnBottomReachedListener onBottomReachedListener;
     private OnScrollListener onScrollListener;
@@ -47,8 +47,7 @@ public final class InteractiveScrollView extends ScrollView {
         super.onScrollChanged(l, t, oldL, oldT);
     }
 
-    public void setOnBottomReachedListener(
-            OnBottomReachedListener onBottomReachedListener) {
+    public void setOnBottomReachedListener(OnBottomReachedListener onBottomReachedListener) {
         this.onBottomReachedListener = onBottomReachedListener;
     }
 

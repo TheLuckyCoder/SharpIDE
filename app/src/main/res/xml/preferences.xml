@@ -37,4 +37,12 @@
             android:defaultValue="true"
             android:key="show_symbols_bar" />
     </PreferenceCategory>
+    <PreferenceCategory android:title="@string/pref_category_about">
+        <Preference
+            android:title="App Made by The Lucky Coder"
+            android:key="author" />
+        <Preference
+            android:title="Open Source Licenses"
+            android:key="licenses" />
+    </PreferenceCategory>
 </PreferenceScreen>

@@ -23,7 +23,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/view_margin"
             android:layout_marginBottom="@dimen/view_margin"
-            android:onClick="selectMod"
+            android:onClick="selectFile"
             android:textSize="16sp" />
 
         <Button

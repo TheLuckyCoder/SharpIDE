@@ -3,11 +3,14 @@ package net.theluckycoder.scriptcraft;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
+import android.support.transition.TransitionManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatDelegate;
+import android.support.v7.widget.AppCompatEditText;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.webkit.ConsoleMessage;
 import android.webkit.JsPromptResult;
 import android.webkit.JsResult;
@@ -18,13 +21,7 @@ import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
-
 import net.theluckycoder.scriptcraft.utils.Util;
-
-import java.io.File;
-import java.io.IOException;
 
 public final class ConsoleActivity extends AppCompatActivity {
 
@@ -33,44 +30,40 @@ public final class ConsoleActivity extends AppCompatActivity {
     private boolean windowVisible = false;
     private LinearLayout windowLayout;
     private TextView messageTv;
+    private WebView webView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_console);
+
         if (getSupportActionBar() != null)
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        String htmlFileContent = "<!DOCTYPE html>\n<html>\n<head>\n<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>";
-        Util.saveFile(new File(Util.hiddenFolder + "index.html"), htmlFileContent.split(System.getProperty("line.separator")));
         try {
-            Util.copyFile(new File(getIntent().getStringExtra("filePath")), new File(Util.hiddenFolder + "main.js"));
-        } catch (IOException e) {
+            Util.saveFileInternally(this, "index.html", "<!DOCTYPE html>\n<html>\n<head>\n<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>");
+        } catch (Exception e) {
             e.printStackTrace();
         }
 
-        messageTv = (TextView) findViewById(R.id.consoleTextView);
-        windowLayout = (LinearLayout) findViewById(R.id.window);
+        messageTv = findViewById(R.id.consoleTextView);
+        windowLayout = findViewById(R.id.window);
         windowLayout.setVisibility(View.GONE);
-        WebView webView = (WebView) findViewById(R.id.webView);
+        webView = findViewById(R.id.webView);
         webView.loadUrl("about:blank");
-        String url = "file://" + Util.hiddenFolder + "index.html";
+        final String url = "file://" + getFilesDir().getAbsolutePath() + "/index.html";
         WebSettings webSettings = webView.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webView.setWebViewClient(new WebViewClient());
         webView.setWebChromeClient(new MyChromeClient());
         webView.loadUrl(url);
-
-        //Init AdMob
-        AdView mAdView = (AdView) findViewById(R.id.adView);
-        AdRequest adRequest = new AdRequest.Builder()
-                .setRequestAgent("android_studio:ad_template")
-                .build();
-        mAdView.loadAd(adRequest);
     }
 
     public void expand(View view) {
+        ViewGroup containerView = findViewById(R.id.container);
+        TransitionManager.beginDelayedTransition(containerView);
+
         FloatingActionButton fab = (FloatingActionButton) view;
         if (windowVisible) {
             windowVisible = false;
@@ -95,7 +88,7 @@ public final class ConsoleActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class MyChromeClient extends WebChromeClient {
+    private final class MyChromeClient extends WebChromeClient {
         @Override
         public boolean onJsAlert(WebView view, String url, String message, final JsResult result) {
             AlertDialog.Builder dialog = new AlertDialog.Builder(ConsoleActivity.this);
@@ -114,9 +107,12 @@ public final class ConsoleActivity extends AppCompatActivity {
 
         @Override
         public boolean onJsPrompt(WebView view, String url, String message, String defaultValue, final JsPromptResult result) {
+            final AppCompatEditText editText = new AppCompatEditText(ConsoleActivity.this);
+            editText.setText(defaultValue);
             AlertDialog.Builder dialog = new AlertDialog.Builder(ConsoleActivity.this);
             dialog.setTitle("JavaScript");
             dialog.setMessage(message);
+            dialog.setView(editText);
             dialog.setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
@@ -145,7 +141,7 @@ public final class ConsoleActivity extends AppCompatActivity {
                     result.confirm();
                 }
             });
-            dialog.setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
+            dialog.setNegativeButton(android.R.string.no, new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     result.cancel();
@@ -180,7 +176,7 @@ public final class ConsoleActivity extends AppCompatActivity {
 
         @Override
         public boolean onConsoleMessage(ConsoleMessage consoleMessage) {
-            messageTv.setText(consoleMessage.message());
+            messageTv.setText("Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message());
             return true;
         }
     }

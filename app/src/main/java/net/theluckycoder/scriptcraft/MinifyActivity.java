@@ -12,13 +12,12 @@ import android.widget.Toast;
 
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-import com.nbsp.materialfilepicker.MaterialFilePicker;
-import com.nbsp.materialfilepicker.ui.FilePickerActivity;
 
+import net.theluckycoder.filechooser.ChooserActivity;
+import net.theluckycoder.filechooser.FileChooser;
 import net.theluckycoder.scriptcraft.utils.Util;
 
 import java.io.File;
-import java.util.regex.Pattern;
 
 public final class MinifyActivity extends AppCompatActivity {
 
@@ -36,19 +35,17 @@ public final class MinifyActivity extends AppCompatActivity {
         Util.makeFolder(Util.mainFolder);
 
         //Init AdMob
-        AdView mAdView = (AdView) findViewById(R.id.adView);
+        AdView mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder()
                 .setRequestAgent("android_studio:ad_template")
                 .build();
         mAdView.loadAd(adRequest);
     }
 
-    public void selectMod(View view) {
-        new MaterialFilePicker()
-                .withActivity(this)
-                .withRequestCode(1)
-                .withFilter(Pattern.compile(".*\\.js$")) // Filtering files and directories by file name using regexp
-                .withHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
+    public void selectFile(View view) {
+        new FileChooser(this, 444)
+                .setFileExtension("js")
+                .showHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
                 .start();
     }
 
@@ -100,8 +97,8 @@ public final class MinifyActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 1 && resultCode == RESULT_OK) {
-            String filePath = data.getStringExtra(FilePickerActivity.RESULT_FILE_PATH);
+        if (requestCode == 444 && resultCode == RESULT_OK) {
+            String filePath = data.getStringExtra(ChooserActivity.RESULT_FILE_PATH);
             File file = new File(filePath);
             fileName = file.getName();
             this.filePath = file.getPath();

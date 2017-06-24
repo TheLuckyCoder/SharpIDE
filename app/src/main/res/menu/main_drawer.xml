@@ -18,7 +18,7 @@
                 android:title="@string/new_file" />
             <item
                 android:id="@+id/menu_file_info"
-                android:icon="@drawable/ic_info_outline"
+                android:icon="@drawable/ic_file_info"
                 android:title="@string/file_info" />
         </menu>
     </item>
