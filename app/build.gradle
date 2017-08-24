@@ -1,19 +1,27 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'io.fabric'
 
 android {
     compileSdkVersion 26
-    buildToolsVersion "26.0.0"
+    buildToolsVersion "26.0.1"
     defaultConfig {
         applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 15
-        versionName "1.4.3"
+        versionCode 17
+        versionName "1.4.4"
         resConfigs "en"
         vectorDrawables.useSupportLibrary = true
     }
     buildTypes {
+        debug {
+            ext.enableCrashlytics = false
+            resValue "string", "firebase_disabled", "true"
+            versionNameSuffix " DEBUG"
+        }
         release {
+            resValue "string", "firebase_disabled", "false"
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
@@ -21,20 +29,24 @@ android {
     }
 }
 
-def supportLibVersion = "26.0.0-beta2"
-
 dependencies {
-    compile project(':library')
-    compile "com.android.support:appcompat-v7:${supportLibVersion}"
-    compile "com.android.support:design:${supportLibVersion}"
-    compile "com.android.support:recyclerview-v7:${supportLibVersion}"
-    compile 'com.android.support.constraint:constraint-layout:1.0.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    compile 'com.google.firebase:firebase-core:11.0.1'
-    compile 'com.google.firebase:firebase-ads:11.0.1'
+    implementation(name:'filechooser', ext:'aar')
+    implementation 'com.android.support:appcompat-v7:26.0.1'
+    implementation 'com.android.support:design:26.0.1'
+    implementation 'com.android.support:recyclerview-v7:26.0.1'
+    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
 
-    compile 'de.psdev.licensesdialog:licensesdialog:1.8.2'
-    compile 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
+    implementation 'com.google.firebase:firebase-core:11.2.0'
+    implementation 'com.google.firebase:firebase-ads:11.2.0'
+
+    implementation 'de.psdev.licensesdialog:licensesdialog:1.8.2'
+    implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
+
+    implementation('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
+        transitive = true
+    }
 }
 
 apply plugin: 'com.google.gms.google-services'

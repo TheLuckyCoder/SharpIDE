@@ -1,12 +1,12 @@
-package net.theluckycoder.scriptcraft.component;
+package net.theluckycoder.sharpide.component;
 
 import android.content.Context;
 import android.support.v4.widget.NestedScrollView;
 import android.util.AttributeSet;
 import android.view.View;
 
-import net.theluckycoder.scriptcraft.listener.OnBottomReachedListener;
-import net.theluckycoder.scriptcraft.listener.OnScrollListener;
+import net.theluckycoder.sharpide.listener.OnBottomReachedListener;
+import net.theluckycoder.sharpide.listener.OnScrollListener;
 
 public final class InteractiveScrollView extends NestedScrollView {
 

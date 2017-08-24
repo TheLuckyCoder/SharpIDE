@@ -1,4 +1,4 @@
-package net.theluckycoder.scriptcraft.component;
+package net.theluckycoder.sharpide.component;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -23,7 +23,7 @@ import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.ViewTreeObserver;
 
-import net.theluckycoder.scriptcraft.R;
+import net.theluckycoder.sharpide.R;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,7 +44,7 @@ public final class CodeEditText extends AppCompatEditText {
                     "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
                     "null|true|false)\\b");
     private final Pattern PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*");
-    private final Pattern PATTERN_SYMBOLS = Pattern.compile("[\\+\\-\\*&\\^!:/\\|\\?<>=;,]");
+    private final Pattern PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,]");
 
     private Context context;
     private final transient Paint paint = new Paint();

@@ -1,4 +1,4 @@
-package net.theluckycoder.scriptcraft;
+package net.theluckycoder.sharpide;
 
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
@@ -38,15 +38,15 @@ import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.InterstitialAd;
 
-import net.theluckycoder.filechooser.ChooserActivity;
+import net.theluckycoder.filechooser.Chooser;
 import net.theluckycoder.filechooser.FileChooser;
-import net.theluckycoder.scriptcraft.component.CodeEditText;
-import net.theluckycoder.scriptcraft.component.InteractiveScrollView;
-import net.theluckycoder.scriptcraft.listener.FileChangeListener;
-import net.theluckycoder.scriptcraft.listener.OnBottomReachedListener;
-import net.theluckycoder.scriptcraft.listener.OnScrollListener;
-import net.theluckycoder.scriptcraft.utils.CustomTabWidthSpan;
-import net.theluckycoder.scriptcraft.utils.Util;
+import net.theluckycoder.sharpide.component.CodeEditText;
+import net.theluckycoder.sharpide.component.InteractiveScrollView;
+import net.theluckycoder.sharpide.listener.FileChangeListener;
+import net.theluckycoder.sharpide.listener.OnBottomReachedListener;
+import net.theluckycoder.sharpide.listener.OnScrollListener;
+import net.theluckycoder.sharpide.utils.CustomTabWidthSpan;
+import net.theluckycoder.sharpide.utils.Util;
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent;
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener;
 
@@ -64,6 +64,7 @@ public final class MainActivity extends AppCompatActivity
 
     static { AppCompatDelegate.setCompatVectorFromResourcesEnabled(true); }
 
+    private final Util mUtil = new Util();
     private CodeEditText contentView;
     private InteractiveScrollView scrollView;
     private LinearLayout startLayout;
@@ -80,20 +81,11 @@ public final class MainActivity extends AppCompatActivity
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setTheme(R.style.AppTheme_NoActionBar);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        Uri data = getIntent().getData();
-        if (data != null) {
-            try {
-                currentFile = new File(data.getPath());
-                new DocumentLoader().execute();
-            } catch (Exception e) {
-                Log.e("Bad Data", e.getMessage(), e);
-            }
-        }
 
         // Setup Views
         contentView = findViewById(R.id.fileContent);
@@ -134,8 +126,8 @@ public final class MainActivity extends AppCompatActivity
             }
         }
 
-        Util.verifyStoragePermissions(this);
-        Util.makeFolder(Util.mainFolder);
+        mUtil.verifyStoragePermissions(this, 10);
+        new File(mUtil.getMainFolder()).mkdirs();
 
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this, new KeyboardVisibilityEventListener() {
@@ -165,9 +157,9 @@ public final class MainActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         DrawerLayout drawer = findViewById(R.id.drawer_layout);
-        if (drawer.isDrawerOpen(GravityCompat.START)) {
+        if (drawer.isDrawerOpen(GravityCompat.START))
             drawer.closeDrawer(GravityCompat.START);
-        } else {
+        else {
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("quit_confirm", true)) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(this);
                 builder.setTitle(R.string.app_name);
@@ -237,31 +229,7 @@ public final class MainActivity extends AppCompatActivity
             if (currentFile == null) {
                 Toast.makeText(this, R.string.no_file_open, Toast.LENGTH_SHORT).show();
             } else {
-                if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("console_dialog_ask", true)) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                    builder.setTitle("Run Code");
-                    builder.setMessage("The Console is still in beta. It might give inconsistent results. Do you wish to continue?");
-                    builder.setPositiveButton(android.R.string.yes, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            startConsole();
-                        }
-                    });
-                    builder.setNegativeButton(android.R.string.no, null);
-                    builder.setNeutralButton("Don't ask again", new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            SharedPreferences.Editor editor = PreferenceManager.getDefaultSharedPreferences(MainActivity.this).edit();
-                            editor.putBoolean("console_dialog_ask", false);
-                            editor.apply();
-                            startConsole();
-                        }
-                    });
-                    builder.show();
-                } else {
-                    Intent intent = new Intent(MainActivity.this, ConsoleActivity.class).putExtra("filePath", currentFile.getAbsolutePath());
-                    startActivity(intent);
-                }
+                new DocumentSaver(true).execute();
             }
         } else if (id == R.id.menu_replace_all) {
             if (currentFile == null) {
@@ -325,9 +293,9 @@ public final class MainActivity extends AppCompatActivity
                     return;
                 }
 
-                File newFile = new File(Util.mainFolder + etFileName.getText().toString());
+                File newFile = new File(mUtil.getMainFolder() + etFileName.getText().toString());
                 if (!newFile.exists()) {
-                    Util.createFile(newFile);
+                    mUtil.createFile(newFile);
                     Toast.makeText(MainActivity.this, R.string.new_file_created, Toast.LENGTH_SHORT).show();
                 }
                 currentFile = newFile;
@@ -338,8 +306,8 @@ public final class MainActivity extends AppCompatActivity
     }
 
     public void openFileClick(View view) {
-        Util.makeFolder(Util.mainFolder);
-        new FileChooser(this, 555)
+        new File(mUtil.getMainFolder()).mkdirs();
+        new FileChooser(this, 100)
                 .setFileExtension("js")
                 .showHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
                 .start();
@@ -351,17 +319,6 @@ public final class MainActivity extends AppCompatActivity
                 .build();
 
         mInterstitialAd.loadAd(adRequest);
-    }
-
-    private void startConsole() {
-        try {
-            Util.saveFileInternally(this, "main.js", Util.loadFile(getIntent().getStringExtra("filePath")));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        new DocumentSaver().execute();
-        Intent intent = new Intent(this, ConsoleActivity.class).putExtra("filePath", currentFile.getAbsolutePath());
-        startActivity(intent);
     }
 
     private String getFileSize() {
@@ -386,8 +343,7 @@ public final class MainActivity extends AppCompatActivity
     private boolean isChanged() {
         if (FILE_CONTENT == null)
             return false;
-
-        if (FILE_CONTENT.length() >= CHUNK && FILE_CONTENT.substring(0, loaded.length()).equals(currentBuffer))
+        else if (FILE_CONTENT.length() >= CHUNK && FILE_CONTENT.substring(0, loaded.length()).equals(currentBuffer))
             return false;
         else if (FILE_CONTENT.equals(currentBuffer))
             return false;
@@ -449,7 +405,7 @@ public final class MainActivity extends AppCompatActivity
 
     private void saveFile() {
         if (isChanged())
-            new DocumentSaver().execute();
+            new DocumentSaver(false).execute();
         else
             Toast.makeText(getApplicationContext(), R.string.no_change_in_file, Toast.LENGTH_SHORT).show();
     }
@@ -528,6 +484,12 @@ public final class MainActivity extends AppCompatActivity
 
     private class DocumentSaver extends AsyncTask<Void, Void, Void> {
 
+        private final boolean startConsole;
+
+        DocumentSaver(boolean startConsole) {
+            this.startConsole = startConsole;
+        }
+
         @Override
         protected Void doInBackground(Void... voids) {
             BufferedWriter output = null;
@@ -550,6 +512,14 @@ public final class MainActivity extends AppCompatActivity
                 }
             }
 
+            if (startConsole)
+                try {
+                    mUtil.saveFileInternally(MainActivity.this, "main.js", FILE_CONTENT);
+                    mUtil.saveFileInternally(MainActivity.this, "index.html", "<!DOCTYPE html>\n<html>\n<head>\n<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
             return null;
         }
 
@@ -560,6 +530,9 @@ public final class MainActivity extends AppCompatActivity
             if (isFileChangeListenerAttached()) fileChangeListener.onFileSave();
 
             if (mInterstitialAd.isLoaded()) mInterstitialAd.show();
+
+            if (startConsole)
+                startActivity(new Intent(MainActivity.this, ConsoleActivity.class));
         }
     }
 
@@ -567,8 +540,8 @@ public final class MainActivity extends AppCompatActivity
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == 555 && resultCode == RESULT_OK) {
-            String filePath = data.getStringExtra(ChooserActivity.RESULT_FILE_PATH);
+        if (requestCode == 100 && resultCode == RESULT_OK) {
+            String filePath = data.getStringExtra(Chooser.RESULT_FILE_PATH);
             final File newFile = new File(filePath);
             if (newFile.length() >= 10485760) { // if the file is bigger than 10 MB
                 Toast.makeText(this, R.string.file_too_big, Toast.LENGTH_LONG).show();
@@ -596,12 +569,12 @@ public final class MainActivity extends AppCompatActivity
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
-            case Util.REQUEST_EXTERNAL_STORAGE:
+            case 10:
                 if (grantResults.length < 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
                     Toast.makeText(this, "External Storage permission is required in order for the app to work", Toast.LENGTH_SHORT).show();
                     finish();
                 } else
-                    Util.makeFolder(Util.mainFolder);
+                    new File(mUtil.getMainFolder()).mkdirs();
 
                 break;
         }
