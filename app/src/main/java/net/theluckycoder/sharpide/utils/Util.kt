@@ -14,7 +14,7 @@ class Util {
     val mainFolder = Environment.getExternalStorageDirectory().absolutePath + "/SharpIDE/"
     val minifyFolder = mainFolder + "Minify/"
 
-    fun verifyStoragePermissions(activity: Activity, permissionRequestCode : Int) {
+    fun verifyStoragePermissions(activity: Activity, permissionRequestCode: Int) {
         // Check if we have write permission
         val permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 
@@ -57,8 +57,8 @@ class Util {
         }
     }
 
-    private fun convertStreamToString(`is`: InputStream): String {
-        val reader = BufferedReader(InputStreamReader(`is`))
+    private fun convertStreamToString(input: InputStream): String {
+        val reader = BufferedReader(InputStreamReader(input))
         val sb = StringBuilder()
         val line = reader.readLine()
 
@@ -67,7 +67,7 @@ class Util {
         return sb.toString()
     }
 
-    fun loadFile(filePath: String): String? {
+    fun loadFile(filePath: String): String {
         val file = File(filePath)
         var fin: FileInputStream? = null
         try {
@@ -76,11 +76,11 @@ class Util {
             e.printStackTrace()
         }
 
-        var ret: String? = null
-        try {
-            ret = convertStreamToString(fin!!)
+        val result = try {
+            convertStreamToString(fin!!)
         } catch (e: Exception) {
             e.printStackTrace()
+            ""
         }
 
         try {
@@ -90,7 +90,7 @@ class Util {
             e.printStackTrace()
         }
 
-        return ret
+        return result
     }
 
     fun createFile(file: File) {

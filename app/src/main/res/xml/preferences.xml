@@ -3,17 +3,27 @@
     <PreferenceCategory android:title="@string/pref_category_general">
         <CheckBoxPreference
             android:title="@string/pref_load_last_file"
+            android:icon="@drawable/ic_pref_last_file"
             android:defaultValue="true"
             android:key="load_last_file" />
         <CheckBoxPreference
             android:title="@string/pref_quit_confirm"
+            android:summary="@string/pref_quit_confirm_desc"
+            android:icon="@drawable/ic_pref_exit_confirm"
             android:defaultValue="true"
             android:key="quit_confirm" />
         <CheckBoxPreference
             android:title="@string/pref_hidden_files"
             android:summary="@string/pref_hidden_files_desc"
-            android:key="show_hidden_files"
-            android:defaultValue="false" />
+            android:icon="@drawable/ic_pref_hidden_files"
+            android:defaultValue="false"
+            android:key="show_hidden_files" />
+        <EditTextPreference
+            android:title="New Files Name"
+            android:summary="Set the default name of new files"
+            android:icon="@drawable/ic_pref_new_files"
+            android:defaultValue="New File"
+            android:key="new_files_name" />
     </PreferenceCategory>
     <PreferenceCategory android:title="@string/pref_category_editor">
         <EditTextPreference
@@ -21,7 +31,7 @@
             android:summary="@string/pref_font_size_desc"
             android:icon="@drawable/ic_pref_font_size"
             android:key="font_size"
-            android:defaultValue="15"
+            android:defaultValue="16"
             android:dialogTitle="@string/pref_font_size"
             android:inputType="number" />
         <CheckBoxPreference

@@ -34,7 +34,6 @@
     <string name="replace_all">Replace All</string>
     <string name="text_to_replace">Text to replace</string>
     <string name="text_to_replace_with">Text to replace with</string>
-    <string name="new_file_js">New File.js</string>
     <string name="file_too_big">File is too big</string>
     <string name="no_change_in_file">No change in file</string>
     <string name="file_minify_ready">Minified file saved in SharpIDE/Minify folder</string>
@@ -51,10 +50,11 @@
     <string name="group_tools">Tools</string>
     <string name="group_app">App</string>
 
-    <string name="intro_description_first">SharpIDE is an simple and easy to use JavaScript IDE.</string>
+    <!--<string name="intro_description_first">SharpIDE is an simple and easy to use JavaScript IDE.</string>
     <string name="intro_title_permission">Permission required</string>
-    <string name="intro_description_permission">SharpIDE requires Storage permission in order to load and save files.</string>
+    <string name="intro_description_permission">SharpIDE requires Storage permission in order to load and save files.</string>-->
     <string name="title_activity_console">Console - SharpIDE</string>
     <string name="discard_changes_confirm">Are you sure that you want to discard the changes?</string>
     <string name="pref_category_about">About</string>
+    <string name="pref_quit_confirm_desc">Show confirm mDialog when trying to quit the app</string>
 </resources>

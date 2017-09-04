@@ -9,7 +9,6 @@
         android:id="@+id/file_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/new_file_js"
         android:hint="@string/file_name"/>
 
     <TextView
@@ -19,11 +18,13 @@
         android:text="@string/directory"/>
 
     <TextView
+        android:id="@+id/text_select_path"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:padding="16dp"
         android:background="#dddddd"
         android:textSize="16sp"
-        android:text="/sdcard/SharpIDE/" />
+        android:clickable="true"
+        android:focusable="true" />
 
 </LinearLayout>

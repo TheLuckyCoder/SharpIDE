@@ -4,12 +4,14 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.transition.TransitionManager
+import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
 import android.webkit.*
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -32,6 +34,8 @@ class ConsoleActivity : AppCompatActivity() {
         //WebView Setup
         val webView = findViewById<WebView>(R.id.webView)
         webView.clearCache(true)
+        webView.clearHistory()
+        webView.clearMatches()
         val url = "file://" + filesDir.absolutePath + "/index.html"
         val webSettings = webView.settings
         webSettings.javaScriptEnabled = true
@@ -47,20 +51,28 @@ class ConsoleActivity : AppCompatActivity() {
         TransitionManager.beginDelayedTransition(containerView)
 
         val fab = view as FloatingActionButton
-        if (mWindowsIsVisible) {
+        val rotation = if (mWindowsIsVisible) {
             mWindowsIsVisible = false
             windowLayout.visibility = View.GONE
-            fab.setImageResource(R.drawable.ic_expand)
+            0f
         } else {
             mWindowsIsVisible = true
             windowLayout.visibility = View.VISIBLE
-            fab.setImageResource(R.drawable.ic_expand_hide)
+            180f
         }
+        ViewCompat.animate(fab)
+                .rotation(rotation)
+                .withLayer()
+                .setDuration(300)
+                .setInterpolator(OvershootInterpolator())
+                .start()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home)
+        if (item.itemId == android.R.id.home) {
             onBackPressed()
+            return true
+        }
         return super.onOptionsItemSelected(item)
     }
 

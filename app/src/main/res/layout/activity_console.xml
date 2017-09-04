@@ -78,7 +78,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="expand"
-        app:srcCompat="@drawable/ic_expand"
-        app:pressedTranslationZ="12dp" />
+        app:srcCompat="@drawable/ic_expand" />
 
 </android.support.design.widget.CoordinatorLayout>
