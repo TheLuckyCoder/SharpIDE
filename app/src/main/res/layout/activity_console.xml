@@ -6,46 +6,24 @@
     android:layout_height="match_parent"
     tools:context=".ConsoleActivity">
 
-    <android.support.constraint.ConstraintLayout
+    <RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <WebView
             android:id="@+id/webView"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginBottom="0dp"
-            android:layout_marginEnd="0dp"
-            android:layout_marginLeft="0dp"
-            android:layout_marginRight="0dp"
-            android:layout_marginStart="0dp"
-            app:layout_constraintBottom_toTopOf="@+id/window"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.0"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            tools:layout_constraintLeft_creator="1"
-            tools:layout_constraintRight_creator="1"
-            tools:layout_constraintTop_creator="1" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_above="@id/window" />
 
         <LinearLayout
             android:id="@+id/window"
-            android:layout_width="0dp"
-            android:layout_height="200dp"
-            android:layout_marginEnd="0dp"
-            android:layout_marginLeft="0dp"
-            android:layout_marginRight="0dp"
-            android:layout_marginStart="0dp"
-            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="150dp"
+            android:layout_alignParentBottom="true"
             android:background="@android:color/white"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            tools:layout_constraintBottom_creator="1"
-            tools:layout_constraintLeft_creator="1"
-            tools:layout_constraintRight_creator="1">
+            android:orientation="vertical">
 
             <View
                 android:layout_width="match_parent"
@@ -55,10 +33,10 @@
             <android.support.v4.widget.NestedScrollView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:paddingTop="@dimen/console_margin"
                 android:paddingBottom="@dimen/console_margin"
                 android:paddingLeft="@dimen/activity_margin"
-                android:paddingRight="@dimen/activity_margin">
+                android:paddingRight="@dimen/activity_margin"
+                android:paddingTop="@dimen/console_margin">
 
                 <TextView
                     android:id="@+id/consoleTextView"
@@ -69,7 +47,7 @@
             </android.support.v4.widget.NestedScrollView>
 
         </LinearLayout>
-    </android.support.constraint.ConstraintLayout>
+    </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab"

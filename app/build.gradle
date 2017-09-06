@@ -9,7 +9,7 @@ android {
         applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 18
+        versionCode 19
         versionName "1.4.5"
         resConfigs "en"
         vectorDrawables.useSupportLibrary = true
@@ -17,31 +17,33 @@ android {
     buildTypes {
         debug {
             ext.enableCrashlytics = false
-            resValue "string", "firebase_disabled", "true"
+            resValue "string", "debug_build", "true"
             versionNameSuffix " DEBUG"
         }
         release {
-            resValue "string", "firebase_disabled", "false"
+            resValue "string", "debug_build", "false"
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_7
+        targetCompatibility JavaVersion.VERSION_1_7
     }
 }
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    implementation project(':filechooser-release')
+    implementation project(':materialchooser-release')
     implementation 'com.android.support:appcompat-v7:26.0.2'
     implementation 'com.android.support:design:26.0.2'
-    implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     implementation 'com.google.firebase:firebase-core:11.2.0'
     implementation 'com.google.firebase:firebase-ads:11.2.0'
 
     implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
-
     implementation('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
         transitive = true
     }

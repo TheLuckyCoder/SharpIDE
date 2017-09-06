@@ -48,7 +48,7 @@
             android:value="ea25ea11669561e79d0807ee3d412d48855da448" />
         <meta-data
             android:name="firebase_analytics_collection_deactivated"
-            android:value="@string/firebase_disabled" />
+            android:value="@string/debug_build" />
     </application>
 
 </manifest>

@@ -47,7 +47,7 @@ class ConsoleActivity : AppCompatActivity() {
     }
 
     fun expand(view: View) {
-        val containerView = findViewById<ViewGroup>(R.id.container)
+        val containerView: ViewGroup = findViewById(R.id.container)
         TransitionManager.beginDelayedTransition(containerView)
 
         val fab = view as FloatingActionButton
@@ -63,7 +63,7 @@ class ConsoleActivity : AppCompatActivity() {
         ViewCompat.animate(fab)
                 .rotation(rotation)
                 .withLayer()
-                .setDuration(300)
+                .setDuration(400)
                 .setInterpolator(OvershootInterpolator())
                 .start()
     }

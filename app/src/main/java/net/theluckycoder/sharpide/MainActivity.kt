@@ -23,7 +23,6 @@ import android.support.v7.widget.Toolbar
 import android.text.Editable
 import android.text.Spannable
 import android.text.TextWatcher
-import android.util.Log
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
@@ -225,7 +224,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         textSelectPath.text = mLastSavePath
         textSelectPath.setOnClickListener {
             Chooser(this@MainActivity, 200)
-                    .setSelectFile(false)
+                    .setChooserType(Chooser.ChooserType.FOLDER_CHOOSER)
                     .setStartPath(mUtil.mainFolder)
                     .showHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this@MainActivity)
                             .getBoolean("show_hidden_files", false))
@@ -254,7 +253,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         Chooser(this, 100)
                 .setFileExtension("js")
                 .setStartPath(mLastSavePath)
-                .showHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this).getBoolean("show_hidden_files", false))
+                .showHiddenFiles(PreferenceManager.getDefaultSharedPreferences(this)
+                        .getBoolean("show_hidden_files", false))
                 .start()
     }
 
@@ -454,18 +454,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     }
                     mFileContent = sb.toString()
                     return mFileContent as String
-                } catch (ioe: IOException) {
-                    ioe.printStackTrace()
+                } catch (e: IOException) {
+                    e.printStackTrace()
                 } finally {
                     try {
                         br.close()
                     } catch (e: IOException) {
-                        Log.e("FileNotFoundException", e.message, e)
+                        e.printStackTrace()
                     }
 
                 }
             } catch (e: FileNotFoundException) {
-                Log.e("FileNotFoundException", e.message, e)
+                e.printStackTrace()
             }
 
             return ""
