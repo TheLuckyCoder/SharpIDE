@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide.component
+package net.theluckycoder.sharpide.widget
 
 import android.content.Context
 import android.graphics.Canvas
@@ -21,23 +21,25 @@ import java.util.regex.Pattern
 
 class CodeEditText : AppCompatEditText {
 
-    private val PATTERN_CLASSES = Pattern.compile(
-            "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
-                    "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
-                    "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
-                    "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
-                    "Reflect|Proxy|Intl)\\b",
-            Pattern.MULTILINE)
-    private val PATTERN_CUSTOM_CLASSES = Pattern.compile(
-            "(\\w+[ .])")
-    private val PATTERN_KEYWORDS = Pattern.compile(
-            "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
-                    "else|export|extends|finally|for|function|if|import|in|instanceof|" +
-                    "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
-                    "null|true|false)\\b")
-    private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
-    private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
-    private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
+    companion object {
+        private val PATTERN_CLASSES = Pattern.compile(
+                "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
+                        "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
+                        "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
+                        "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
+                        "Reflect|Proxy|Intl)\\b",
+                Pattern.MULTILINE)
+        private val PATTERN_CUSTOM_CLASSES = Pattern.compile(
+                "(\\w+[ .])")
+        private val PATTERN_KEYWORDS = Pattern.compile(
+                "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
+                        "else|export|extends|finally|for|function|if|import|in|instanceof|" +
+                        "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
+                        "null|true|false)\\b")
+        private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
+        private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
+        private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
+    }
 
     private val mContext: Context
     @Transient private val paint = Paint()
@@ -113,8 +115,7 @@ class CodeEditText : AppCompatEditText {
                     dStart < dest.length) {
                 val c = source[start]
 
-                if (c == '\n')
-                    return@InputFilter autoIndent(source, dest, dStart, dEnd)
+                if (c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
             }
 
             source
@@ -123,13 +124,9 @@ class CodeEditText : AppCompatEditText {
         addTextChangedListener(
                 object : TextWatcher {
 
-                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) = Unit
 
-                    }
-
-                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-
-                    }
+                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
 
                     override fun afterTextChanged(e: Editable) {
                         cancelUpdate()
@@ -140,7 +137,13 @@ class CodeEditText : AppCompatEditText {
                     }
                 })
 
-        setSyntaxColors(context)
+        // Set Syntax Colors
+        colorNumber = ContextCompat.getColor(context, R.color.syntax_number)
+        colorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
+        colorClasses = ContextCompat.getColor(context, R.color.syntax_class)
+        colorComment = ContextCompat.getColor(context, R.color.syntax_comment)
+        colorString = ContextCompat.getColor(context, R.color.syntax_string)
+
         val bgPaint = Paint()
         bgPaint.style = Paint.Style.FILL
         bgPaint.color = Color.parseColor("#eeeeee")
@@ -150,14 +153,6 @@ class CodeEditText : AppCompatEditText {
         paint.color = Color.parseColor("#bbbbbb")
         paint.textSize = getPixels(Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "16")))
         viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
-    }
-
-    private fun setSyntaxColors(context: Context) {
-        colorNumber = ContextCompat.getColor(context, R.color.syntax_number)
-        colorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
-        colorClasses = ContextCompat.getColor(context, R.color.syntax_class)
-        colorComment = ContextCompat.getColor(context, R.color.syntax_comment)
-        colorString = ContextCompat.getColor(context, R.color.syntax_string)
     }
 
     private fun cancelUpdate() {

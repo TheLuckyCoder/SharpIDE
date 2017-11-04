@@ -7,7 +7,7 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:id="@+id/startLayout"
-    tools:context=".MainActivity">
+    tools:context=".activities.MainActivity">
 
     <Button
         style="@style/Widget.AppCompat.Button.Borderless"

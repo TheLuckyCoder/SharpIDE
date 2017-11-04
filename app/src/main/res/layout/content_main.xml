@@ -5,18 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".MainActivity"
+    tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <include layout="@layout/layout_start" />
+    <include layout="@layout/partial_start" />
 
-    <net.theluckycoder.sharpide.component.InteractiveScrollView
+    <net.theluckycoder.sharpide.widget.InteractiveScrollView
         android:id="@+id/mainScrollView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone">
 
-        <net.theluckycoder.sharpide.component.CodeEditText
+        <net.theluckycoder.sharpide.widget.CodeEditText
             android:id="@+id/fileContent"
             android:background="@android:color/transparent"
             android:focusable="false"
@@ -25,8 +25,8 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent">
             <requestFocus/>
-        </net.theluckycoder.sharpide.component.CodeEditText>
-    </net.theluckycoder.sharpide.component.InteractiveScrollView>
+        </net.theluckycoder.sharpide.widget.CodeEditText>
+    </net.theluckycoder.sharpide.widget.InteractiveScrollView>
 
     <HorizontalScrollView
         android:id="@+id/symbolScrollView"

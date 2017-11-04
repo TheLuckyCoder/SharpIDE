@@ -2,31 +2,38 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
 
+ext.versionMajor = 1
+ext.versionMinor = 4
+ext.versionPatch = 6
+
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    compileSdkVersion 27
+    buildToolsVersion "27.0.0"
     defaultConfig {
         applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion 14
-        targetSdkVersion 26
-        versionCode 19
-        versionName "1.4.5"
+        targetSdkVersion 27
+        versionName versionMajor + "." + versionMinor + "." + versionPatch
+        versionCode versionMajor * 100 + versionMinor * 10 + versionPatch
         resConfigs "en"
         vectorDrawables.useSupportLibrary = true
     }
+
     buildTypes {
         debug {
             ext.enableCrashlytics = false
-            resValue "string", "debug_build", "true"
+            ext.alwaysUpdateBuildId = false
+            resValue "bool", "debug_build", "true"
             versionNameSuffix " DEBUG"
         }
         release {
-            resValue "string", "debug_build", "false"
+            resValue "bool", "debug_build", "false"
             minifyEnabled true
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -37,14 +44,14 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
     implementation project(':materialchooser-release')
-    implementation 'com.android.support:appcompat-v7:26.0.2'
-    implementation 'com.android.support:design:26.0.2'
-    implementation 'com.google.firebase:firebase-core:11.2.0'
-    implementation 'com.google.firebase:firebase-ads:11.2.0'
+    implementation 'com.android.support:appcompat-v7:27.0.0'
+    implementation 'com.android.support:design:27.0.0'
+    implementation 'com.google.firebase:firebase-core:11.4.2'
+    implementation 'com.google.firebase:firebase-ads:11.4.2'
 
     implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
-    implementation('com.crashlytics.sdk.android:crashlytics:2.6.8@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.7.0@aar') {
         transitive = true
     }
 }

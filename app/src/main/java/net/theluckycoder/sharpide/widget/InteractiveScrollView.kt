@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide.component
+package net.theluckycoder.sharpide.widget
 
 import android.content.Context
 import android.util.AttributeSet
@@ -40,10 +40,6 @@ class InteractiveScrollView : ScrollView {
 
     fun setOnBottomReachedListener(onBottomReachedListener: OnBottomReachedListener?) {
         this.onBottomReachedListener = onBottomReachedListener
-    }
-
-    fun setOnScrollListener(onScrollListener: OnScrollListener?) {
-        this.onScrollListener = onScrollListener
     }
 
 }

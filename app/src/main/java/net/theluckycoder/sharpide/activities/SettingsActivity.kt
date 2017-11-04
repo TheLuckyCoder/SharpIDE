@@ -1,8 +1,9 @@
-package net.theluckycoder.sharpide
+package net.theluckycoder.sharpide.activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
+import net.theluckycoder.sharpide.SettingsFragment
 
 class SettingsActivity : AppCompatActivity() {
 
