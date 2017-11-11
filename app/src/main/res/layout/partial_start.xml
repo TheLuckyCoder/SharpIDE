@@ -6,7 +6,7 @@
     android:gravity="center"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:id="@+id/startLayout"
+    android:id="@+id/layout_start"
     tools:context=".activities.MainActivity">
 
     <Button

@@ -17,7 +17,7 @@
         android:visibility="gone">
 
         <net.theluckycoder.sharpide.widget.CodeEditText
-            android:id="@+id/fileContent"
+            android:id="@+id/edit_main"
             android:background="@android:color/transparent"
             android:focusable="false"
             android:imeOptions="flagNoExtractUi"

@@ -34,7 +34,7 @@ import java.io.*
 import java.util.regex.Pattern
 
 
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UpdateChecker.OnUpdateNeededListener {
 
     private companion object {
         private const val CHUNK = 20000
@@ -42,10 +42,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private const val CHANGE_PATH_REQUEST_CODE = 151
     }
 
-    private lateinit var codeEditText: CodeEditText
-    private lateinit var scrollView: InteractiveScrollView
-    private lateinit var startLayout: LinearLayout
-    private lateinit var symbolScrollView: HorizontalScrollView
+    private val codeEditText: CodeEditText by bind(R.id.edit_main)
+    private val scrollView: InteractiveScrollView by bind(R.id.mainScrollView)
+    private val startLayout: LinearLayout by bind(R.id.layout_start)
+    private val symbolScrollView: HorizontalScrollView by bind(R.id.symbolScrollView)
 
     private val mAds = Ads(this)
     private var mDialog: AlertDialog? = null
@@ -62,17 +62,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
-        // Setup Views
-        codeEditText = findViewById(R.id.fileContent)
-        startLayout = findViewById(R.id.startLayout)
-
+        // Views
         val symbolLayout: LinearLayout = findViewById(R.id.symbolLayout)
         for (i in 0 until symbolLayout.childCount)
             symbolLayout.getChildAt(i).setOnClickListener({ view -> codeEditText.text.insert(codeEditText.selectionStart, (view as TextView).text.string) })
 
-        scrollView = findViewById(R.id.mainScrollView)
         scrollView.setOnBottomReachedListener(null)
-        symbolScrollView = findViewById(R.id.symbolScrollView)
 
         // Set up navigation drawer
         val drawer: DrawerLayout = findViewById(R.id.drawer_layout)
@@ -103,22 +98,34 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
             if (PreferenceManager.getDefaultSharedPreferences(this@MainActivity).getBoolean("show_symbols_bar", true)) {
-                if (isOpen)
-                    symbolScrollView.visibility = View.VISIBLE
-                else
-                    symbolScrollView.visibility = View.GONE
+                symbolScrollView.visibility = if (isOpen) View.VISIBLE else View.GONE
             }
         }
+
+        // Setup UpdateChecker
+        UpdateChecker(this).check()
 
         // Setup ads
         mAds.loadInterstitial()
     }
 
+    override fun onUpdateNeeded() {
+        AlertDialog.Builder(this)
+                .setTitle(R.string.updater_new_version)
+                .setMessage(R.string.updater_new_update_desc)
+                .setPositiveButton(R.string.updater_update, { _, _ ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=net.theluckycoder.scriptcraft"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }).setNegativeButton(getString(R.string.updater_no), null)
+                .show()
+    }
+
     override fun onBackPressed() {
         val drawer: DrawerLayout = findViewById(R.id.drawer_layout)
-        if (drawer.isDrawerOpen(GravityCompat.START))
+        if (drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START)
-        else {
+        } else {
             if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("quit_confirm", true)) {
                 AlertDialog.Builder(this)
                         .setTitle(R.string.app_name)
@@ -126,8 +133,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .setPositiveButton(android.R.string.yes) { _, _ -> finish() }
                         .setNegativeButton(android.R.string.no, null)
                         .show()
-            } else
-                finish()
+            } else {
+                return super.onBackPressed()
+            }
         }
     }
 
@@ -160,8 +168,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .setPositiveButton(R.string.replace_all) { _, _ ->
                             val findText: EditText = dialogView.findViewById(R.id.findText)
                             val replaceText: EditText = dialogView.findViewById(R.id.replaceText)
+
                             val newText = codeEditText.text.string.replace(findText.text.string, replaceText.text.string)
                             codeEditText.setText(newText)
+
                             mAds.showInterstitial()
                         }.setNegativeButton(android.R.string.cancel, null)
                         .show()
@@ -253,10 +263,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return ""
     }
 
-    private fun getFileInfo(): String {
-        return "Size: " + getFileSize() + "\n" +
-                "Path: " + mCurrentFile!!.path + "\n"
-    }
+    private fun getFileInfo() = "Size: ${getFileSize()}\nPath: ${mCurrentFile!!.path}\n"
 
     private fun newFile() {
         val dialogBuilder = AlertDialog.Builder(this)
@@ -288,7 +295,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             val newFile = File(textSelectPath.text.string + etFileName.text.string)
             if (!newFile.exists()) {
-                newFile.createFile()
+                newFile.writeText("")
                 Toast.makeText(this@MainActivity, R.string.new_file_created, Toast.LENGTH_SHORT).show()
             }
             mCurrentFile = newFile
@@ -400,7 +407,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     /*** Async Classes  ***/
-    private inner class LoadTask : AsyncTask<Void, Void, String>() {
+    private inner class LoadTask internal constructor() : AsyncTask<Void, Void, String>() {
 
         override fun onPreExecute() {
             super.onPreExecute()
@@ -414,7 +421,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val br = BufferedReader(InputStreamReader(dis))
                 try {
                     val sb = StringBuilder()
-                    var line: String? = br.readLine()
+                    var line = br.readLine()
 
                     while (line != null) {
                         sb.append(line).append("\n")
@@ -487,8 +494,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             mAds.showInterstitial()
 
-            if (startConsole)
-                startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
+            if (startConsole) startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
         }
     }
 }

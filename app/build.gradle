@@ -4,7 +4,7 @@ apply plugin: 'io.fabric'
 
 ext.versionMajor = 1
 ext.versionMinor = 4
-ext.versionPatch = 6
+ext.versionPatch = 7
 
 android {
     compileSdkVersion 27
@@ -46,12 +46,13 @@ dependencies {
     implementation project(':materialchooser-release')
     implementation 'com.android.support:appcompat-v7:27.0.0'
     implementation 'com.android.support:design:27.0.0'
-    implementation 'com.google.firebase:firebase-core:11.4.2'
-    implementation 'com.google.firebase:firebase-ads:11.4.2'
+    implementation 'com.google.firebase:firebase-core:11.6.0'
+    implementation 'com.google.firebase:firebase-config:11.6.0'
+    implementation 'com.google.firebase:firebase-ads:11.6.0'
 
     implementation 'de.psdev.licensesdialog:licensesdialog:1.8.3'
     implementation 'net.yslibrary.keyboardvisibilityevent:keyboardvisibilityevent:2.1.0'
-    implementation('com.crashlytics.sdk.android:crashlytics:2.7.0@aar') {
+    implementation('com.crashlytics.sdk.android:crashlytics:2.7.1@aar') {
         transitive = true
     }
 }

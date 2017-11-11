@@ -11,7 +11,9 @@ import android.widget.Button
 import android.widget.Toast
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.*
+import net.theluckycoder.sharpide.utils.Ads
+import net.theluckycoder.sharpide.utils.Constants
+import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import java.io.File
 
 
@@ -69,7 +71,7 @@ class MinifyActivity : AppCompatActivity() {
 
     fun obfuscate(view: View) {
         val file = File(mFilePath)
-        var fileContent = file.loadFile()
+        var fileContent = file.readText()
 
         if (fileContent == "") {
             Snackbar.make(view, R.string.error_empty_file, Snackbar.LENGTH_SHORT).show()
@@ -89,7 +91,7 @@ class MinifyActivity : AppCompatActivity() {
         .replace("\n", "").replace("\t", "")
 
         val newFile = File(Constants.minifyFolder + file.name)
-        newFile.save(fileContent.split(System.getProperty("line.separator").toRegex()).toTypedArray())
+        newFile.writeText(fileContent)
 
         Toast.makeText(this, R.string.file_minify_ready, Toast.LENGTH_LONG).show()
     }
