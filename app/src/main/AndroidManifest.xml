@@ -33,14 +33,14 @@
         </activity>
         <activity
             android:name=".activities.MinifyActivity"
-            android:label="@string/minify_tool" />
+            android:label="@string/menu_minify_tool" />
         <activity
             android:name=".activities.SettingsActivity"
-            android:label="@string/settings" />
+            android:label="@string/title_settings" />
         <activity
             android:name=".activities.ConsoleActivity"
             android:configChanges="orientation|screenSize"
-            android:label="@string/title_activity_console" />
+            android:label="@string/title_console" />
 
         <meta-data
             android:name="io.fabric.ApiKey"

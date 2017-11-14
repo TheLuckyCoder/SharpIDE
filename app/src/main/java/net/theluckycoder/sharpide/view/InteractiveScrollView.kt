@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide.widget
+package net.theluckycoder.sharpide.view
 
 import android.content.Context
 import android.util.AttributeSet
@@ -19,8 +19,7 @@ class InteractiveScrollView : ScrollView {
     constructor(context: Context) : super(context)
 
     override fun onScrollChanged(l: Int, t: Int, oldL: Int, oldT: Int) {
-        if (onScrollListener == null || onBottomReachedListener == null)
-            return
+        if (onScrollListener == null || onBottomReachedListener == null) return
 
         onScrollListener?.onScrolled()
 

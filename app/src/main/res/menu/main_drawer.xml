@@ -6,38 +6,57 @@
         <menu>
             <item
                 android:id="@+id/menu_save"
-                android:icon="@drawable/ic_save"
-                android:title="@string/save_file" />
+                android:icon="@drawable/ic_menu_save"
+                android:title="@string/menu_save_file" />
+            <item
+                android:id="@+id/menu_save_as"
+                android:icon="@drawable/ic_menu_save"
+                android:title="@string/menu_save_file_as" />
             <item
                 android:id="@+id/menu_open"
-                android:icon="@drawable/ic_open"
-                android:title="@string/open_file" />
+                android:icon="@drawable/ic_menu_open"
+                android:title="@string/menu_open_file" />
             <item
                 android:id="@+id/menu_new"
-                android:icon="@drawable/ic_new_file"
-                android:title="@string/new_file" />
+                android:icon="@drawable/ic_menu_new_file"
+                android:title="@string/menu_new_file" />
             <item
                 android:id="@+id/menu_file_info"
-                android:icon="@drawable/ic_file_info"
-                android:title="@string/file_info" />
+                android:icon="@drawable/ic_menu_info"
+                android:title="@string/menu_file_info" />
         </menu>
     </item>
+    <item
+        android:title="@string/group_search"
+        android:checkableBehavior="none">
+        <menu>
+            <item
+                android:id="@+id/menu_find"
+                android:icon="@drawable/ic_menu_search"
+                android:title="@string/menu_find" />
+            <item
+                android:id="@+id/menu_go_to_line"
+                android:icon="@drawable/ic_menu_go_to_line"
+                android:title="@string/menu_go_to_line" />
+            <item
+                android:id="@+id/menu_replace_all"
+                android:icon="@drawable/ic_menu_replace"
+                android:title="@string/replace_all" />
+        </menu>
+    </item>
+
     <item
         android:title="@string/group_tools"
         android:checkableBehavior="none">
         <menu>
             <item
                 android:id="@+id/menu_run"
-                android:icon="@drawable/ic_run"
-                android:title="@string/action_run" />
-            <item
-                android:id="@+id/menu_replace_all"
-                android:icon="@drawable/ic_find_replace"
-                android:title="@string/replace_all" />
+                android:icon="@drawable/ic_menu_run"
+                android:title="@string/menu_run" />
             <item
                 android:id="@+id/menu_minify"
-                android:icon="@drawable/ic_minify"
-                android:title="@string/minify_tool" />
+                android:icon="@drawable/ic_menu_minify"
+                android:title="@string/menu_minify_tool" />
         </menu>
     </item>
     <item
@@ -47,11 +66,11 @@
             <item
                 android:id="@+id/menu_rate"
                 android:icon="@drawable/ic_rate_review"
-                android:title="@string/action_rate" />
+                android:title="@string/menu_rate_app" />
             <item
                 android:id="@+id/menu_settings"
-                android:icon="@drawable/ic_settings"
-                android:title="@string/settings" />
+                android:icon="@drawable/ic_menu_settings"
+                android:title="@string/title_settings" />
         </menu>
     </item>
 </menu>

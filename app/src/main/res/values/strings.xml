@@ -2,65 +2,71 @@
     <string name="app_name" translatable="false">SharpIDE</string>
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1279472163660969/8935487535</string>
 
-    <string name="new_file">New File</string>
-    <string name="file_info">File Information</string>
-    <string name="save_file">Save File</string>
+    <string name="title_settings">Settings</string>
+    <string name="title_console">Console</string>
     <string name="file_saved">File Saved</string>
     <string name="file_name">File Name</string>
     <string name="new_file_created">New file created</string>
-    <string name="create_new_file">"Create New File: "</string>
-    <string name="loading_file">Loading File…</string>
-    <string name="invalid_file_name">Invalid File name</string>
-    <string name="open_file">Open File</string>
+    <string name="create_new_file">Create New File</string>
+    <string name="invalid_file_name">Invalid File Name</string>
     <string name="action_close">Close</string>
-    <string name="no_file_open">No file open</string>
     <string name="error_empty_file">File is empty</string>
-    <string name="minify_tool">Minify Tool</string>
     <string name="select_file">Select File</string>
     <string name="action_minify">Minify</string>
-    <string name="action_run">Run</string>
     <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file. Also some of the whitespaces</string>
     <string name="directory">Directory:</string>
     <string name="no_errors">No Errors Found</string>
+    <string name="quit_confirm">Are you sure you want to quit?</string>
+    <string name="replace_all">Replace All</string>
+    <string name="text_to_replace">Text to replace</string>
+    <string name="text_to_replace_with">Text to replace with</string>
+    <string name="text_to_find">Text to find</string>
+    <string name="ignore_case">Ignore Case</string>
+    <string name="file_too_big">File is too big</string>
+    <string name="file_minify_ready">Minified file saved in SharpIDE/Minify folder</string>
+    <string name="action_apply">Apply</string>
 
+    <!-- Settings -->
+    <string name="pref_category_general">General</string>
+    <string name="pref_category_editor">Editor</string>
+    <string name="pref_category_about">About</string>
+    <string name="pref_load_last_file">Load last opened file</string>
+    <string name="pref_quit_confirm">Confirm exit from app</string>
+    <string name="pref_quit_confirm_desc">Show confirm dialog when trying to quit the app</string>
+    <string name="pref_hidden_files">Show hidden files</string>
+    <string name="pref_hidden_files_desc">Show hidden files and folders when choosing a file</string>
+    <string name="pref_new_files_name">New Files Name</string>
+    <string name="pref_new_files_name_desc">Set the default name of new files</string>
     <string name="pref_font_size">Editor Font Size</string>
     <string name="pref_font_size_desc">Specify the font size of the editor</string>
-    <string name="settings">Settings</string>
-    <string name="exit_confirmation">Are you sure you want to quit?</string>
     <string name="pref_line_numbers">Show line numbers</string>
     <string name="pref_line_numbers_desc">Show line numbers in the editor</string>
     <string name="pref_symbols_bar">Show symbol bar</string>
     <string name="pref_symbols_bar_desc">Show symbol bar while writing</string>
-    <string name="replace_all">Replace All</string>
-    <string name="text_to_replace">Text to replace</string>
-    <string name="text_to_replace_with">Text to replace with</string>
-    <string name="file_too_big">File is too big</string>
-    <string name="no_change_in_file">No change in file</string>
-    <string name="file_minify_ready">Minified file saved in SharpIDE/Minify folder</string>
-    <string name="action_rate">Rate App</string>
-    <string name="pref_hidden_files">Show hidden files</string>
-    <string name="pref_hidden_files_desc">Show hidden files and folders when choosing a file</string>
-    <string name="file_modified">File has been modified</string>
 
-    <string name="pref_quit_confirm">Confirm exit from app</string>
-    <string name="pref_load_last_file">Load last opened file</string>
-    <string name="pref_category_general">General</string>
-    <string name="pref_category_editor">Editor</string>
+    <!-- Menu -->
     <string name="group_files">Files</string>
     <string name="group_tools">Tools</string>
     <string name="group_app">App</string>
-
-    <!--<string name="intro_description_first">SharpIDE is an simple and easy to use JavaScript IDE.</string>
-    <string name="intro_title_permission">Permission required</string>
-    <string name="intro_description_permission">SharpIDE requires Storage permission in order to load and save files.</string>-->
-    <string name="title_activity_console">Console</string>
-    <string name="discard_changes_confirm">Are you sure that you want to discard the changes?</string>
-    <string name="pref_category_about">About</string>
-    <string name="pref_quit_confirm_desc">Show confirm mDialog when trying to quit the app</string>
+    <string name="group_search">Search</string>
+    <string name="menu_new_file">New File</string>
+    <string name="menu_file_info">File Information</string>
+    <string name="menu_save_file">Save File</string>
+    <string name="menu_save_file_as">Save File As</string>
+    <string name="menu_open_file">Open File</string>
+    <string name="menu_find">Find</string>
+    <string name="menu_run">Run</string>
+    <string name="menu_minify_tool">Minify Tool</string>
+    <string name="menu_go_to_line">Go To Line</string>
+    <string name="menu_rate_app">Rate App</string>
 
     <!-- Updater -->
     <string name="updater_new_version">New version available</string>
     <string name="updater_new_update_desc">Please update the app to the newest version, to have the latest features!</string>
     <string name="updater_update">Update</string>
     <string name="updater_no">No, thanks</string>
+
+    <!--<string name="intro_description_first">SharpIDE is an simple and easy to use JavaScript IDE.</string>
+    <string name="intro_title_permission">Permission required</string>
+    <string name="intro_description_permission">SharpIDE requires Storage permission in order to load and save files.</string>-->
 </resources>

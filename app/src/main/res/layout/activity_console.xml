@@ -12,7 +12,7 @@
         android:layout_height="match_parent">
 
         <WebView
-            android:id="@+id/webView"
+            android:id="@+id/web_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@id/window" />
@@ -56,6 +56,6 @@
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="expand"
-        app:srcCompat="@drawable/ic_expand" />
+        app:srcCompat="@drawable/ic_arrow_up" />
 
 </android.support.design.widget.CoordinatorLayout>

@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide.widget
+package net.theluckycoder.sharpide.view
 
 import android.content.Context
 import android.graphics.Canvas
@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 
 class CodeEditText : AppCompatEditText {
 
-    companion object {
+    private companion object {
         private val PATTERN_CLASSES = Pattern.compile(
                 "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
                         "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
@@ -56,8 +56,7 @@ class CodeEditText : AppCompatEditText {
     private val updateRunnable = Runnable {
         val e = text
 
-        onTextChangedListener?.onTextChanged(
-                e.toString())
+        onTextChangedListener?.onTextChanged(e.toString())
 
         highlightWithoutChange(e)
     }
@@ -79,8 +78,7 @@ class CodeEditText : AppCompatEditText {
             val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
 
             var n = spans.size
-            while (n-- > 0)
-                e.removeSpan(spans[n])
+            while (n-- > 0) e.removeSpan(spans[n])
         }
 
         // remove background color spans
@@ -88,22 +86,76 @@ class CodeEditText : AppCompatEditText {
             val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
 
             var n = spans.size
-            while (n-- > 0)
-                e.removeSpan(spans[n])
+            while (n-- > 0) e.removeSpan(spans[n])
         }
     }
 
-    fun setTextHighlighted(text: CharSequence?) {
-        val newText = text ?: ""
-
+    fun setTextHighlighted(text: CharSequence) {
         cancelUpdate()
 
         modified = false
-        setText(highlight(SpannableStringBuilder(newText)))
+        setText(highlight(SpannableStringBuilder(text)))
         modified = true
 
-        onTextChangedListener?.onTextChanged(newText.toString())
+        onTextChangedListener?.onTextChanged(text.toString())
     }
+
+    fun findText(searchText: String, ignoreCase: Boolean) {
+        var needle = searchText
+
+        if (needle.isEmpty()) return
+
+        var startSelection = selectionEnd
+        var haystack = text.toString()
+
+        if (ignoreCase) {
+            needle = needle.toLowerCase()
+            haystack = haystack.toLowerCase()
+        }
+
+        var foundPosition = haystack.substring(startSelection).indexOf(needle)
+
+        if (foundPosition == -1) {
+            foundPosition = haystack.indexOf(needle)
+            startSelection = 0
+        }
+        if (foundPosition != -1) {
+            val newSelection = foundPosition + startSelection
+            setSelection(newSelection, needle.length + newSelection)
+        }
+    }
+
+    fun findPreviousText(searchText: String, ignoreCase: Boolean) {
+        var needle = searchText
+
+        if (needle.isEmpty()) return
+
+        val endSelection = selectionStart
+        var haystack = text.toString()
+        if (ignoreCase) {
+            needle = needle.toLowerCase()
+            haystack = haystack.toLowerCase()
+        }
+
+        var foundPosition = haystack.substring(0, endSelection).lastIndexOf(needle)
+        if (foundPosition == -1) foundPosition = haystack.lastIndexOf(needle)
+        if (foundPosition != -1) setSelection(foundPosition, needle.length + foundPosition)
+    }
+
+    fun goToLine(toLine: Int) {
+        var line = toLine - 1
+
+        when {
+            line < 0 -> line = 0
+            line > lineCount - 1 -> line = lineCount - 1
+        }
+
+        setSelection(layout.getLineStart(line))
+    }
+
+    /*fun toBegin() = setLine(0)
+
+    fun toEnd() = setLine(lineCount - 1)*/
 
     private fun init(context: Context) {
         setHorizontallyScrolling(true)
@@ -342,9 +394,8 @@ class CodeEditText : AppCompatEditText {
         canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), paint)
     }
 
-    private fun getPixels(dp: Int): Float {
-        return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), mContext.resources.displayMetrics)
-    }
+    private fun getPixels(dp: Int): Float =
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), mContext.resources.displayMetrics)
 
     interface OnTextChangedListener {
         fun onTextChanged(text: String)

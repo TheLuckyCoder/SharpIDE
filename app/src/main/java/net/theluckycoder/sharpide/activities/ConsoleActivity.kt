@@ -34,7 +34,7 @@ class ConsoleActivity : AppCompatActivity() {
         windowLayout.visibility = View.GONE
 
         //WebView Setup
-        val webView: WebView = findViewById(R.id.webView)
+        val webView: WebView = findViewById(R.id.web_view)
         with(webView) {
             clearCache(true)
             clearHistory()

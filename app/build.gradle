@@ -3,8 +3,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
 
 ext.versionMajor = 1
-ext.versionMinor = 4
-ext.versionPatch = 7
+ext.versionMinor = 5
+ext.versionPatch = 0
 
 android {
     compileSdkVersion 27
@@ -44,8 +44,8 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
     implementation project(':materialchooser-release')
-    implementation 'com.android.support:appcompat-v7:27.0.0'
-    implementation 'com.android.support:design:27.0.0'
+    implementation 'com.android.support:appcompat-v7:27.0.1'
+    implementation 'com.android.support:design:27.0.1'
     implementation 'com.google.firebase:firebase-core:11.6.0'
     implementation 'com.google.firebase:firebase-config:11.6.0'
     implementation 'com.google.firebase:firebase-ads:11.6.0'

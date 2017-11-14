@@ -5,7 +5,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.InterstitialAd
-import io.fabric.sdk.android.Fabric
+import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 
 
@@ -33,7 +33,7 @@ class Ads(private val activity: Activity) {
     }
 
     private fun newAdRequest(): AdRequest {
-        val testDevice = if (Fabric.isDebuggable()) "221E5C37FA6D629E99A639B912C683D3" else ""
+        val testDevice = if (BuildConfig.DEBUG) "221E5C37FA6D629E99A639B912C683D3" else ""
         return AdRequest.Builder()
                 .addTestDevice(testDevice)
                 .build()

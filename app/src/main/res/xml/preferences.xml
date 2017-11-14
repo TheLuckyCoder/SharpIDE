@@ -19,8 +19,8 @@
             android:defaultValue="false"
             android:key="show_hidden_files" />
         <EditTextPreference
-            android:title="New Files Name"
-            android:summary="Set the default name of new files"
+            android:title="@string/pref_new_files_name"
+            android:summary="@string/pref_new_files_name_desc"
             android:icon="@drawable/ic_pref_new_files"
             android:defaultValue="New File"
             android:key="new_files_name" />
@@ -43,7 +43,7 @@
         <CheckBoxPreference
             android:title="@string/pref_symbols_bar"
             android:summary="@string/pref_symbols_bar_desc"
-            android:icon="@drawable/ic_symbols"
+            android:icon="@drawable/ic_pref_symbols"
             android:defaultValue="true"
             android:key="show_symbols_bar" />
     </PreferenceCategory>
