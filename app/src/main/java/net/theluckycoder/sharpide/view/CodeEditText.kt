@@ -16,6 +16,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.KeyEvent
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.utils.Prefs
 import java.util.regex.Pattern
 
 
@@ -29,8 +30,7 @@ class CodeEditText : AppCompatEditText {
                         "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
                         "Reflect|Proxy|Intl)\\b",
                 Pattern.MULTILINE)
-        private val PATTERN_CUSTOM_CLASSES = Pattern.compile(
-                "(\\w+[ .])")
+        private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
                 "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
                         "else|export|extends|finally|for|function|if|import|in|instanceof|" +
@@ -41,34 +41,25 @@ class CodeEditText : AppCompatEditText {
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
     }
 
-    private val mContext: Context
-    @Transient private val paint = Paint()
-    private var mLayout: Layout? = null
-    private val updateHandler = Handler()
-    private val onTextChangedListener: OnTextChangedListener? = null
-    private val updateDelay = 500
-    private var modified = true
+    @Transient private val mPaint = Paint()
+    private lateinit var mLayout: Layout
+    private val mUpdateHandler = Handler()
+    private val mUpdateDelay = 500
+    private var mModified = true
     private var colorNumber = 0
     private var colorKeyword = 0
     private var colorClasses = 0
     private var colorComment = 0
     private var colorString = 0
-    private val updateRunnable = Runnable {
-        val e = text
-
-        onTextChangedListener?.onTextChanged(e.toString())
-
-        highlightWithoutChange(e)
-    }
+    private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
     private var mOnImeBack: BackPressedListener? = null
+    private val preferences get() = PreferenceManager.getDefaultSharedPreferences(context)
 
     constructor(context: Context) : super(context) {
-        mContext = context
         init(context)
     }
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
-        mContext = context
         init(context)
     }
 
@@ -93,11 +84,9 @@ class CodeEditText : AppCompatEditText {
     fun setTextHighlighted(text: CharSequence) {
         cancelUpdate()
 
-        modified = false
+        mModified = false
         setText(highlight(SpannableStringBuilder(text)))
-        modified = true
-
-        onTextChangedListener?.onTextChanged(text.toString())
+        mModified = true
     }
 
     fun findText(searchText: String, ignoreCase: Boolean) {
@@ -161,7 +150,7 @@ class CodeEditText : AppCompatEditText {
         setHorizontallyScrolling(true)
 
         filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
-            if (modified &&
+            if (mModified &&
                     end - start == 1 &&
                     start < source.length &&
                     dStart < dest.length) {
@@ -183,9 +172,9 @@ class CodeEditText : AppCompatEditText {
                     override fun afterTextChanged(e: Editable) {
                         cancelUpdate()
 
-                        if (!modified) return
+                        if (!mModified) return
 
-                        updateHandler.postDelayed(updateRunnable, updateDelay.toLong())
+                        mUpdateHandler.postDelayed(mUpdateRunnable, mUpdateDelay.toLong())
                     }
                 })
 
@@ -200,24 +189,26 @@ class CodeEditText : AppCompatEditText {
         bgPaint.style = Paint.Style.FILL
         bgPaint.color = Color.parseColor("#eeeeee")
 
-        paint.style = Paint.Style.FILL
-        paint.isAntiAlias = true
-        paint.color = Color.parseColor("#bbbbbb")
-        paint.textSize = getPixels(Integer.parseInt(PreferenceManager.getDefaultSharedPreferences(context).getString("font_size", "16")))
+        mPaint.style = Paint.Style.FILL
+        mPaint.isAntiAlias = true
+        mPaint.color = Color.parseColor("#bbbbbb")
+        mPaint.textSize = getPixels(Integer.parseInt(preferences.getString(Prefs.FONT_SIZE, "16")))
         viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
     }
 
     private fun cancelUpdate() {
-        updateHandler.removeCallbacks(updateRunnable)
+        mUpdateHandler.removeCallbacks(mUpdateRunnable)
     }
 
     private fun highlightWithoutChange(e: Editable) {
-        modified = false
+        mModified = false
         highlight(e)
-        modified = true
+        mModified = true
     }
 
     private fun highlight(editable: Editable): Editable {
+        if (!preferences.getBoolean(Prefs.SYNTAX_HIGHLIGHTING, true)) return editable
+
         try {
             // don't use e.clearSpans() because it will
             // remove too much
@@ -369,21 +360,23 @@ class CodeEditText : AppCompatEditText {
         setPadding(padding, 0, 0, 0)
 
         val scrollY = scrollY
-        val firstLine = mLayout!!.getLineForVertical(scrollY)
+        val firstLine = mLayout.getLineForVertical(scrollY)
         val lastLine = try {
-            mLayout!!.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
+            mLayout.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
         } catch (e: NullPointerException) {
-            mLayout!!.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
+            mLayout.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
         }
 
-        //the y position starts at the baseline of the first line
-        var positionY = baseline + (mLayout!!.getLineBaseline(firstLine) - mLayout!!.getLineBaseline(0))
-        drawLineNumber(canvas, mLayout, positionY, firstLine)
+        if (preferences.getBoolean(Prefs.SHOW_LINE_NUMBERS, true)) {
+            //the y position starts at the baseline of the first line
+            var positionY = baseline + (mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0))
+            drawLineNumber(canvas, mLayout, positionY, firstLine)
 
-        for (i in firstLine + 1..lastLine) {
-            //get the next y position using the difference between the current and last baseline
-            positionY += mLayout!!.getLineBaseline(i) - mLayout!!.getLineBaseline(i - 1)
-            drawLineNumber(canvas, mLayout, positionY, i)
+            for (i in firstLine + 1..lastLine) {
+                //get the next y position using the difference between the current and last baseline
+                positionY += mLayout.getLineBaseline(i) - mLayout.getLineBaseline(i - 1)
+                drawLineNumber(canvas, mLayout, positionY, i)
+            }
         }
 
         super.onDraw(canvas)
@@ -391,17 +384,13 @@ class CodeEditText : AppCompatEditText {
 
     private fun drawLineNumber(canvas: Canvas, layout: Layout?, positionY: Int, line: Int) {
         val positionX = layout!!.getLineLeft(line).toInt()
-        canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), paint)
+        canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), mPaint)
     }
 
     private fun getPixels(dp: Int): Float =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), mContext.resources.displayMetrics)
+            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
 
-    interface OnTextChangedListener {
-        fun onTextChanged(text: String)
-    }
-
-    /*** Keyboard checking  */
+    /*** Keyboard checking ***/
     override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP)
             mOnImeBack?.onImeBack()

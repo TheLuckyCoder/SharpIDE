@@ -16,12 +16,14 @@ import android.webkit.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.utils.bind
+
 
 class ConsoleActivity : AppCompatActivity() {
 
     private var mWindowsIsVisible = false
-    private lateinit var windowLayout: LinearLayout
-    private lateinit var messageTv: TextView
+    private val windowLayout: LinearLayout by bind(R.id.window)
+    private val messageTv: TextView by bind(R.id.text_console_message)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,11 +31,9 @@ class ConsoleActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        messageTv = findViewById(R.id.consoleTextView)
-        windowLayout = findViewById(R.id.window)
         windowLayout.visibility = View.GONE
 
-        //WebView Setup
+        // WebView Setup
         val webView: WebView = findViewById(R.id.web_view)
         with(webView) {
             clearCache(true)
@@ -65,6 +65,7 @@ class ConsoleActivity : AppCompatActivity() {
             windowLayout.visibility = View.VISIBLE
             180f
         }
+
         ViewCompat.animate(fab)
                 .rotation(rotation)
                 .withLayer()
@@ -92,7 +93,7 @@ class ConsoleActivity : AppCompatActivity() {
             return true
         }
 
-        override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String, result: JsPromptResult): Boolean {
+        override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String?, result: JsPromptResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
                     .setTitle("JavaScript")
                     .setMessage(message)

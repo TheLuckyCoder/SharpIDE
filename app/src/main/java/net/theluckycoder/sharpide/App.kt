@@ -6,6 +6,7 @@ import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.core.CrashlyticsCore
 import io.fabric.sdk.android.Fabric
 
+
 class App : Application() {
 
     override fun onCreate() {

@@ -22,12 +22,16 @@ fun Activity.verifyStoragePermission() {
 }
 
 fun <T : View> Activity.bind(@IdRes res: Int): Lazy<T> =
-        lazy(LazyThreadSafetyMode.NONE) { findViewById<T>(res) }
+        lazyFast { findViewById<T>(res) }
 
-fun Context.saveFileInternally(fileName: String, data: String): Boolean {
+fun <T> lazyFast(operation: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) {
+    operation()
+}
+
+fun Context.saveFileInternally(fileName: String, content: String): Boolean {
     return try {
         val fos = openFileOutput(fileName, Context.MODE_PRIVATE)
-        fos.write(data.toByteArray())
+        fos.write(content.toByteArray())
         fos.close()
         true
     } catch (e: IOException) {

@@ -1,1 +1,1 @@
-include ':app', ':materialchooser-release'
+include ':app'

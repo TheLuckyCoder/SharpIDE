@@ -43,6 +43,8 @@
     <string name="pref_line_numbers_desc">Show line numbers in the editor</string>
     <string name="pref_symbols_bar">Show symbol bar</string>
     <string name="pref_symbols_bar_desc">Show symbol bar while writing</string>
+    <string name="pref_syntax_highlighting">Syntax Highlighting</string>
+    <string name="pref_syntax_highlighting_desc">Enable Syntax Highlighting</string>
 
     <!-- Menu -->
     <string name="group_files">Files</string>

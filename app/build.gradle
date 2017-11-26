@@ -2,9 +2,11 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'io.fabric'
 
-ext.versionMajor = 1
-ext.versionMinor = 5
-ext.versionPatch = 0
+ext {
+    versionMajor = 1
+    versionMinor = 5
+    versionPatch = 1
+}
 
 android {
     compileSdkVersion 27
@@ -13,7 +15,7 @@ android {
         applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion 14
         targetSdkVersion 27
-        versionName versionMajor + "." + versionMinor + "." + versionPatch
+        versionName "$versionMajor.$versionMinor.$versionPatch"
         versionCode versionMajor * 100 + versionMinor * 10 + versionPatch
         resConfigs "en"
         vectorDrawables.useSupportLibrary = true
@@ -43,7 +45,7 @@ android {
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
 
-    implementation project(':materialchooser-release')
+    implementation 'net.theluckycoder.materialchooser:materialchooser:1.1.1'
     implementation 'com.android.support:appcompat-v7:27.0.1'
     implementation 'com.android.support:design:27.0.1'
     implementation 'com.google.firebase:firebase-core:11.6.0'

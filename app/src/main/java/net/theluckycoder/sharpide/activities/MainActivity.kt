@@ -23,18 +23,19 @@ import android.text.TextWatcher
 import android.view.MenuItem
 import android.view.View
 import android.widget.*
+import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.listener.OnBottomReachedListener
 import net.theluckycoder.sharpide.utils.*
 import net.theluckycoder.sharpide.utils.Constants.PERMISSION_REQUEST_CODE
 import net.theluckycoder.sharpide.view.CodeEditText
-import net.theluckycoder.sharpide.view.InteractiveScrollView
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
+import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
 import java.io.*
 import java.util.regex.Pattern
 
 
+@SuppressLint("InflateParams")
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UpdateChecker.OnUpdateNeededListener {
 
     private companion object {
@@ -44,7 +45,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private val codeEditText: CodeEditText by bind(R.id.edit_main)
-    private val scrollView: InteractiveScrollView by bind(R.id.main_scroll_view)
+    private val scrollView: ScrollView by bind(R.id.main_scroll_view)
     private val symbolScrollView: HorizontalScrollView by bind(R.id.symbolScrollView)
 
     private val mAds = Ads(this)
@@ -54,6 +55,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var mCurrentBuffer = ""
     private val mLoaded = StringBuilder()
     private var mLastSavePath = ""
+    private var mDefaultFileName = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme_NoActionBar)
@@ -65,14 +67,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Views
         val symbolLayout: LinearLayout = findViewById(R.id.layout_symbols)
-        for (i in 0 until symbolLayout.childCount)
+        for (i in 0 until symbolLayout.childCount) {
             symbolLayout.getChildAt(i).setOnClickListener({ codeEditText.text.insert(codeEditText.selectionStart, (it as TextView).text.string) })
-
-        scrollView.setOnBottomReachedListener(null)
+        }
 
         // Set up navigation drawer
         val drawer: DrawerLayout = findViewById(R.id.drawer_layout)
-        val toggle = ActionBarDrawerToggle(this, drawer, toolbar, 0, 0)
+        val toggle = object : ActionBarDrawerToggle(this, drawer, toolbar, 0, 0) {
+            override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
+                super.onDrawerSlide(drawerView, slideOffset)
+                UIUtil.hideKeyboard(this@MainActivity)
+                codeEditText.clearFocus()
+            }
+        }
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
@@ -82,12 +89,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Load preferences
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
 
-        mCurrentFile = File(Constants.mainFolder + preferences.getString("new_files_name", "New File") + ".js")
+        mDefaultFileName = preferences.getString(Prefs.NEW_FILES_NAME, "Untitled") + ".js"
+        mCurrentFile = File(mDefaultFileName)
         supportActionBar?.subtitle = mCurrentFile.name
 
-        codeEditText.textSize = Integer.parseInt(preferences.getString("font_size", "16")).toFloat()
-        if (preferences.getBoolean("load_last_file", true)) {
-            val lastFilePath = preferences.getString("last_file_path", "")
+        codeEditText.textSize = Integer.parseInt(preferences.getString(Prefs.FONT_SIZE, "16")).toFloat()
+        if (preferences.getBoolean(Prefs.LOAD_LAST_FILE, true)) {
+            val lastFilePath = preferences.getString(Prefs.LAST_FILE_PATH, "")
             val lastFile = File(lastFilePath)
 
             if (lastFilePath != "" && lastFile.isFile && lastFile.canRead()) {
@@ -96,7 +104,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        mLastSavePath = preferences.getString("last_save_path", Constants.mainFolder)
+        mLastSavePath = preferences.getString(Prefs.LAST_FILE_PATH, Constants.mainFolder)
 
         // Check for permission
         verifyStoragePermission()
@@ -104,7 +112,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
-            if (PreferenceManager.getDefaultSharedPreferences(this@MainActivity).getBoolean("show_symbols_bar", true)) {
+            if (preferences.getBoolean(Prefs.SHOW_SYMBOLS_BAR, true)) {
                 symbolScrollView.visibility = if (isOpen) View.VISIBLE else View.GONE
             }
         }
@@ -113,6 +121,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         UpdateChecker(this).check()
 
         // Setup ads
+        MobileAds.initialize(this, "ca-app-pub-1279472163660969~2916940339")
         mAds.loadInterstitial()
     }
 
@@ -133,19 +142,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         when {
             drawer.isDrawerOpen(GravityCompat.START) -> drawer.closeDrawer(GravityCompat.START)
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean("quit_confirm", true) -> AlertDialog.Builder(this)
-                    .setTitle(R.string.app_name)
-                    .setMessage(R.string.quit_confirm)
-                    .setPositiveButton(android.R.string.yes) { _, _ -> finish() }
-                    .setNegativeButton(android.R.string.no, null)
-                    .show()
+            PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Prefs.CONFIRM_QUIT, true) -> {
+                AlertDialog.Builder(this)
+                        .setTitle(R.string.app_name)
+                        .setMessage(R.string.quit_confirm)
+                        .setPositiveButton(android.R.string.yes) { _, _ -> finish() }
+                        .setNegativeButton(android.R.string.no, null)
+                        .show()
+            }
             else -> return super.onBackPressed()
         }
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
-            R.id.menu_save -> SaveTask(false).execute()
+            R.id.menu_save -> {
+                if (mCurrentFile.path != mDefaultFileName) {
+                    SaveTask(false).execute()
+                } else {
+                    saveAs(false)
+                }
+            }
             R.id.menu_save_as -> saveAs(false)
             R.id.menu_open -> openFileClick()
             R.id.menu_new -> saveAs(true)
@@ -259,17 +276,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     /*** Private Functions  ***/
     private fun getFileSize(): String {
-        val fileSize: Double
-        if (mCurrentFile.isFile) {
-            fileSize = mCurrentFile.length().toDouble()
+        if (!mCurrentFile.isFile) return ""
 
-            return when {
-                fileSize < 1024 -> fileSize.string + "B"
-                fileSize > 1024 && fileSize < 1024 * 1024 -> (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
-                else -> (Math.round(fileSize / (1024 * 1204) * 100.0) / 100.0).string + "MB"
-            }
+        val fileSize = mCurrentFile.length().toDouble()
+
+        return when {
+            fileSize < 1024 -> fileSize.string + "B"
+            fileSize > 1024 && fileSize < 1024 * 1024 -> (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
+            else -> (Math.round(fileSize / (1024 * 1204) * 100.0) / 100.0).string + "MB"
         }
-        return ""
     }
 
     private fun getFileInfo() = "Size: ${getFileSize()}\nPath: ${mCurrentFile.path}\n"
@@ -278,19 +293,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         Chooser(this, LOAD_FILE_REQUEST_CODE,
                 fileExtension = "js",
                 showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
-                        .getBoolean("show_hidden_files", false),
-                startPath = mLastSavePath)
+                        .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
+                startPath = File(mLastSavePath).parent ?: "")
                 .start()
     }
 
     private fun saveAs(newFile: Boolean) {
         val dialogBuilder = AlertDialog.Builder(this)
 
-        if (newFile) {
-            dialogBuilder.setTitle(R.string.create_new_file)
-        } else {
-            dialogBuilder.setTitle(R.string.menu_save_file_as)
-        }
+        dialogBuilder.setTitle(if (newFile) R.string.create_new_file else R.string.menu_save_file_as)
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_new_file, null)
         dialogBuilder.setView(dialogView)
@@ -300,14 +311,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val textSelectPath: TextView = dialogView.findViewById(R.id.text_select_path)
         val btnOk: Button = dialogView.findViewById(R.id.button_ok)
 
-        etFileName.setText(PreferenceManager.getDefaultSharedPreferences(this).getString("new_files_name", getString(R.string.menu_new_file)) + ".js")
+        etFileName.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(Prefs.NEW_FILES_NAME, "Untitled") + ".js")
 
         textSelectPath.text = mLastSavePath
         textSelectPath.setOnClickListener {
             Chooser(this@MainActivity, CHANGE_PATH_REQUEST_CODE,
                     fileExtension = "js",
                     showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean("show_hidden_files", false),
+                            .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
                     startPath = Constants.mainFolder,
                     chooserType = Chooser.FOLDER_CHOOSER)
                     .start()
@@ -339,27 +350,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mDialog!!.show()
     }
 
-    private fun loadInChunks(scrollView: InteractiveScrollView, bigString: String) {
+    private fun loadInChunks(bigString: String) {
         mLoaded.append(bigString.substring(0, CHUNK))
         codeEditText.setTextHighlighted(mLoaded)
-        scrollView.setOnBottomReachedListener(object : OnBottomReachedListener {
-            override fun onBottomReached() {
-                val length = mLoaded.length
-                when {
-                    length >= bigString.length -> return
-                    length + CHUNK > bigString.length -> {
-                        val buffer = bigString.substring(length, bigString.length)
-                        mLoaded.append(buffer)
-                    }
-                    else -> {
-                        val buffer = bigString.substring(length, length + CHUNK)
-                        mLoaded.append(buffer)
-                    }
-                }
-
-                codeEditText.setTextHighlighted(mLoaded)
-            }
-        })
     }
 
     private fun loadDocument(fileContent: String) {
@@ -367,7 +360,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         mLoaded.delete(0, mLoaded.length)
         if (fileContent.length > CHUNK) {
-            loadInChunks(scrollView, fileContent)
+            loadInChunks(fileContent)
         } else {
             mLoaded.append(fileContent)
             codeEditText.setTextHighlighted(mLoaded)
@@ -489,7 +482,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         override fun onPostExecute(string: String) {
             loadDocument(string)
             val editor = PreferenceManager.getDefaultSharedPreferences(this@MainActivity).edit()
-            editor.putString("last_file_path", mCurrentFile.absolutePath)
+            editor.putString(Prefs.LAST_FILE_PATH, mCurrentFile.absolutePath)
             editor.apply()
         }
     }

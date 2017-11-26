@@ -11,14 +11,13 @@ import net.theluckycoder.sharpide.R
 
 class Ads(private val activity: Activity) {
 
-    private lateinit var interstitialAd: InterstitialAd
+    private val interstitialAd by lazyFast { InterstitialAd(activity) }
 
     fun loadBanner() {
         activity.findViewById<AdView>(R.id.adView).loadAd(newAdRequest())
     }
 
     fun loadInterstitial() {
-        interstitialAd = InterstitialAd(activity)
         interstitialAd.adUnitId = "ca-app-pub-1279472163660969/4828330332"
         interstitialAd.adListener = object : AdListener() {
             override fun onAdClosed() {

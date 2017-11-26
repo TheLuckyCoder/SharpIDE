@@ -39,7 +39,7 @@
                 android:paddingTop="@dimen/console_margin">
 
                 <TextView
-                    android:id="@+id/consoleTextView"
+                    android:id="@+id/text_console_message"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/no_errors"

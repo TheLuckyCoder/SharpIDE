@@ -22,9 +22,10 @@
             android:title="@string/pref_new_files_name"
             android:summary="@string/pref_new_files_name_desc"
             android:icon="@drawable/ic_pref_new_files"
-            android:defaultValue="New File"
+            android:defaultValue="Untitled"
             android:key="new_files_name" />
     </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_editor">
         <EditTextPreference
             android:title="@string/pref_font_size"
@@ -33,20 +34,28 @@
             android:key="font_size"
             android:defaultValue="16"
             android:dialogTitle="@string/pref_font_size"
-            android:inputType="number" />
+            android:inputType="number"
+            android:maxLength="3" />
         <CheckBoxPreference
             android:title="@string/pref_line_numbers"
             android:summary="@string/pref_line_numbers_desc"
+            android:key="show_line_numbers"
             android:icon="@drawable/ic_pref_line_numbers"
-            android:defaultValue="true"
-            android:enabled="false" />
+            android:defaultValue="true" />
         <CheckBoxPreference
             android:title="@string/pref_symbols_bar"
             android:summary="@string/pref_symbols_bar_desc"
             android:icon="@drawable/ic_pref_symbols"
             android:defaultValue="true"
             android:key="show_symbols_bar" />
+        <CheckBoxPreference
+            android:title="@string/pref_syntax_highlighting"
+            android:summary="@string/pref_syntax_highlighting_desc"
+            android:icon="@drawable/ic_pref_syntax_highlighting"
+            android:defaultValue="true"
+            android:key="enable_syntax_highlighting" />
     </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/pref_category_about">
         <Preference
             android:title="App Made by The Lucky Coder"

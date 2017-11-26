@@ -8,7 +8,7 @@
     tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <net.theluckycoder.sharpide.view.InteractiveScrollView
+    <ScrollView
         android:id="@+id/main_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -20,10 +20,8 @@
             android:imeOptions="flagNoExtractUi"
             android:inputType="textVisiblePassword|textMultiLine"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-            <requestFocus />
-        </net.theluckycoder.sharpide.view.CodeEditText>
-    </net.theluckycoder.sharpide.view.InteractiveScrollView>
+            android:layout_height="wrap_content" />
+    </ScrollView>
 
     <include layout="@layout/partial_symbols" />
 

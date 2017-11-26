@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide
+package net.theluckycoder.sharpide.fragment
 
 import android.content.Intent
 import android.net.Uri
@@ -10,6 +10,7 @@ import de.psdev.licensesdialog.LicensesDialog
 import de.psdev.licensesdialog.licenses.ApacheSoftwareLicense20
 import de.psdev.licensesdialog.model.Notice
 import de.psdev.licensesdialog.model.Notices
+import net.theluckycoder.sharpide.R
 
 class SettingsFragment : PreferenceFragment() {
 

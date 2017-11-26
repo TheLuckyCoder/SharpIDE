@@ -2,13 +2,13 @@
 <resources>
     <color name="colorPrimary">#03A9F4</color>
     <color name="colorPrimaryDark">#0288D1</color>
-    <color name="colorAccent">#FF9800</color>
+    <color name="colorAccent">#FF4081</color>
 
     <color name="syntax_number">#C62828</color>
-    <color name="syntax_keyword">#ff2c82c8</color>
+    <color name="syntax_keyword">#2c82c8</color>
     <color name="syntax_class">#FF8000</color>
     <color name="syntax_comment">#808080</color>
-    <color name="syntax_string">#ff009b00</color>
+    <color name="syntax_string">#009b00</color>
 
     <!--<color name="color_intro_first">#039BE5</color>
     <color name="color_intro_dark_first">#0277BD</color>

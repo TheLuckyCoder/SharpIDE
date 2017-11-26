@@ -3,7 +3,7 @@ package net.theluckycoder.sharpide.activities
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
-import net.theluckycoder.sharpide.SettingsFragment
+import net.theluckycoder.sharpide.fragment.SettingsFragment
 
 class SettingsActivity : AppCompatActivity() {
 
