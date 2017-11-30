@@ -17,7 +17,7 @@ fun Activity.verifyStoragePermission() {
 
     if (permission != PackageManager.PERMISSION_GRANTED) {
         // We don't have permission so prompt the user
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), Constants.PERMISSION_REQUEST_CODE)
+        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), Const.PERMISSION_REQUEST_CODE)
     }
 }
 

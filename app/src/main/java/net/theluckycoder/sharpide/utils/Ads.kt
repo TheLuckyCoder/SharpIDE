@@ -28,7 +28,11 @@ class Ads(private val activity: Activity) {
     }
 
     fun showInterstitial() {
-        if (interstitialAd.isLoaded) interstitialAd.show()
+        try {
+            if (interstitialAd.isLoaded) interstitialAd.show()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     private fun newAdRequest(): AdRequest {

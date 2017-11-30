@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Rect
 import android.os.Handler
 import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
@@ -42,18 +43,20 @@ class CodeEditText : AppCompatEditText {
     }
 
     @Transient private val mPaint = Paint()
+    private val mPaintHighlight = Paint()
+    private val mLineBounds = Rect()
     private lateinit var mLayout: Layout
     private val mUpdateHandler = Handler()
-    private val mUpdateDelay = 500
+    private val mUpdateDelay = 250
     private var mModified = true
-    private var colorNumber = 0
-    private var colorKeyword = 0
-    private var colorClasses = 0
-    private var colorComment = 0
-    private var colorString = 0
     private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
     private var mOnImeBack: BackPressedListener? = null
-    private val preferences get() = PreferenceManager.getDefaultSharedPreferences(context)
+    private var mColorNumber = 0
+    private var mColorKeyword = 0
+    private var mColorClasses = 0
+    private var mColorComment = 0
+    private var mColorString = 0
+    private val mPreferences get() = PreferenceManager.getDefaultSharedPreferences(context)
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -179,11 +182,11 @@ class CodeEditText : AppCompatEditText {
                 })
 
         // Set Syntax Colors
-        colorNumber = ContextCompat.getColor(context, R.color.syntax_number)
-        colorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
-        colorClasses = ContextCompat.getColor(context, R.color.syntax_class)
-        colorComment = ContextCompat.getColor(context, R.color.syntax_comment)
-        colorString = ContextCompat.getColor(context, R.color.syntax_string)
+        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
+        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
+        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
+        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
+        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
 
         val bgPaint = Paint()
         bgPaint.style = Paint.Style.FILL
@@ -192,7 +195,7 @@ class CodeEditText : AppCompatEditText {
         mPaint.style = Paint.Style.FILL
         mPaint.isAntiAlias = true
         mPaint.color = Color.parseColor("#bbbbbb")
-        mPaint.textSize = getPixels(Integer.parseInt(preferences.getString(Prefs.FONT_SIZE, "16")))
+        mPaint.textSize = getPixels(Integer.parseInt(mPreferences.getString(Prefs.FONT_SIZE, "16")))
         viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
     }
 
@@ -207,7 +210,7 @@ class CodeEditText : AppCompatEditText {
     }
 
     private fun highlight(editable: Editable): Editable {
-        if (!preferences.getBoolean(Prefs.SYNTAX_HIGHLIGHTING, true)) return editable
+        if (!mPreferences.getBoolean(Prefs.SYNTAX_HIGHLIGHTING, true)) return editable
 
         try {
             // don't use e.clearSpans() because it will
@@ -219,31 +222,31 @@ class CodeEditText : AppCompatEditText {
             run {
                 val m = PATTERN_CLASSES.matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             run {
                 val m = PATTERN_CUSTOM_CLASSES.matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             run {
                 val m = PATTERN_KEYWORDS.matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             run {
                 val m = PATTERN_SYMBOLS.matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             run {
                 val m = Pattern.compile("\\$\\w+").matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             run {
@@ -252,14 +255,14 @@ class CodeEditText : AppCompatEditText {
                     val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
                     for (span in spans)
                         editable.removeSpan(span)
-                    editable.setSpan(ForegroundColorSpan(colorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
 
             run {
                 val m = PATTERN_NUMBERS.matcher(editable)
                 while (m.find())
-                    editable.setSpan(ForegroundColorSpan(colorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
             val m = PATTERN_COMMENTS.matcher(editable)
@@ -267,7 +270,7 @@ class CodeEditText : AppCompatEditText {
                 val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
                 for (span in spans)
                     editable.removeSpan(span)
-                editable.setSpan(ForegroundColorSpan(colorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
         } catch (e: IllegalStateException) {
             Log.e("IllegalStateException", e.message, e)
@@ -278,6 +281,13 @@ class CodeEditText : AppCompatEditText {
 
         return editable
     }
+
+    private val line: Int
+        get() = if (selectionStart == -1 || layout == null) {
+            -1
+        } else {
+            layout.getLineForOffset(selectionStart)
+        }
 
     private fun autoIndent(source: CharSequence, dest: Spanned, dStart: Int, dEnd: Int): CharSequence {
         var indent = ""
@@ -356,27 +366,34 @@ class CodeEditText : AppCompatEditText {
         }
 
     override fun onDraw(canvas: Canvas) {
-        val padding = getPixels(digitCount * 10 + 10).toInt()
-        setPadding(padding, 0, 0, 0)
-
-        val scrollY = scrollY
-        val firstLine = mLayout.getLineForVertical(scrollY)
-        val lastLine = try {
-            mLayout.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
-        } catch (e: NullPointerException) {
-            mLayout.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
+        if(mPreferences.getBoolean(Prefs.HIGHLIGHT_CURRENT_LINE, true)) {
+            getLineBounds(line, mLineBounds)
+            mPaintHighlight.color = Color.parseColor("#ffffff")
+            canvas.drawRect(mLineBounds, mPaintHighlight)
         }
 
-        if (preferences.getBoolean(Prefs.SHOW_LINE_NUMBERS, true)) {
-            //the y position starts at the baseline of the first line
+        if (mPreferences.getBoolean(Prefs.SHOW_LINE_NUMBERS, true)) {
+            val padding = getPixels(digitCount * 10 + 10).toInt()
+            setPadding(padding, 0, 0, 0)
+
+            val firstLine = mLayout.getLineForVertical(scrollY)
+            val lastLine = try {
+                mLayout.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
+            } catch (e: NullPointerException) {
+                mLayout.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
+            }
+
+            // The y position starts at the baseline of the first line
             var positionY = baseline + (mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0))
             drawLineNumber(canvas, mLayout, positionY, firstLine)
 
             for (i in firstLine + 1..lastLine) {
-                //get the next y position using the difference between the current and last baseline
+                // Get the next y position using the difference between the current and last baseline
                 positionY += mLayout.getLineBaseline(i) - mLayout.getLineBaseline(i - 1)
                 drawLineNumber(canvas, mLayout, positionY, i)
             }
+        } else {
+            setPadding(0, 0, 0, 0)
         }
 
         super.onDraw(canvas)

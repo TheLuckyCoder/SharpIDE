@@ -65,7 +65,7 @@
         <menu>
             <item
                 android:id="@+id/menu_rate"
-                android:icon="@drawable/ic_rate_review"
+                android:icon="@drawable/ic_menu_rate"
                 android:title="@string/menu_rate_app" />
             <item
                 android:id="@+id/menu_settings"

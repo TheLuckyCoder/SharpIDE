@@ -27,7 +27,7 @@ import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.*
-import net.theluckycoder.sharpide.utils.Constants.PERMISSION_REQUEST_CODE
+import net.theluckycoder.sharpide.utils.Const.PERMISSION_REQUEST_CODE
 import net.theluckycoder.sharpide.view.CodeEditText
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
@@ -86,6 +86,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
 
+
         // Load preferences
         val preferences = PreferenceManager.getDefaultSharedPreferences(this)
 
@@ -104,11 +105,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        mLastSavePath = preferences.getString(Prefs.LAST_FILE_PATH, Constants.mainFolder)
+        mLastSavePath = File(preferences.getString(Prefs.LAST_FILE_PATH, Const.MAIN_FOLDER)).absolutePath
+        if (mLastSavePath != Const.SDCARD_FOLDER) {
+            mLastSavePath = File(mLastSavePath).parent + "/"
+        }
+
 
         // Check for permission
         verifyStoragePermission()
-        File(Constants.mainFolder).mkdirs()
+        File(Const.MAIN_FOLDER).mkdirs()
 
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
@@ -173,7 +178,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .setNeutralButton(R.string.action_close, null)
                         .show()
             }
-            R.id.menu_run -> SaveTask(true).execute()
+            R.id.menu_run -> {
+                if (mCurrentFile.path != mDefaultFileName) {
+                    SaveTask(true).execute()
+                } else {
+                    saveAs(false)
+                }
+            }
             R.id.menu_find -> {
                 val dialogView = layoutInflater.inflate(R.layout.dialog_find, null)
                 AlertDialog.Builder(this)
@@ -183,7 +194,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             val etFind: EditText = dialogView.findViewById(R.id.edit_find)
                             val cbIgnoreCase: CheckBox = dialogView.findViewById(R.id.cb_ignore_case)
 
-                            updateFabVisibility(etFind.text.string, cbIgnoreCase.isChecked, true)
+                            updateFabVisibility(etFind.text.string, cbIgnoreCase.isChecked)
 
                             mAds.showInterstitial()
                         }.setNegativeButton(android.R.string.cancel, null)
@@ -268,7 +279,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Toast.makeText(this, "External Storage permission is required in order for the app to work", Toast.LENGTH_SHORT).show()
                 finish()
             } else {
-                File(Constants.mainFolder).mkdir()
+                File(Const.MAIN_FOLDER).mkdir()
                 LoadTask().execute()
             }
         }
@@ -294,7 +305,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 fileExtension = "js",
                 showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
                         .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
-                startPath = File(mLastSavePath).parent ?: "")
+                startPath = mLastSavePath)
                 .start()
     }
 
@@ -309,19 +320,25 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val etFileName: EditText = dialogView.findViewById(R.id.file_name)
         val textSelectPath: TextView = dialogView.findViewById(R.id.text_select_path)
+        val btnCancel: Button = dialogView.findViewById(R.id.button_cancel)
         val btnOk: Button = dialogView.findViewById(R.id.button_ok)
 
         etFileName.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(Prefs.NEW_FILES_NAME, "Untitled") + ".js")
 
         textSelectPath.text = mLastSavePath
         textSelectPath.setOnClickListener {
-            Chooser(this@MainActivity, CHANGE_PATH_REQUEST_CODE,
+            Chooser(this@MainActivity,
+                    requestCode = CHANGE_PATH_REQUEST_CODE,
                     fileExtension = "js",
                     showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
                             .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
-                    startPath = Constants.mainFolder,
+                    startPath = Const.MAIN_FOLDER,
                     chooserType = Chooser.FOLDER_CHOOSER)
                     .start()
+        }
+
+        btnCancel.setOnClickListener {
+            mDialog!!.dismiss()
         }
 
         btnOk.setOnClickListener {
@@ -344,6 +361,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 SaveTask(false).execute()
                 LoadTask().execute()
             }
+
+            mDialog!!.dismiss()
 
         }
 
@@ -393,16 +412,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mAds.showInterstitial()
     }
 
-    private fun updateFabVisibility(searchText: String, ignoreCase: Boolean, visible: Boolean) {
+    private fun updateFabVisibility(searchText: String?, ignoreCase: Boolean) {
         val fabPrevious: FloatingActionButton = findViewById(R.id.fab_previous)
         val fabNext: FloatingActionButton = findViewById(R.id.fab_next)
         val fabClose: FloatingActionButton = findViewById(R.id.fab_close)
 
-        if (visible) {
+        if (searchText != null) {
             fabPrevious.show()
             fabNext.show()
             fabClose.show()
             symbolScrollView.visibility = View.GONE
+
+            fabPrevious.setOnClickListener { codeEditText.findPreviousText(searchText, ignoreCase) }
+            fabNext.setOnClickListener { codeEditText.findText(searchText, ignoreCase) }
+            fabClose.setOnClickListener { updateFabVisibility(null, false) }
         } else {
             fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton?) {
@@ -424,11 +447,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             })
             return
         }
-
-
-        fabPrevious.setOnClickListener { codeEditText.findPreviousText(searchText, ignoreCase) }
-        fabNext.setOnClickListener { codeEditText.findText(searchText, ignoreCase) }
-        fabClose.setOnClickListener { updateFabVisibility("", false, false) }
     }
 
     private fun applyTabWidth(text: Editable, start: Int, end: Int) {

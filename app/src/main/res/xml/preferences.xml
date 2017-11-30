@@ -50,10 +50,14 @@
             android:key="show_symbols_bar" />
         <CheckBoxPreference
             android:title="@string/pref_syntax_highlighting"
-            android:summary="@string/pref_syntax_highlighting_desc"
             android:icon="@drawable/ic_pref_syntax_highlighting"
             android:defaultValue="true"
             android:key="enable_syntax_highlighting" />
+        <CheckBoxPreference
+            android:title="@string/pref_highlight_current_line"
+            android:icon="@drawable/ic_pref_highlight_current_line"
+            android:defaultValue="true"
+            android:key="highlight_current_line" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_about">

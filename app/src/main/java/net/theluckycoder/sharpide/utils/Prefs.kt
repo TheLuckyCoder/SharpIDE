@@ -11,4 +11,5 @@ object Prefs {
     const val SHOW_LINE_NUMBERS = "show_line_numbers"
     const val SHOW_SYMBOLS_BAR = "show_symbols_bar"
     const val SYNTAX_HIGHLIGHTING = "enable_syntax_highlighting"
+    const val HIGHLIGHT_CURRENT_LINE = "highlight_current_line"
 }

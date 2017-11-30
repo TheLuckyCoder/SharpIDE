@@ -12,7 +12,7 @@ import android.widget.Toast
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
-import net.theluckycoder.sharpide.utils.Constants
+import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import java.io.File
 
@@ -30,7 +30,7 @@ class MinifyActivity : AppCompatActivity() {
         verifyStoragePermission()
 
         //Create main folder
-        File(Constants.minifyFolder).mkdirs()
+        File(Const.MINIFY_FOLDER).mkdirs()
 
         //Init AdMob
         Ads(this).loadBanner()
@@ -55,7 +55,7 @@ class MinifyActivity : AppCompatActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (data == null) return
 
-        if (requestCode == Constants.PERMISSION_REQUEST_CODE && resultCode == RESULT_OK) {
+        if (requestCode == Const.PERMISSION_REQUEST_CODE && resultCode == RESULT_OK) {
             mFilePath = data.getStringExtra(Chooser.RESULT_PATH)
             findViewById<Button>(R.id.obfuscateBtn).isEnabled = true
         }
@@ -90,7 +90,7 @@ class MinifyActivity : AppCompatActivity() {
         // remove the new lines and tabs
         .replace("\n", "").replace("\t", "")
 
-        val newFile = File(Constants.minifyFolder + file.name)
+        val newFile = File(Const.MINIFY_FOLDER + file.name)
         newFile.writeText(fileContent)
 
         Toast.makeText(this, R.string.file_minify_ready, Toast.LENGTH_LONG).show()

@@ -44,7 +44,7 @@
     <string name="pref_symbols_bar">Show symbol bar</string>
     <string name="pref_symbols_bar_desc">Show symbol bar while writing</string>
     <string name="pref_syntax_highlighting">Syntax Highlighting</string>
-    <string name="pref_syntax_highlighting_desc">Enable Syntax Highlighting</string>
+    <string name="pref_highlight_current_line">Highlight Current Line</string>
 
     <!-- Menu -->
     <string name="group_files">Files</string>

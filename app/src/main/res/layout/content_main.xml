@@ -23,21 +23,18 @@
             android:layout_height="wrap_content" />
     </ScrollView>
 
-    <include layout="@layout/partial_symbols" />
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        app:layout_dodgeInsetEdges="bottom">
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab_previous"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/fab_margin"
-            android:layout_marginEnd="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin"
             android:visibility="gone"
             app:srcCompat="@drawable/ic_arrow_up" />
@@ -46,8 +43,6 @@
             android:id="@+id/fab_next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/fab_margin"
-            android:layout_marginEnd="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin"
             android:visibility="gone"
             app:srcCompat="@drawable/ic_arrow_down" />
@@ -56,10 +51,10 @@
             android:id="@+id/fab_close"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="@dimen/fab_margin"
-            android:layout_marginEnd="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin"
             android:visibility="gone"
             app:srcCompat="@drawable/ic_close" />
     </LinearLayout>
+
+    <include layout="@layout/partial_symbols" />
 </android.support.design.widget.CoordinatorLayout>
