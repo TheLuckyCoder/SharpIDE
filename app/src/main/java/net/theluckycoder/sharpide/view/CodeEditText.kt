@@ -6,10 +6,15 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Handler
-import android.preference.PreferenceManager
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.AppCompatEditText
-import android.text.*
+import android.text.Editable
+import android.text.InputFilter
+import android.text.Layout
+import android.text.Spannable
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.TextWatcher
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
@@ -17,7 +22,7 @@ import android.util.Log
 import android.util.TypedValue
 import android.view.KeyEvent
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.Prefs
+import net.theluckycoder.sharpide.utils.Preferences
 import java.util.regex.Pattern
 
 
@@ -47,7 +52,6 @@ class CodeEditText : AppCompatEditText {
     private val mLineBounds = Rect()
     private lateinit var mLayout: Layout
     private val mUpdateHandler = Handler()
-    private val mUpdateDelay = 250
     private var mModified = true
     private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
     private var mOnImeBack: BackPressedListener? = null
@@ -56,7 +60,7 @@ class CodeEditText : AppCompatEditText {
     private var mColorClasses = 0
     private var mColorComment = 0
     private var mColorString = 0
-    private val mPreferences get() = PreferenceManager.getDefaultSharedPreferences(context)
+    private val mPreferences by lazy { Preferences(context) }
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -64,6 +68,92 @@ class CodeEditText : AppCompatEditText {
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         init(context)
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        if(mPreferences.getHighlightCurrentLine()) {
+            getLineBounds(line, mLineBounds)
+            mPaintHighlight.color = Color.parseColor("#ffffff")
+            canvas.drawRect(mLineBounds, mPaintHighlight)
+        }
+
+        if (mPreferences.getShowLineNumbers()) {
+            val padding = getPixels(digitCount * 10 + 10).toInt()
+            setPadding(padding, 0, 0, 0)
+
+            val firstLine = mLayout.getLineForVertical(scrollY)
+            val lastLine = try {
+                mLayout.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
+            } catch (e: NullPointerException) {
+                mLayout.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
+            }
+
+            // The y position starts at the baseline of the first line
+            var positionY = baseline + (mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0))
+            drawLineNumber(canvas, mLayout, positionY, firstLine)
+
+            for (i in firstLine + 1..lastLine) {
+                // Get the next y position using the difference between the current and last baseline
+                positionY += mLayout.getLineBaseline(i) - mLayout.getLineBaseline(i - 1)
+                drawLineNumber(canvas, mLayout, positionY, i)
+            }
+        } else {
+            setPadding(0, 0, 0, 0)
+        }
+
+        super.onDraw(canvas)
+    }
+
+    private fun init(context: Context) {
+        setHorizontallyScrolling(true)
+
+        filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
+            if (mModified &&
+                    end - start == 1 &&
+                    start < source.length &&
+                    dStart < dest.length) {
+                val c = source[start]
+
+                if (c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
+            }
+
+            source
+        })
+
+        addTextChangedListener(object : TextWatcher {
+            private var count = 0
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                this.count = count
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
+
+            override fun afterTextChanged(e: Editable) {
+                if (mPreferences.getAutoCloseBrackets()) autoCloseBrackets(e, count)
+                cancelUpdate()
+
+                if (!mModified) return
+
+                mUpdateHandler.postDelayed(mUpdateRunnable, 250)
+            }
+        })
+
+        // Set Syntax Colors
+        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
+        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
+        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
+        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
+        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
+
+        val bgPaint = Paint()
+        bgPaint.style = Paint.Style.FILL
+        bgPaint.color = Color.parseColor("#eeeeee")
+
+        mPaint.style = Paint.Style.FILL
+        mPaint.isAntiAlias = true
+        mPaint.color = Color.parseColor("#bbbbbb")
+        mPaint.textSize = getPixels(mPreferences.getFontSize())
+        viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
     }
 
     private fun clearSpans(e: Editable) {
@@ -84,123 +174,37 @@ class CodeEditText : AppCompatEditText {
         }
     }
 
-    fun setTextHighlighted(text: CharSequence) {
-        cancelUpdate()
-
-        mModified = false
-        setText(highlight(SpannableStringBuilder(text)))
-        mModified = true
-    }
-
-    fun findText(searchText: String, ignoreCase: Boolean) {
-        var needle = searchText
-
-        if (needle.isEmpty()) return
-
-        var startSelection = selectionEnd
-        var haystack = text.toString()
-
-        if (ignoreCase) {
-            needle = needle.toLowerCase()
-            haystack = haystack.toLowerCase()
-        }
-
-        var foundPosition = haystack.substring(startSelection).indexOf(needle)
-
-        if (foundPosition == -1) {
-            foundPosition = haystack.indexOf(needle)
-            startSelection = 0
-        }
-        if (foundPosition != -1) {
-            val newSelection = foundPosition + startSelection
-            setSelection(newSelection, needle.length + newSelection)
-        }
-    }
-
-    fun findPreviousText(searchText: String, ignoreCase: Boolean) {
-        var needle = searchText
-
-        if (needle.isEmpty()) return
-
-        val endSelection = selectionStart
-        var haystack = text.toString()
-        if (ignoreCase) {
-            needle = needle.toLowerCase()
-            haystack = haystack.toLowerCase()
-        }
-
-        var foundPosition = haystack.substring(0, endSelection).lastIndexOf(needle)
-        if (foundPosition == -1) foundPosition = haystack.lastIndexOf(needle)
-        if (foundPosition != -1) setSelection(foundPosition, needle.length + foundPosition)
-    }
-
-    fun goToLine(toLine: Int) {
-        var line = toLine - 1
-
-        when {
-            line < 0 -> line = 0
-            line > lineCount - 1 -> line = lineCount - 1
-        }
-
-        setSelection(layout.getLineStart(line))
-    }
-
-    /*fun toBegin() = setLine(0)
-
-    fun toEnd() = setLine(lineCount - 1)*/
-
-    private fun init(context: Context) {
-        setHorizontallyScrolling(true)
-
-        filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
-            if (mModified &&
-                    end - start == 1 &&
-                    start < source.length &&
-                    dStart < dest.length) {
-                val c = source[start]
-
-                if (c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
-            }
-
-            source
-        })
-
-        addTextChangedListener(
-                object : TextWatcher {
-
-                    override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) = Unit
-
-                    override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
-
-                    override fun afterTextChanged(e: Editable) {
-                        cancelUpdate()
-
-                        if (!mModified) return
-
-                        mUpdateHandler.postDelayed(mUpdateRunnable, mUpdateDelay.toLong())
-                    }
-                })
-
-        // Set Syntax Colors
-        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
-        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
-        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
-        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
-        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
-
-        val bgPaint = Paint()
-        bgPaint.style = Paint.Style.FILL
-        bgPaint.color = Color.parseColor("#eeeeee")
-
-        mPaint.style = Paint.Style.FILL
-        mPaint.isAntiAlias = true
-        mPaint.color = Color.parseColor("#bbbbbb")
-        mPaint.textSize = getPixels(Integer.parseInt(mPreferences.getString(Prefs.FONT_SIZE, "16")))
-        viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
-    }
-
     private fun cancelUpdate() {
         mUpdateHandler.removeCallbacks(mUpdateRunnable)
+    }
+
+    private fun autoCloseBrackets(e: Editable, count: Int) {
+        val selectedStr = SpannableStringBuilder(text)
+        val startSelection = selectionStart
+        val endSelection = selectionEnd
+
+        if (count > 0 && selectedStr.isNotEmpty() && startSelection > 0 && startSelection == endSelection) {
+            val c = selectedStr[startSelection - 1]
+            var nextC = 'x'
+            var prevC = 'x'
+
+            if (selectedStr.length > startSelection) {
+                nextC = selectedStr[startSelection]
+            }
+            if (startSelection > 1) {
+                prevC = selectedStr[startSelection - 2]
+            }
+            if (!(c != '(' || nextC == ')' || prevC == '(')) {
+                e.insert(startSelection, ")")
+                setSelection(startSelection)
+            } else if (!(c != '{' || nextC == '}' || prevC == '{')) {
+                e.insert(startSelection, "}")
+                setSelection(startSelection)
+            } else if (!(c != '[' || nextC == ']' || prevC == '[')) {
+                e.insert(startSelection, "]")
+                setSelection(startSelection)
+            }
+        }
     }
 
     private fun highlightWithoutChange(e: Editable) {
@@ -210,7 +214,7 @@ class CodeEditText : AppCompatEditText {
     }
 
     private fun highlight(editable: Editable): Editable {
-        if (!mPreferences.getBoolean(Prefs.SYNTAX_HIGHLIGHTING, true)) return editable
+        if (!mPreferences.getSyntaxHighlighting()) return editable
 
         try {
             // don't use e.clearSpans() because it will
@@ -365,40 +369,6 @@ class CodeEditText : AppCompatEditText {
             return count
         }
 
-    override fun onDraw(canvas: Canvas) {
-        if(mPreferences.getBoolean(Prefs.HIGHLIGHT_CURRENT_LINE, true)) {
-            getLineBounds(line, mLineBounds)
-            mPaintHighlight.color = Color.parseColor("#ffffff")
-            canvas.drawRect(mLineBounds, mPaintHighlight)
-        }
-
-        if (mPreferences.getBoolean(Prefs.SHOW_LINE_NUMBERS, true)) {
-            val padding = getPixels(digitCount * 10 + 10).toInt()
-            setPadding(padding, 0, 0, 0)
-
-            val firstLine = mLayout.getLineForVertical(scrollY)
-            val lastLine = try {
-                mLayout.getLineForVertical(scrollY + (height - extendedPaddingTop - extendedPaddingBottom))
-            } catch (e: NullPointerException) {
-                mLayout.getLineForVertical(scrollY + (height - paddingTop - paddingBottom))
-            }
-
-            // The y position starts at the baseline of the first line
-            var positionY = baseline + (mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0))
-            drawLineNumber(canvas, mLayout, positionY, firstLine)
-
-            for (i in firstLine + 1..lastLine) {
-                // Get the next y position using the difference between the current and last baseline
-                positionY += mLayout.getLineBaseline(i) - mLayout.getLineBaseline(i - 1)
-                drawLineNumber(canvas, mLayout, positionY, i)
-            }
-        } else {
-            setPadding(0, 0, 0, 0)
-        }
-
-        super.onDraw(canvas)
-    }
-
     private fun drawLineNumber(canvas: Canvas, layout: Layout?, positionY: Int, line: Int) {
         val positionX = layout!!.getLineLeft(line).toInt()
         canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), mPaint)
@@ -407,6 +377,67 @@ class CodeEditText : AppCompatEditText {
     private fun getPixels(dp: Int): Float =
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
 
+    fun setTextHighlighted(text: CharSequence) {
+        cancelUpdate()
+
+        mModified = false
+        setText(highlight(SpannableStringBuilder(text)))
+        mModified = true
+    }
+
+    fun findText(searchText: String, ignoreCase: Boolean) {
+        var needle = searchText
+
+        if (needle.isEmpty()) return
+
+        var startSelection = selectionEnd
+        var haystack = text.toString()
+
+        if (ignoreCase) {
+            needle = needle.toLowerCase()
+            haystack = haystack.toLowerCase()
+        }
+
+        var foundPosition = haystack.substring(startSelection).indexOf(needle)
+
+        if (foundPosition == -1) {
+            foundPosition = haystack.indexOf(needle)
+            startSelection = 0
+        }
+        if (foundPosition != -1) {
+            val newSelection = foundPosition + startSelection
+            setSelection(newSelection, needle.length + newSelection)
+        }
+    }
+
+    fun findPreviousText(searchText: String, ignoreCase: Boolean) {
+        var needle = searchText
+
+        if (needle.isEmpty()) return
+
+        val endSelection = selectionStart
+        var haystack = text.toString()
+        if (ignoreCase) {
+            needle = needle.toLowerCase()
+            haystack = haystack.toLowerCase()
+        }
+
+        var foundPosition = haystack.substring(0, endSelection).lastIndexOf(needle)
+        if (foundPosition == -1) foundPosition = haystack.lastIndexOf(needle)
+        if (foundPosition != -1) setSelection(foundPosition, needle.length + foundPosition)
+    }
+
+    fun goToLine(toLine: Int) {
+        var line = toLine - 1
+
+        when {
+            line < 0 -> line = 0
+            line > lineCount - 1 -> line = lineCount - 1
+        }
+
+        setSelection(layout.getLineStart(line))
+    }
+
     /*** Keyboard checking ***/
     override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {
         if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP)
@@ -414,7 +445,7 @@ class CodeEditText : AppCompatEditText {
         return super.dispatchKeyEvent(event)
     }
 
-    interface BackPressedListener {
+    internal interface BackPressedListener {
         fun onImeBack()
     }
 }

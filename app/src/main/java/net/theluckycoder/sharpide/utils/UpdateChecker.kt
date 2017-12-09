@@ -21,8 +21,7 @@ class UpdateChecker(private val onUpdateNeededListener: OnUpdateNeededListener) 
         if (remoteConfig.getBoolean(KEY_UPDATE_REQUIRED)) {
             val currentVersion = remoteConfig.getLong(KEY_CURRENT_VERSION).toInt()
 
-            if (currentVersion > BuildConfig.VERSION_CODE)
-                onUpdateNeededListener.onUpdateNeeded()
+            if (currentVersion > BuildConfig.VERSION_CODE) onUpdateNeededListener.onUpdateNeeded()
         }
     }
 }

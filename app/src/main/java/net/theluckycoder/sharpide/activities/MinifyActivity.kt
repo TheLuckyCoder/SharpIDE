@@ -86,7 +86,8 @@ class MinifyActivity : AppCompatActivity() {
         .replace("/\n+/".toRegex(), "\n")
         // remove comments
         .replace("/\\*.*\\*/".toRegex(), "").replace("//.*(?=\\n)".toRegex(), "")
-        .replace(" + ", "+").replace(" - ", "-").replace(" = ", "=").replace("if ", "if").replace("( ", "(")
+        .replace(" + ", "+").replace(" - ", "-").replace(" = ", "=")
+        .replace("if ", "if").replace("for ", "for").replace("( ", "(")
         // remove the new lines and tabs
         .replace("\n", "").replace("\t", "")
 
@@ -95,4 +96,5 @@ class MinifyActivity : AppCompatActivity() {
 
         Toast.makeText(this, R.string.file_minify_ready, Toast.LENGTH_LONG).show()
     }
+
 }

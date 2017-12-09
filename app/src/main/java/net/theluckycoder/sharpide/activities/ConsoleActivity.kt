@@ -10,9 +10,13 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
-import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
-import android.webkit.*
+import android.webkit.ConsoleMessage
+import android.webkit.JsPromptResult
+import android.webkit.JsResult
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
@@ -21,7 +25,7 @@ import net.theluckycoder.sharpide.utils.bind
 
 class ConsoleActivity : AppCompatActivity() {
 
-    private var mWindowsIsVisible = false
+    private val webView: WebView by bind(R.id.web_view)
     private val windowLayout: LinearLayout by bind(R.id.window)
     private val messageTv: TextView by bind(R.id.text_console_message)
 
@@ -34,44 +38,34 @@ class ConsoleActivity : AppCompatActivity() {
         windowLayout.visibility = View.GONE
 
         // WebView Setup
-        val webView: WebView = findViewById(R.id.web_view)
+        with(webView) {
+            loadUrl("about:blank")
+            val url = "file://" + filesDir.absolutePath + "/index.html"
+            settings.javaScriptEnabled = true
+            webViewClient = WebViewClient()
+            webChromeClient = MyChromeClient()
+            loadUrl(url)
+        }
+
+        savedInstanceState?.let {
+            webView.restoreState(it.getBundle("webViewState"))
+        }
+    }
+
+    override fun onDestroy() {
         with(webView) {
             clearCache(true)
             clearHistory()
             clearMatches()
-            val url = "file://" + filesDir.absolutePath + "/index.html"
-            with(settings) {
-                javaScriptEnabled = true
-                domStorageEnabled = true
-            }
-            webViewClient = WebViewClient()
-            webChromeClient = MyChromeClient()
-            loadUrl("about:blank")
-            loadUrl(url)
         }
+        super.onDestroy()
     }
 
-    fun expand(view: View) {
-        val containerView: ViewGroup = findViewById(R.id.container)
-        TransitionManager.beginDelayedTransition(containerView)
-
-        val fab = view as FloatingActionButton
-        val rotation = if (mWindowsIsVisible) {
-            mWindowsIsVisible = false
-            windowLayout.visibility = View.GONE
-            0f
-        } else {
-            mWindowsIsVisible = true
-            windowLayout.visibility = View.VISIBLE
-            180f
-        }
-
-        ViewCompat.animate(fab)
-                .rotation(rotation)
-                .withLayer()
-                .setDuration(400)
-                .setInterpolator(OvershootInterpolator())
-                .start()
+    override fun onSaveInstanceState(outState: Bundle?) {
+        val state = Bundle()
+        webView.saveState(state)
+        outState?.putBundle("webViewState", state)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -80,6 +74,25 @@ class ConsoleActivity : AppCompatActivity() {
             return true
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    fun expand(view: View) {
+        TransitionManager.beginDelayedTransition(findViewById(R.id.container))
+
+        val rotation = if (windowLayout.visibility == View.VISIBLE) {
+            windowLayout.visibility = View.GONE
+            0f
+        } else {
+            windowLayout.visibility = View.VISIBLE
+            180f
+        }
+
+        ViewCompat.animate(view as FloatingActionButton)
+                .rotation(rotation)
+                .withLayer()
+                .setDuration(400)
+                .setInterpolator(OvershootInterpolator())
+                .start()
     }
 
     private inner class MyChromeClient : WebChromeClient() {
@@ -95,7 +108,7 @@ class ConsoleActivity : AppCompatActivity() {
 
         override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String?, result: JsPromptResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("JavaScript")
+                    .setTitle("JavaScript Prompt")
                     .setMessage(message)
                     .setView(AppCompatEditText(this@ConsoleActivity).apply { setText(defaultValue) })
                     .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
@@ -107,7 +120,7 @@ class ConsoleActivity : AppCompatActivity() {
 
         override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("JavaScript")
+                    .setTitle("JavaScript Confirm")
                     .setMessage(message)
                     .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
                     .setNegativeButton(android.R.string.no) { _, _ -> result.cancel() }

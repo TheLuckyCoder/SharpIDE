@@ -67,6 +67,8 @@
     <string name="updater_new_update_desc">Please update the app to the newest version, to have the latest features!</string>
     <string name="updater_update">Update</string>
     <string name="updater_no">No, thanks</string>
+    <string name="pref_auto_close_brackets">Brackets Auto-Closing</string>
+    <string name="pref_auto_close_brackets_desc">Auto Close Brackets while writing</string>
 
     <!--<string name="intro_description_first">SharpIDE is an simple and easy to use JavaScript IDE.</string>
     <string name="intro_title_permission">Permission required</string>

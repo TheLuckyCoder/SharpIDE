@@ -8,7 +8,6 @@ import android.net.Uri
 import android.os.AsyncTask
 import android.os.Bundle
 import android.os.Handler
-import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -22,16 +21,38 @@ import android.text.Spannable
 import android.text.TextWatcher
 import android.view.MenuItem
 import android.view.View
-import android.widget.*
+import android.widget.Button
+import android.widget.CheckBox
+import android.widget.EditText
+import android.widget.HorizontalScrollView
+import android.widget.LinearLayout
+import android.widget.ScrollView
+import android.widget.TextView
+import android.widget.Toast
 import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.*
+import net.theluckycoder.sharpide.utils.Ads
+import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Const.PERMISSION_REQUEST_CODE
+import net.theluckycoder.sharpide.utils.CustomTabWidthSpan
+import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.UpdateChecker
+import net.theluckycoder.sharpide.utils.bind
+import net.theluckycoder.sharpide.utils.lazyFast
+import net.theluckycoder.sharpide.utils.saveFileInternally
+import net.theluckycoder.sharpide.utils.string
+import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import net.theluckycoder.sharpide.view.CodeEditText
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
-import java.io.*
+import java.io.BufferedReader
+import java.io.DataInputStream
+import java.io.File
+import java.io.FileInputStream
+import java.io.FileNotFoundException
+import java.io.IOException
+import java.io.InputStreamReader
 import java.util.regex.Pattern
 
 
@@ -39,7 +60,6 @@ import java.util.regex.Pattern
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UpdateChecker.OnUpdateNeededListener {
 
     private companion object {
-        private const val CHUNK = 20000
         private const val LOAD_FILE_REQUEST_CODE = 150
         private const val CHANGE_PATH_REQUEST_CODE = 151
     }
@@ -54,8 +74,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var mFileContent = ""
     private var mCurrentBuffer = ""
     private val mLoaded = StringBuilder()
-    private var mLastSavePath = ""
-    private var mDefaultFileName = ""
+    private lateinit var mDefaultFileName: String
+    private val mPreferences by lazyFast { Preferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         setTheme(R.style.AppTheme_NoActionBar)
@@ -86,17 +106,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
 
-
         // Load preferences
-        val preferences = PreferenceManager.getDefaultSharedPreferences(this)
-
-        mDefaultFileName = preferences.getString(Prefs.NEW_FILES_NAME, "Untitled") + ".js"
+        mDefaultFileName = mPreferences.getNewFilesName()
         mCurrentFile = File(mDefaultFileName)
         supportActionBar?.subtitle = mCurrentFile.name
 
-        codeEditText.textSize = Integer.parseInt(preferences.getString(Prefs.FONT_SIZE, "16")).toFloat()
-        if (preferences.getBoolean(Prefs.LOAD_LAST_FILE, true)) {
-            val lastFilePath = preferences.getString(Prefs.LAST_FILE_PATH, "")
+        codeEditText.textSize = mPreferences.getFontSize().toFloat()
+        if (mPreferences.getLoadLastFile()) {
+            val lastFilePath = mPreferences.getLastFilePath()
             val lastFile = File(lastFilePath)
 
             if (lastFilePath != "" && lastFile.isFile && lastFile.canRead()) {
@@ -105,19 +122,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        mLastSavePath = File(preferences.getString(Prefs.LAST_FILE_PATH, Const.MAIN_FOLDER)).absolutePath
-        if (mLastSavePath != Const.SDCARD_FOLDER) {
-            mLastSavePath = File(mLastSavePath).parent + "/"
-        }
-
-
         // Check for permission
         verifyStoragePermission()
         File(Const.MAIN_FOLDER).mkdirs()
 
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
-            if (preferences.getBoolean(Prefs.SHOW_SYMBOLS_BAR, true)) {
+            if (mPreferences.getShowSymbolsBar()) {
                 symbolScrollView.visibility = if (isOpen) View.VISIBLE else View.GONE
             }
         }
@@ -147,7 +158,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         when {
             drawer.isDrawerOpen(GravityCompat.START) -> drawer.closeDrawer(GravityCompat.START)
-            PreferenceManager.getDefaultSharedPreferences(this).getBoolean(Prefs.CONFIRM_QUIT, true) -> {
+            mPreferences.getConfirmQuit() -> {
                 AlertDialog.Builder(this)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.quit_confirm)
@@ -169,7 +180,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
             R.id.menu_save_as -> saveAs(false)
-            R.id.menu_open -> openFileClick()
+            R.id.menu_open -> {
+                Chooser(this,
+                        requestCode = LOAD_FILE_REQUEST_CODE,
+                        fileExtension = "js",
+                        showHiddenFiles = mPreferences.getShowHiddenFiles(),
+                        startPath = Const.MAIN_FOLDER)
+                        .start()
+            }
             R.id.menu_new -> saveAs(true)
             R.id.menu_file_info -> {
                 AlertDialog.Builder(this)
@@ -193,6 +211,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .setPositiveButton(R.string.action_apply) { _, _ ->
                             val etFind: EditText = dialogView.findViewById(R.id.edit_find)
                             val cbIgnoreCase: CheckBox = dialogView.findViewById(R.id.cb_ignore_case)
+
+                            if (etFind.text.isEmpty()) return@setPositiveButton
 
                             updateFabVisibility(etFind.text.string, cbIgnoreCase.isChecked)
 
@@ -265,10 +285,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         if (requestCode == CHANGE_PATH_REQUEST_CODE && resultCode == RESULT_OK) {
-            mLastSavePath = data.getStringExtra(Chooser.RESULT_PATH)
             mDialog?.let {
                 it.dismiss()
-                saveAs(true)
+                saveAs(true, data.getStringExtra(Chooser.RESULT_PATH))
             }
         }
     }
@@ -293,23 +312,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         return when {
             fileSize < 1024 -> fileSize.string + "B"
-            fileSize > 1024 && fileSize < 1024 * 1024 -> (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
+            fileSize > 1024 && fileSize < 1024 * 1024 -> {
+                (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
+            }
             else -> (Math.round(fileSize / (1024 * 1204) * 100.0) / 100.0).string + "MB"
         }
     }
 
     private fun getFileInfo() = "Size: ${getFileSize()}\nPath: ${mCurrentFile.path}\n"
 
-    private fun openFileClick() {
-        Chooser(this, LOAD_FILE_REQUEST_CODE,
-                fileExtension = "js",
-                showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
-                        .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
-                startPath = mLastSavePath)
-                .start()
-    }
-
-    private fun saveAs(newFile: Boolean) {
+    private fun saveAs(newFile: Boolean, folderPath: String? = null) {
         val dialogBuilder = AlertDialog.Builder(this)
 
         dialogBuilder.setTitle(if (newFile) R.string.create_new_file else R.string.menu_save_file_as)
@@ -323,15 +335,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val btnCancel: Button = dialogView.findViewById(R.id.button_cancel)
         val btnOk: Button = dialogView.findViewById(R.id.button_ok)
 
-        etFileName.setText(PreferenceManager.getDefaultSharedPreferences(this).getString(Prefs.NEW_FILES_NAME, "Untitled") + ".js")
+        etFileName.setText(mPreferences.getNewFilesName())
 
-        textSelectPath.text = mLastSavePath
+        textSelectPath.text = folderPath ?: Const.MAIN_FOLDER
         textSelectPath.setOnClickListener {
             Chooser(this@MainActivity,
                     requestCode = CHANGE_PATH_REQUEST_CODE,
                     fileExtension = "js",
-                    showHiddenFiles = PreferenceManager.getDefaultSharedPreferences(this)
-                            .getBoolean(Prefs.SHOW_HIDDEN_FILES, false),
+                    showHiddenFiles = mPreferences.getShowHiddenFiles(),
                     startPath = Const.MAIN_FOLDER,
                     chooserType = Chooser.FOLDER_CHOOSER)
                     .start()
@@ -351,7 +362,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             val file = File(textSelectPath.text.string + etFileName.text.string)
             if (!file.exists() && newFile) {
-                file.writeText("")
+                file.createNewFile()
                 Toast.makeText(this@MainActivity, R.string.new_file_created, Toast.LENGTH_SHORT).show()
             }
 
@@ -363,23 +374,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             mDialog!!.dismiss()
-
         }
 
         mDialog!!.show()
     }
 
-    private fun loadInChunks(bigString: String) {
-        mLoaded.append(bigString.substring(0, CHUNK))
-        codeEditText.setTextHighlighted(mLoaded)
-    }
-
     private fun loadDocument(fileContent: String) {
+        val chunkSize = 20000
+
         scrollView.smoothScrollTo(0, 0)
 
         mLoaded.delete(0, mLoaded.length)
-        if (fileContent.length > CHUNK) {
-            loadInChunks(fileContent)
+        if (fileContent.length > chunkSize) {
+            mLoaded.append(fileContent.substring(0, chunkSize))
+            codeEditText.setTextHighlighted(mLoaded)
         } else {
             mLoaded.append(fileContent)
             codeEditText.setTextHighlighted(mLoaded)
@@ -389,16 +397,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             private var start = 0
             private var end = 0
 
-            override fun beforeTextChanged(p1: CharSequence, p2: Int, p3: Int, p4: Int) = Unit
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
 
-            override fun onTextChanged(p1: CharSequence, start: Int, before: Int, count: Int) {
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
                 this.start = start
                 this.end = start + count
             }
 
-            override fun afterTextChanged(p1: Editable) {
+            override fun afterTextChanged(s: Editable) {
                 Handler().postDelayed({
-                    applyTabWidth(p1, start, end)
+                    applyTabWidth(s, start, end)
 
                     mCurrentBuffer = codeEditText.text.string
                 }, 500)
@@ -428,24 +436,23 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             fabClose.setOnClickListener { updateFabVisibility(null, false) }
         } else {
             fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
-                override fun onHidden(fab: FloatingActionButton?) {
+                override fun onHidden(fab: FloatingActionButton) {
                     super.onHidden(fab)
-                    fab?.visibility = View.GONE
+                    fab.visibility = View.GONE
                 }
             })
             fabNext.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
-                override fun onHidden(fab: FloatingActionButton?) {
+                override fun onHidden(fab: FloatingActionButton) {
                     super.onHidden(fab)
-                    fab?.visibility = View.GONE
+                    fab.visibility = View.GONE
                 }
             })
             fabClose.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
-                override fun onHidden(fab: FloatingActionButton?) {
+                override fun onHidden(fab: FloatingActionButton) {
                     super.onHidden(fab)
-                    fab?.visibility = View.GONE
+                    fab.visibility = View.GONE
                 }
             })
-            return
         }
     }
 
@@ -467,8 +474,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         override fun doInBackground(vararg paths: Void?): String {
             try {
-                val fis = FileInputStream(mCurrentFile)
-                val dis = DataInputStream(fis)
+                val dis = DataInputStream(FileInputStream(mCurrentFile))
                 val br = BufferedReader(InputStreamReader(dis))
                 try {
                     val sb = StringBuilder()
@@ -499,9 +505,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         override fun onPostExecute(string: String) {
             loadDocument(string)
-            val editor = PreferenceManager.getDefaultSharedPreferences(this@MainActivity).edit()
-            editor.putString(Prefs.LAST_FILE_PATH, mCurrentFile.absolutePath)
-            editor.apply()
+            mPreferences.setLastFilePath(mCurrentFile.absolutePath)
         }
     }
 

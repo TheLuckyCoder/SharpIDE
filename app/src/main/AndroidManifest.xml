@@ -39,7 +39,6 @@
             android:label="@string/title_settings" />
         <activity
             android:name=".activities.ConsoleActivity"
-            android:configChanges="orientation|screenSize"
             android:label="@string/title_console" />
 
         <meta-data

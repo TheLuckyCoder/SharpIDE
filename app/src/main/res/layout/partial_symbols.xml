@@ -20,77 +20,60 @@
         <TextView
             style="@style/SymbolView"
             android:text="{" />
-
         <TextView
             style="@style/SymbolView"
             android:text="}" />
-
         <TextView
             style="@style/SymbolView"
             android:text="(" />
-
         <TextView
             style="@style/SymbolView"
             android:text=")" />
-
         <TextView
             style="@style/SymbolView"
             android:text=";" />
-
         <TextView
             style="@style/SymbolView"
             android:text="," />
-
         <TextView
             style="@style/SymbolView"
             android:text="=" />
-
         <TextView
             style="@style/SymbolView"
             android:text="&quot;" />
-
         <TextView
             style="@style/SymbolView"
             android:text="|" />
-
         <TextView
             style="@style/SymbolView"
             android:text="&amp;" />
-
         <TextView
             style="@style/SymbolView"
             android:text="!" />
-
         <TextView
             style="@style/SymbolView"
             android:text="[" />
-
         <TextView
             style="@style/SymbolView"
             android:text="]" />
-
         <TextView
             style="@style/SymbolView"
             android:text="+" />
-
         <TextView
             style="@style/SymbolView"
             android:text="-" />
-
         <TextView
             style="@style/SymbolView"
             android:text="*" />
-
         <TextView
             style="@style/SymbolView"
             android:text="/" />
-
         <TextView
             style="@style/SymbolView"
             android:text="&lt;" />
-
         <TextView
             style="@style/SymbolView"
             android:text="&gt;" />
     </LinearLayout>
+
 </HorizontalScrollView>
