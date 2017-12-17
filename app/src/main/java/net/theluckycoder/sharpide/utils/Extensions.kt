@@ -12,6 +12,29 @@ import java.io.IOException
 
 val Any.string get() = toString()
 
+fun String.replaceUtil(search: String, replace: String): String {
+    if (this.isEmpty() || search.isEmpty()) return this
+
+    var start = 0
+    var end = this.indexOf(search, start)
+
+    if (end == -1) return this
+
+    var increase = replace.length - search.length
+    increase = if (increase < 0) 0 else increase
+    increase *= 16
+
+    val builder = StringBuilder(this.length + increase)
+    while (end != -1) {
+        builder.append(this.substring(start, end)).append(replace)
+        start = end + search.length
+        end = this.indexOf(search, start)
+    }
+    builder.append(this.substring(start))
+
+    return builder.toString()
+}
+
 fun Activity.verifyStoragePermission() {
     val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
 

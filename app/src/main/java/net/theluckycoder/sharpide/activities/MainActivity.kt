@@ -1,13 +1,11 @@
 package net.theluckycoder.sharpide.activities
 
 import android.annotation.SuppressLint
-import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.AsyncTask
 import android.os.Bundle
-import android.os.Handler
+import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -15,10 +13,9 @@ import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.app.AppCompatDelegate
 import android.support.v7.widget.Toolbar
-import android.text.Editable
-import android.text.Spannable
-import android.text.TextWatcher
+import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
@@ -26,20 +23,20 @@ import android.widget.CheckBox
 import android.widget.EditText
 import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
-import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
-import com.google.android.gms.ads.MobileAds
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Const.PERMISSION_REQUEST_CODE
-import net.theluckycoder.sharpide.utils.CustomTabWidthSpan
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.bind
 import net.theluckycoder.sharpide.utils.lazyFast
+import net.theluckycoder.sharpide.utils.replaceUtil
 import net.theluckycoder.sharpide.utils.saveFileInternally
 import net.theluckycoder.sharpide.utils.string
 import net.theluckycoder.sharpide.utils.verifyStoragePermission
@@ -57,45 +54,50 @@ import java.util.regex.Pattern
 
 
 @SuppressLint("InflateParams")
-class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, UpdateChecker.OnUpdateNeededListener {
+class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private companion object {
-        private const val LOAD_FILE_REQUEST_CODE = 150
-        private const val CHANGE_PATH_REQUEST_CODE = 151
+        private const val LOAD_FILE_CODE = 10
+        private const val CHANGE_PATH_CODE = 11
     }
 
-    private val codeEditText: CodeEditText by bind(R.id.edit_main)
-    private val scrollView: ScrollView by bind(R.id.main_scroll_view)
-    private val symbolScrollView: HorizontalScrollView by bind(R.id.symbolScrollView)
+    private val codeEditText: CodeEditText by bind(R.id.code_editor)
+    private val symbolScrollView: HorizontalScrollView by bind(R.id.scroll_view_symbols)
 
     private val mAds = Ads(this)
-    private var mDialog: AlertDialog? = null
+    private var mSaveDialog: AlertDialog? = null
     private lateinit var mCurrentFile: File
-    private var mFileContent = ""
-    private var mCurrentBuffer = ""
-    private val mLoaded = StringBuilder()
-    private lateinit var mDefaultFileName: String
     private val mPreferences by lazyFast { Preferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Set the Theme
         setTheme(R.style.AppTheme_NoActionBar)
+        if (PreferenceManager.getDefaultSharedPreferences(this).getBoolean("dark_theme", false)){
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Set Toolbar
         val toolbar: Toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         // Views
         val symbolLayout: LinearLayout = findViewById(R.id.layout_symbols)
         for (i in 0 until symbolLayout.childCount) {
-            symbolLayout.getChildAt(i).setOnClickListener({ codeEditText.text.insert(codeEditText.selectionStart, (it as TextView).text.string) })
+            symbolLayout.getChildAt(i).setOnClickListener { view ->
+                codeEditText.text.insert(codeEditText.selectionStart, (view as TextView).text.string)
+            }
         }
 
-        // Set up navigation drawer
+        // Set up Drawer Layout
         val drawer: DrawerLayout = findViewById(R.id.drawer_layout)
         val toggle = object : ActionBarDrawerToggle(this, drawer, toolbar, 0, 0) {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 super.onDrawerSlide(drawerView, slideOffset)
+
                 UIUtil.hideKeyboard(this@MainActivity)
                 codeEditText.clearFocus()
             }
@@ -103,12 +105,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawer.addDrawerListener(toggle)
         toggle.syncState()
 
+        // Setup Navigation View
         val navigationView: NavigationView = findViewById(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
+        val header = navigationView.getHeaderView(0)
+        header.findViewById<View>(R.id.header_layout_main).setOnClickListener {
+            startActivity(Intent(this, AboutActivity::class.java))
+            drawer.closeDrawer(GravityCompat.START)
+        }
+        header.findViewById<View>(R.id.header_image_settings).setOnClickListener {
+            startActivity(Intent(this, SettingsActivity::class.java))
+            drawer.closeDrawer(GravityCompat.START)
+        }
 
         // Load preferences
-        mDefaultFileName = mPreferences.getNewFilesName()
-        mCurrentFile = File(mDefaultFileName)
+        mCurrentFile = File(mPreferences.getNewFilesName())
         supportActionBar?.subtitle = mCurrentFile.name
 
         codeEditText.textSize = mPreferences.getFontSize().toFloat()
@@ -118,7 +129,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             if (lastFilePath != "" && lastFile.isFile && lastFile.canRead()) {
                 mCurrentFile = lastFile
-                LoadTask().execute()
+                loadFileTask()
             }
         }
 
@@ -128,29 +139,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
-            if (mPreferences.getShowSymbolsBar()) {
+            if (mPreferences.showSymbolsBar()) {
                 symbolScrollView.visibility = if (isOpen) View.VISIBLE else View.GONE
             }
         }
 
         // Setup UpdateChecker
-        UpdateChecker(this).check()
+        UpdateChecker {
+            AlertDialog.Builder(this@MainActivity)
+                    .setTitle(R.string.updater_new_version)
+                    .setMessage(R.string.updater_new_update_desc)
+                    .setPositiveButton(R.string.updater_update, { _, _ ->
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Const.MARKET_LINK))
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                    }).setNegativeButton(R.string.updater_no, null)
+                    .show()
+        }
 
         // Setup ads
-        MobileAds.initialize(this, "ca-app-pub-1279472163660969~2916940339")
-        mAds.loadInterstitial()
-    }
-
-    override fun onUpdateNeeded() {
-        AlertDialog.Builder(this)
-                .setTitle(R.string.updater_new_version)
-                .setMessage(R.string.updater_new_update_desc)
-                .setPositiveButton(R.string.updater_update, { _, _ ->
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=net.theluckycoder.scriptcraft"))
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(intent)
-                }).setNegativeButton(getString(R.string.updater_no), null)
-                .show()
+        mAds.initAds().loadInterstitial()
     }
 
     override fun onBackPressed() {
@@ -158,7 +166,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         when {
             drawer.isDrawerOpen(GravityCompat.START) -> drawer.closeDrawer(GravityCompat.START)
-            mPreferences.getConfirmQuit() -> {
+            mPreferences.confirmAppQuit() -> {
                 AlertDialog.Builder(this)
                         .setTitle(R.string.app_name)
                         .setMessage(R.string.quit_confirm)
@@ -173,8 +181,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_save -> {
-                if (mCurrentFile.path != mDefaultFileName) {
-                    SaveTask(false).execute()
+                if (mCurrentFile.path !=  mPreferences.getNewFilesName()) {
+                    saveFileTask(false)
                 } else {
                     saveAs(false)
                 }
@@ -182,9 +190,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_save_as -> saveAs(false)
             R.id.menu_open -> {
                 Chooser(this,
-                        requestCode = LOAD_FILE_REQUEST_CODE,
+                        requestCode = LOAD_FILE_CODE,
                         fileExtension = "js",
-                        showHiddenFiles = mPreferences.getShowHiddenFiles(),
+                        showHiddenFiles = mPreferences.showHiddenFiles(),
                         startPath = Const.MAIN_FOLDER)
                         .start()
             }
@@ -197,13 +205,65 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .show()
             }
             R.id.menu_run -> {
-                if (mCurrentFile.path != mDefaultFileName) {
-                    SaveTask(true).execute()
+                if (mCurrentFile.path !=  mPreferences.getNewFilesName()) {
+                    saveFileTask(true)
                 } else {
                     saveAs(false)
                 }
             }
-            R.id.menu_find -> {
+            R.id.menu_minify -> startActivity(Intent(this, MinifyActivity::class.java))
+        }
+
+        findViewById<DrawerLayout>(R.id.drawer_layout).closeDrawer(GravityCompat.START)
+        return true
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (data == null) return
+
+        if (requestCode == LOAD_FILE_CODE && resultCode == RESULT_OK) {
+            val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
+            if (newFile.length() >= 10485760) { // if the file is bigger than 10 MB
+                Toast.makeText(this, R.string.file_too_big, Toast.LENGTH_LONG).show()
+                return
+            }
+
+            if (newFile.isFile && newFile.canRead()) {
+                mCurrentFile = newFile
+                loadFileTask()
+            }
+        }
+
+        if (requestCode == CHANGE_PATH_CODE && resultCode == RESULT_OK) {
+            mSaveDialog?.let {
+                it.dismiss()
+                saveAs(true, data.getStringExtra(Chooser.RESULT_PATH))
+            }
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.size < 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "External Storage permission is required in order for the app to work",
+                        Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                File(Const.MAIN_FOLDER).mkdir()
+                loadFileTask()
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.main_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        when(item.itemId) {
+           R.id.menu_find -> {
                 val dialogView = layoutInflater.inflate(R.layout.dialog_find, null)
                 AlertDialog.Builder(this)
                         .setTitle(R.string.menu_find)
@@ -228,6 +288,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .setPositiveButton(R.string.action_apply) { _, _ ->
                             val etLine: EditText = dialogView.findViewById(R.id.edit_line)
 
+                            if (etLine.text.isEmpty()) return@setPositiveButton
+
                             codeEditText.goToLine(etLine.text.string.toInt())
 
                             mAds.showInterstitial()
@@ -243,78 +305,31 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                             val etFind: EditText = dialogView.findViewById(R.id.edit_find)
                             val etReplace: EditText = dialogView.findViewById(R.id.edit_replace)
 
-                            val newText = codeEditText.text.string.replace(etFind.text.string, etReplace.text.string)
+                            if (etFind.text.isEmpty()) return@setPositiveButton
+
+                            val newText = codeEditText.text.string.replaceUtil(etFind.text.string, etReplace.text.string)
                             codeEditText.setText(newText)
 
                             mAds.showInterstitial()
                         }.setNegativeButton(android.R.string.cancel, null)
                         .show()
             }
-            R.id.menu_minify -> startActivity(Intent(this, MinifyActivity::class.java))
-            R.id.menu_settings -> startActivity(Intent(this, SettingsActivity::class.java))
-            R.id.menu_rate -> {
-                val uri = Uri.parse("market://details?id=" + packageName)
-                val goToMarket = Intent(Intent.ACTION_VIEW, uri)
-                goToMarket.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_MULTIPLE_TASK)
-                try {
-                    startActivity(goToMarket)
-                } catch (e: ActivityNotFoundException) {
-                    startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://play.google.com/store/apps/details?id=net.theluckycoder.scriptcraft")))
-                }
-            }
+            R.id.menu_edit_cut -> codeEditText.cut()
+            R.id.menu_edit_copy -> codeEditText.copy()
+            R.id.menu_edit_paste -> codeEditText.paste()
+            R.id.menu_edit_select_line -> codeEditText.selectLine()
+            R.id.menu_edit_select_all -> codeEditText.selectAll()
         }
-
-        findViewById<DrawerLayout>(R.id.drawer_layout).closeDrawer(GravityCompat.START)
-        return true
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (data == null) return
-
-        if (requestCode == LOAD_FILE_REQUEST_CODE && resultCode == RESULT_OK) {
-            val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
-            if (newFile.length() >= 10485760) { // if the file is bigger than 10 MB
-                Toast.makeText(this, R.string.file_too_big, Toast.LENGTH_LONG).show()
-                return
-            }
-
-            mCurrentFile = newFile
-
-            LoadTask().execute()
-        }
-
-        if (requestCode == CHANGE_PATH_REQUEST_CODE && resultCode == RESULT_OK) {
-            mDialog?.let {
-                it.dismiss()
-                saveAs(true, data.getStringExtra(Chooser.RESULT_PATH))
-            }
-        }
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.size < 0 && grantResults[0] != PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "External Storage permission is required in order for the app to work", Toast.LENGTH_SHORT).show()
-                finish()
-            } else {
-                File(Const.MAIN_FOLDER).mkdir()
-                LoadTask().execute()
-            }
-        }
+        return super.onOptionsItemSelected(item)
     }
 
     /*** Private Functions  ***/
     private fun getFileSize(): String {
-        if (!mCurrentFile.isFile) return ""
-
         val fileSize = mCurrentFile.length().toDouble()
 
         return when {
             fileSize < 1024 -> fileSize.string + "B"
-            fileSize > 1024 && fileSize < 1024 * 1024 -> {
-                (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
-            }
+            fileSize > 1024 && fileSize < 1024 * 1024 -> (Math.round(fileSize / 1024 * 100.0) / 100.0).string + "KB"
             else -> (Math.round(fileSize / (1024 * 1204) * 100.0) / 100.0).string + "MB"
         }
     }
@@ -328,7 +343,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_new_file, null)
         dialogBuilder.setView(dialogView)
-        mDialog = dialogBuilder.create()
+        mSaveDialog = dialogBuilder.create()
 
         val etFileName: EditText = dialogView.findViewById(R.id.file_name)
         val textSelectPath: TextView = dialogView.findViewById(R.id.text_select_path)
@@ -340,16 +355,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         textSelectPath.text = folderPath ?: Const.MAIN_FOLDER
         textSelectPath.setOnClickListener {
             Chooser(this@MainActivity,
-                    requestCode = CHANGE_PATH_REQUEST_CODE,
+                    requestCode = CHANGE_PATH_CODE,
                     fileExtension = "js",
-                    showHiddenFiles = mPreferences.getShowHiddenFiles(),
+                    showHiddenFiles = mPreferences.showHiddenFiles(),
                     startPath = Const.MAIN_FOLDER,
                     chooserType = Chooser.FOLDER_CHOOSER)
                     .start()
         }
 
         btnCancel.setOnClickListener {
-            mDialog!!.dismiss()
+            mSaveDialog!!.dismiss()
         }
 
         btnOk.setOnClickListener {
@@ -367,55 +382,36 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             mCurrentFile = file
+            mPreferences.setLastFilePath(mCurrentFile.absolutePath)
 
-            if (!newFile) {
-                SaveTask(false).execute()
-                LoadTask().execute()
+            if (newFile) {
+                loadFileTask()
+            } else {
+                saveFileTask(false)
             }
 
-            mDialog!!.dismiss()
+            mSaveDialog!!.dismiss()
         }
 
-        mDialog!!.show()
+        mSaveDialog!!.show()
     }
 
     private fun loadDocument(fileContent: String) {
+        mPreferences.setLastFilePath(mCurrentFile.absolutePath)
+        codeEditText.scrollTo(0, 0)
+
         val chunkSize = 20000
+        val loaded = StringBuilder()
 
-        scrollView.smoothScrollTo(0, 0)
-
-        mLoaded.delete(0, mLoaded.length)
         if (fileContent.length > chunkSize) {
-            mLoaded.append(fileContent.substring(0, chunkSize))
-            codeEditText.setTextHighlighted(mLoaded)
+            loaded.append(fileContent.substring(0, chunkSize))
+            codeEditText.setTextHighlighted(loaded)
         } else {
-            mLoaded.append(fileContent)
-            codeEditText.setTextHighlighted(mLoaded)
+            loaded.append(fileContent)
+            codeEditText.setTextHighlighted(loaded)
         }
 
-        codeEditText.addTextChangedListener(object : TextWatcher {
-            private var start = 0
-            private var end = 0
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
-
-            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                this.start = start
-                this.end = start + count
-            }
-
-            override fun afterTextChanged(s: Editable) {
-                Handler().postDelayed({
-                    applyTabWidth(s, start, end)
-
-                    mCurrentBuffer = codeEditText.text.string
-                }, 500)
-            }
-        })
-        mCurrentBuffer = codeEditText.text.string
-
         supportActionBar?.subtitle = mCurrentFile.name
-        scrollView.visibility = View.VISIBLE
 
         mAds.showInterstitial()
     }
@@ -456,36 +452,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun applyTabWidth(text: Editable, start: Int, end: Int) {
-        var newStart = start
-
-        while (newStart < end) {
-            val index = text.string.indexOf("\t", newStart)
-            if (index < 0)
-                break
-            text.setSpan(CustomTabWidthSpan(), index, index + 1, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-            newStart = index + 1
-        }
-    }
-
-    /*** Async Classes  ***/
-    @SuppressLint("StaticFieldLeak")
-    private inner class LoadTask internal constructor() : AsyncTask<Void, Void, String>() {
-
-        override fun doInBackground(vararg paths: Void?): String {
-            try {
+    private fun loadFileTask() {
+        async(CommonPool) {
+            val fileContent = try {
                 val dis = DataInputStream(FileInputStream(mCurrentFile))
                 val br = BufferedReader(InputStreamReader(dis))
+                val sb = StringBuilder()
                 try {
-                    val sb = StringBuilder()
                     var line = br.readLine()
 
                     while (line != null) {
                         sb.append(line).append("\n")
                         line = br.readLine()
                     }
-                    mFileContent = sb.string
-                    return mFileContent
                 } catch (e: IOException) {
                     e.printStackTrace()
                 } finally {
@@ -494,45 +473,40 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     } catch (e: IOException) {
                         e.printStackTrace()
                     }
-
                 }
+                sb.string
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
+                ""
             }
-
-            return ""
-        }
-
-        override fun onPostExecute(string: String) {
-            loadDocument(string)
-            mPreferences.setLastFilePath(mCurrentFile.absolutePath)
+            runOnUiThread {
+                loadDocument(fileContent)
+            }
         }
     }
 
-    @SuppressLint("StaticFieldLeak")
-    private inner class SaveTask internal constructor(private val startConsole: Boolean) : AsyncTask<Void, Void, Void>() {
+    private fun saveFileTask(startConsole: Boolean) {
+        async(CommonPool) {
+            val fileContent = codeEditText.text.string
+            mCurrentFile.writeText(fileContent)
 
-        override fun doInBackground(vararg voids: Void?): Void? {
-            mFileContent = codeEditText.text.string
-            mCurrentFile.writeText(mFileContent)
-
-            if (startConsole)
+            if (startConsole) {
                 try {
-                    this@MainActivity.saveFileInternally("main.js", mFileContent)
-                    this@MainActivity.saveFileInternally("index.html", "<!DOCTYPE html>\n<html>\n<head>\n<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>")
+                    this@MainActivity.saveFileInternally("main.js", fileContent)
+                    this@MainActivity.saveFileInternally("index.html", "<!DOCTYPE html>\n<html>\n<head>\n" +
+                            "<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>")
                 } catch (e: RuntimeException) {
                     e.printStackTrace()
                 }
+            }
 
-            return null
-        }
+            runOnUiThread {
+                Toast.makeText(this@MainActivity, R.string.file_saved, Toast.LENGTH_SHORT).show()
 
-        override fun onPostExecute(v: Void?) {
-            Toast.makeText(this@MainActivity, R.string.file_saved, Toast.LENGTH_SHORT).show()
+                mAds.showInterstitial()
 
-            mAds.showInterstitial()
-
-            if (startConsole) startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
+                if (startConsole) startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
+            }
         }
     }
 }

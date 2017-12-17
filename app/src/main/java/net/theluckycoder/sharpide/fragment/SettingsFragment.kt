@@ -1,38 +1,31 @@
 package net.theluckycoder.sharpide.fragment
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
-import android.preference.Preference
-import android.preference.PreferenceFragment
-
-import de.psdev.licensesdialog.LicensesDialog
-import de.psdev.licensesdialog.licenses.ApacheSoftwareLicense20
-import de.psdev.licensesdialog.model.Notice
-import de.psdev.licensesdialog.model.Notices
+import android.support.v7.app.AppCompatDelegate
+import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import net.theluckycoder.sharpide.R
 
-class SettingsFragment : PreferenceFragment() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+class SettingsFragment : PreferenceFragmentCompat() {
+
+    override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.preferences)
 
-        findPreference("author").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("http://theluckycoder.net")))
-            true
-        }
+        findPreference("dark_theme").setOnPreferenceClickListener {
+            if (preferenceManager.sharedPreferences.getBoolean("dark_theme", false)){
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
 
-        findPreference("licenses").onPreferenceClickListener = Preference.OnPreferenceClickListener {
-            val notices = Notices()
-            notices.addNotice(Notice("KeyboardVisibilityEvent", "http://yslibrary.net", "Copyright 2015-2017 Shimizu Yasuhiro (yshrsmz)", ApacheSoftwareLicense20()))
-
-            LicensesDialog.Builder(activity)
-                    .setNotices(notices)
-                    .setIncludeOwnLicense(true)
-                    .build()
-                    .show()
+            activity?.let {
+                val intent = it.intent
+                it.finish()
+                startActivity(intent)
+            }
             true
         }
     }
+
+
 }

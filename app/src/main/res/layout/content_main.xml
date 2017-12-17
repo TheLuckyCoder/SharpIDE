@@ -8,20 +8,15 @@
     tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <ScrollView
-        android:id="@+id/main_scroll_view"
+    <net.theluckycoder.sharpide.view.CodeEditText
+        android:id="@+id/code_editor"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
-
-        <net.theluckycoder.sharpide.view.CodeEditText
-            android:id="@+id/edit_main"
-            android:background="@android:color/transparent"
-            android:focusable="true"
-            android:imeOptions="flagNoExtractUi"
-            android:inputType="textVisiblePassword|textMultiLine"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
-    </ScrollView>
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent"
+        android:completionThreshold="1"
+        android:gravity="top"
+        android:imeOptions="flagNoExtractUi"
+        android:inputType="textVisiblePassword|textMultiLine" />
 
     <LinearLayout
         android:layout_width="wrap_content"
@@ -57,4 +52,5 @@
     </LinearLayout>
 
     <include layout="@layout/partial_symbols" />
+
 </android.support.design.widget.CoordinatorLayout>

@@ -3,4 +3,7 @@
     <dimen name="view_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="console_margin">8dp</dimen>
+
+    <dimen name="card_margin_horizontal">8dp</dimen>
+    <dimen name="card_margin_vertical">8dp</dimen>
 </resources>

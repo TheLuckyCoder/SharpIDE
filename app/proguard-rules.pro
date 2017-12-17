@@ -4,7 +4,13 @@
 -allowaccessmodification
 -dontpreverify
 
+# Crashlythics
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 -keep class com.crashlytics.** { *; }
 -dontwarn com.crashlytics.**
+
+# Coroutines
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}

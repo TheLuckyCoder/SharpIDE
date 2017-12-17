@@ -3,6 +3,7 @@ package net.theluckycoder.sharpide.utils
 import android.content.Context
 import android.preference.PreferenceManager
 
+
 class Preferences(context: Context) {
 
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
@@ -15,21 +16,25 @@ class Preferences(context: Context) {
         preferences.edit().putString("last_file_path", path).apply()
     }
 
-    fun getConfirmQuit() = preferences.getBoolean("quit_confirm", true)
+    fun confirmAppQuit() = preferences.getBoolean("quit_confirm", true)
 
-    fun getShowHiddenFiles() = preferences.getBoolean("show_hidden_files", false)
+    fun useDarkTheme() = preferences.getBoolean("dark_theme", false)
+
+    fun showHiddenFiles() = preferences.getBoolean("show_hidden_files", false)
 
     fun getNewFilesName() = preferences.getString("new_files_name", "Untitled") + ".js"
 
-    fun getFontSize() = preferences.getString("font_size", "16").toInt()
+    fun getFontSize() = preferences.getInt("editor_font_size", 18)
 
-    fun getShowLineNumbers() = preferences.getBoolean("show_line_numbers", true)
+    fun showLineNumbers() = preferences.getBoolean("show_line_numbers", true)
 
-    fun getShowSymbolsBar() = preferences.getBoolean("show_symbols_bar", true)
+    fun showSymbolsBar() = preferences.getBoolean("show_symbols_bar", true)
 
-    fun getSyntaxHighlighting() = preferences.getBoolean("enable_syntax_highlighting", true)
+    fun isSyntaxHighlightingEnabled() = preferences.getBoolean("enable_syntax_highlighting", true)
 
-    fun getHighlightCurrentLine() = preferences.getBoolean("highlight_current_line", true)
+    fun highlightCurrentLine() = preferences.getBoolean("highlight_current_line", true)
 
-    fun getAutoCloseBrackets() = preferences.getBoolean("auto_close_brackets", true)
+    fun autoCloseBrackets() = preferences.getBoolean("auto_close_brackets", true)
+
+    fun showSuggestions() = preferences.getBoolean("show_code_suggestions", false)
 }

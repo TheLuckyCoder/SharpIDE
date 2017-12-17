@@ -5,6 +5,7 @@ import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdView
 import com.google.android.gms.ads.InterstitialAd
+import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 
@@ -12,6 +13,11 @@ import net.theluckycoder.sharpide.R
 class Ads(private val activity: Activity) {
 
     private val interstitialAd by lazyFast { InterstitialAd(activity) }
+
+    fun initAds(): Ads {
+        MobileAds.initialize(activity, "ca-app-pub-1279472163660969~2916940339")
+        return this
+    }
 
     fun loadBanner() {
         activity.findViewById<AdView>(R.id.adView).loadAd(newAdRequest())
@@ -36,7 +42,7 @@ class Ads(private val activity: Activity) {
     }
 
     private fun newAdRequest(): AdRequest {
-        val testDevice = if (BuildConfig.DEBUG) "221E5C37FA6D629E99A639B912C683D3" else ""
+        val testDevice = if (BuildConfig.DEBUG) "21996E7D39CB4A757CBEF3F4EAB93D6B" else ""
         return AdRequest.Builder()
                 .addTestDevice(testDevice)
                 .build()

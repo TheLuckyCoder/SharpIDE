@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
     <PreferenceCategory android:title="@string/pref_category_general">
         <CheckBoxPreference
             android:title="@string/pref_load_last_file"
@@ -13,6 +15,13 @@
             android:icon="@drawable/ic_pref_exit_confirm"
             android:defaultValue="true"
             android:key="quit_confirm" />
+
+        <SwitchPreference
+            android:title="@string/pref_dark_theme"
+            android:summary="@string/pref_dark_theme_desc"
+            android:icon="@drawable/ic_pref_dark_theme"
+            android:defaultValue="false"
+            android:key="dark_theme" />
 
         <CheckBoxPreference
             android:title="@string/pref_hidden_files"
@@ -30,15 +39,15 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_editor">
-        <EditTextPreference
+        <!--suppress AndroidElementNotAllowed -->
+        <SeekBarPreference
             android:title="@string/pref_font_size"
             android:summary="@string/pref_font_size_desc"
             android:icon="@drawable/ic_pref_font_size"
-            android:key="font_size"
-            android:defaultValue="16"
-            android:dialogTitle="@string/pref_font_size"
-            android:inputType="number"
-            android:maxLength="3" />
+            android:key="editor_font_size"
+            app:min="8"
+            android:max="35"
+            android:defaultValue="18" />
 
         <CheckBoxPreference
             android:title="@string/pref_line_numbers"
@@ -71,15 +80,12 @@
             android:summary="@string/pref_auto_close_brackets_desc"
             android:defaultValue="true"
             android:key="auto_close_brackets" />
+
+        <CheckBoxPreference
+            android:title="Show code suggestions"
+            android:summary="This feature is still experimental and might not work as expected"
+            android:defaultValue="false"
+            android:key="show_code_suggestions" />
     </PreferenceCategory>
 
-    <PreferenceCategory android:title="@string/pref_category_about">
-        <Preference
-            android:title="App Made by The Lucky Coder"
-            android:key="author" />
-
-        <Preference
-            android:title="Open Source Licenses"
-            android:key="licenses" />
-    </PreferenceCategory>
 </PreferenceScreen>

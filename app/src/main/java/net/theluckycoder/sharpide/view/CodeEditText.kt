@@ -1,5 +1,7 @@
 package net.theluckycoder.sharpide.view
 
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -7,28 +9,35 @@ import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Handler
 import android.support.v4.content.ContextCompat
-import android.support.v7.widget.AppCompatEditText
+import android.support.v7.widget.AppCompatMultiAutoCompleteTextView
 import android.text.Editable
 import android.text.InputFilter
 import android.text.Layout
 import android.text.Spannable
+import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
+import android.text.TextUtils
 import android.text.TextWatcher
-import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.util.Log
 import android.util.TypedValue
-import android.view.KeyEvent
+import android.widget.ArrayAdapter
+import android.widget.MultiAutoCompleteTextView
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
 import java.util.regex.Pattern
 
 
-class CodeEditText : AppCompatEditText {
+class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     private companion object {
+        private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch", "super", "class", "const", "continue",
+                "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {",
+                "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {", "typeof", "var",
+                "void", "while", "with", "null", "true", "false")
+
         private val PATTERN_CLASSES = Pattern.compile(
                 "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
                         "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
@@ -47,21 +56,6 @@ class CodeEditText : AppCompatEditText {
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
     }
 
-    @Transient private val mPaint = Paint()
-    private val mPaintHighlight = Paint()
-    private val mLineBounds = Rect()
-    private lateinit var mLayout: Layout
-    private val mUpdateHandler = Handler()
-    private var mModified = true
-    private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
-    private var mOnImeBack: BackPressedListener? = null
-    private var mColorNumber = 0
-    private var mColorKeyword = 0
-    private var mColorClasses = 0
-    private var mColorComment = 0
-    private var mColorString = 0
-    private val mPreferences by lazy { Preferences(context) }
-
     constructor(context: Context) : super(context) {
         init(context)
     }
@@ -70,15 +64,40 @@ class CodeEditText : AppCompatEditText {
         init(context)
     }
 
+    constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
+        init(context)
+    }
+
+    @Transient private val mPaint = Paint()
+    private val mPaintHighlight = Paint()
+    private val mLineBounds = Rect()
+    private lateinit var mLayout: Layout
+    private val mUpdateHandler = Handler()
+    private var mModified = true
+    private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
+    private var mColorNumber = 0
+    private var mColorKeyword = 0
+    private var mColorClasses = 0
+    private var mColorComment = 0
+    private var mColorString = 0
+    private val mPreferences by lazy { Preferences(context) }
+
     override fun onDraw(canvas: Canvas) {
-        if(mPreferences.getHighlightCurrentLine()) {
+        if (mPreferences.highlightCurrentLine()) {
             getLineBounds(line, mLineBounds)
-            mPaintHighlight.color = Color.parseColor("#ffffff")
+
+            val color = if (!mPreferences.useDarkTheme()) {
+                ContextCompat.getColor(context, R.color.line_highlight)
+            } else {
+                ContextCompat.getColor(context, R.color.line_highlight_dark)
+            }
+            mPaintHighlight.color = color
+
             canvas.drawRect(mLineBounds, mPaintHighlight)
         }
 
-        if (mPreferences.getShowLineNumbers()) {
-            val padding = getPixels(digitCount * 10 + 10).toInt()
+        if (mPreferences.showLineNumbers()) {
+            val padding = getPixels(digitCount * 10 + 14).toInt()
             setPadding(padding, 0, 0, 0)
 
             val firstLine = mLayout.getLineForVertical(scrollY)
@@ -98,7 +117,7 @@ class CodeEditText : AppCompatEditText {
                 drawLineNumber(canvas, mLayout, positionY, i)
             }
         } else {
-            setPadding(0, 0, 0, 0)
+            setPadding(getPixels(4).toInt(), 0, 0, 0)
         }
 
         super.onDraw(canvas)
@@ -129,7 +148,7 @@ class CodeEditText : AppCompatEditText {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
 
             override fun afterTextChanged(e: Editable) {
-                if (mPreferences.getAutoCloseBrackets()) autoCloseBrackets(e, count)
+                if (mPreferences.autoCloseBrackets()) autoCloseBrackets(e, count)
                 cancelUpdate()
 
                 if (!mModified) return
@@ -145,15 +164,64 @@ class CodeEditText : AppCompatEditText {
         mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
         mColorString = ContextCompat.getColor(context, R.color.syntax_string)
 
-        val bgPaint = Paint()
-        bgPaint.style = Paint.Style.FILL
-        bgPaint.color = Color.parseColor("#eeeeee")
-
         mPaint.style = Paint.Style.FILL
         mPaint.isAntiAlias = true
         mPaint.color = Color.parseColor("#bbbbbb")
         mPaint.textSize = getPixels(mPreferences.getFontSize())
+
         viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
+
+        // Set Adapter
+        val adapter = ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, COMPLETION_KEYWORDS)
+        setAdapter(adapter)
+        setTokenizer(object : MultiAutoCompleteTextView.Tokenizer {
+            override fun findTokenStart(text: CharSequence, cursor: Int): Int {
+                var i = cursor
+
+                while (i > 0 && text[i - 1] != ' ') i--
+                while (i < cursor && text[i] == ' ') i++
+
+                return i
+            }
+
+            override fun findTokenEnd(text: CharSequence, cursor: Int): Int {
+                var i = cursor
+                val len = text.length
+
+                while (i < len) {
+                    if (text[i] == ' ') {
+                        return i
+                    } else {
+                        i++
+                    }
+                }
+
+                return len
+            }
+
+            override fun terminateToken(text: CharSequence): CharSequence {
+                var i = text.length
+
+                while (i > 0 && text[i - 1] != ' ') i--
+
+                return if (i > 0 && text[i - 1] == ' ') {
+                    text
+                } else {
+                    if (text is Spanned) {
+                        val sp = SpannableString(text.toString() + " ")
+                        TextUtils.copySpansFrom(text, 0, text.length, Any::class.java, sp, 0)
+                        sp
+                    } else {
+                        text.toString() + " "
+                    }
+                }
+            }
+
+        })
+    }
+
+    override fun showDropDown() {
+        if (mPreferences.showSuggestions()) super.showDropDown()
     }
 
     private fun clearSpans(e: Editable) {
@@ -166,12 +234,12 @@ class CodeEditText : AppCompatEditText {
         }
 
         // remove background color spans
-        run {
-            val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
+        //run {
+        //    val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
 
-            var n = spans.size
-            while (n-- > 0) e.removeSpan(spans[n])
-        }
+        //    var n = spans.size
+        //    while (n-- > 0) e.removeSpan(spans[n])
+        //}
     }
 
     private fun cancelUpdate() {
@@ -214,7 +282,7 @@ class CodeEditText : AppCompatEditText {
     }
 
     private fun highlight(editable: Editable): Editable {
-        if (!mPreferences.getSyntaxHighlighting()) return editable
+        if (!mPreferences.isSyntaxHighlightingEnabled()) return editable
 
         try {
             // don't use e.clearSpans() because it will
@@ -269,12 +337,13 @@ class CodeEditText : AppCompatEditText {
                     editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
             }
 
-            val m = PATTERN_COMMENTS.matcher(editable)
-            while (m.find()) {
-                val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-                for (span in spans)
-                    editable.removeSpan(span)
-                editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+            run {
+                val m = PATTERN_COMMENTS.matcher(editable)
+                while (m.find()) {
+                    val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
+                    for (span in spans) editable.removeSpan(span)
+                    editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
         } catch (e: IllegalStateException) {
             Log.e("IllegalStateException", e.message, e)
@@ -369,13 +438,21 @@ class CodeEditText : AppCompatEditText {
             return count
         }
 
-    private fun drawLineNumber(canvas: Canvas, layout: Layout?, positionY: Int, line: Int) {
-        val positionX = layout!!.getLineLeft(line).toInt()
+    private fun drawLineNumber(canvas: Canvas, layout: Layout, positionY: Int, line: Int) {
+        val positionX = layout.getLineLeft(line).toInt()
         canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), mPaint)
     }
 
     private fun getPixels(dp: Int): Float =
             TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
+
+    private fun getSelectedText(): CharSequence {
+        return if (selectionEnd > selectionStart) {
+            text.subSequence(selectionStart, selectionEnd)
+        } else {
+            text.subSequence(selectionEnd, selectionStart)
+        }
+    }
 
     fun setTextHighlighted(text: CharSequence) {
         cancelUpdate()
@@ -438,14 +515,43 @@ class CodeEditText : AppCompatEditText {
         setSelection(layout.getLineStart(line))
     }
 
-    /*** Keyboard checking ***/
-    override fun onKeyPreIme(keyCode: Int, event: KeyEvent): Boolean {
-        if (event.keyCode == KeyEvent.KEYCODE_BACK && event.action == KeyEvent.ACTION_UP)
-            mOnImeBack?.onImeBack()
-        return super.dispatchKeyEvent(event)
+    fun cut() {
+        copy()
+
+        if (selectionEnd > selectionStart) {
+            text.replace(selectionStart, selectionEnd, "")
+        } else {
+            text.replace(selectionEnd, selectionStart, "")
+        }
     }
 
-    internal interface BackPressedListener {
-        fun onImeBack()
+    fun copy() {
+        val clipboard: ClipboardManager? = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+
+        val clipData = ClipData.newPlainText("text", getSelectedText())
+        clipboard?.primaryClip = clipData
+    }
+
+    fun paste() {
+        val clipboard: ClipboardManager? = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        if (clipboard == null || !clipboard.hasPrimaryClip()) return
+
+        val item = clipboard.primaryClip.getItemAt(0)
+        val clipboardText = item.text.toString()
+
+        if (clipboardText.isBlank()) return
+
+        if (selectionEnd > selectionStart) {
+            text.replace(selectionStart, selectionEnd, clipboardText)
+        } else {
+            text.replace(selectionEnd, selectionStart, clipboardText)
+        }
+    }
+
+    fun selectLine() {
+        if (selectionEnd != -1) {
+            val line = layout.getLineForOffset(selectionEnd)
+            setSelection(layout.getLineStart(line), layout.getLineEnd(line))
+        }
     }
 }

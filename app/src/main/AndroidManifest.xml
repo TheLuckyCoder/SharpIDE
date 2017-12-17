@@ -40,6 +40,10 @@
         <activity
             android:name=".activities.ConsoleActivity"
             android:label="@string/title_console" />
+        <activity
+            android:name=".activities.AboutActivity"
+            android:label="@string/menu_about"
+            android:theme="@style/AppTheme.About" />
 
         <meta-data
             android:name="io.fabric.ApiKey"
