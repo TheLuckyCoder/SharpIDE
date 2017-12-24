@@ -5,35 +5,39 @@ import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
 import android.support.annotation.IdRes
+import android.support.annotation.LayoutRes
 import android.support.v4.app.ActivityCompat
+import android.view.LayoutInflater
 import android.view.View
 import java.io.IOException
 
 
-val Any.string get() = toString()
+inline val Any.string get() = toString()
 
-fun String.replaceUtil(search: String, replace: String): String {
-    if (this.isEmpty() || search.isEmpty()) return this
+fun String.ktReplace(oldString: String, newString: String): String {
+    if (this.isEmpty() || oldString.isEmpty()) return this
 
     var start = 0
-    var end = this.indexOf(search, start)
+    var end = this.indexOf(oldString, start)
 
     if (end == -1) return this
 
-    var increase = replace.length - search.length
+    var increase = newString.length - oldString.length
     increase = if (increase < 0) 0 else increase
     increase *= 16
 
     val builder = StringBuilder(this.length + increase)
     while (end != -1) {
-        builder.append(this.substring(start, end)).append(replace)
-        start = end + search.length
-        end = this.indexOf(search, start)
+        builder.append(this.substring(start, end)).append(newString)
+        start = end + oldString.length
+        end = this.indexOf(oldString, start)
     }
     builder.append(this.substring(start))
 
-    return builder.toString()
+    return builder.string
 }
+
+infix fun LayoutInflater.inflate(@LayoutRes resource: Int): View = inflate(resource, null)
 
 fun Activity.verifyStoragePermission() {
     val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -51,7 +55,7 @@ fun <T> lazyFast(operation: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) 
     operation()
 }
 
-fun Context.saveFileInternally(fileName: String, content: String): Boolean {
+fun Context.saveInternalFile(fileName: String, content: String): Boolean {
     return try {
         val fos = openFileOutput(fileName, Context.MODE_PRIVATE)
         fos.write(content.toByteArray())

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.design.widget.FloatingActionButton
 import android.support.transition.TransitionManager
+import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewCompat
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -11,12 +12,7 @@ import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import android.webkit.ConsoleMessage
-import android.webkit.JsPromptResult
-import android.webkit.JsResult
-import android.webkit.WebChromeClient
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.webkit.*
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
@@ -42,6 +38,7 @@ class ConsoleActivity : AppCompatActivity() {
             loadUrl("about:blank")
             val url = "file://" + filesDir.absolutePath + "/index.html"
             settings.javaScriptEnabled = true
+            setBackgroundColor(ContextCompat.getColor(this@ConsoleActivity, R.color.main_background))
             webViewClient = WebViewClient()
             webChromeClient = MyChromeClient()
             loadUrl(url)
@@ -52,6 +49,13 @@ class ConsoleActivity : AppCompatActivity() {
         }
     }
 
+    override fun onSaveInstanceState(outState: Bundle?) {
+        val state = Bundle()
+        webView.saveState(state)
+        outState?.putBundle("webViewState", state)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onDestroy() {
         with(webView) {
             clearCache(true)
@@ -59,13 +63,6 @@ class ConsoleActivity : AppCompatActivity() {
             clearMatches()
         }
         super.onDestroy()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle?) {
-        val state = Bundle()
-        webView.saveState(state)
-        outState?.putBundle("webViewState", state)
-        super.onSaveInstanceState(outState)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -132,7 +129,7 @@ class ConsoleActivity : AppCompatActivity() {
         override fun onJsBeforeUnload(view: WebView, url: String, message: String, result: JsResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
                     .setTitle("Confirm Navigation")
-                    .setMessage((message + "\nAre your sure you want to leave this page?"))
+                    .setMessage(message + "\nAre your sure you want to leave this page?")
                     .setPositiveButton("Leave page") { _, _ -> result.confirm() }
                     .setNegativeButton("Stay on this page") { _, _ -> result.cancel() }
                     .setCancelable(false)
@@ -142,7 +139,14 @@ class ConsoleActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-            messageTv.text = "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
+            var text = messageTv.text.toString()
+            if (text == getString(R.string.no_errors)) {
+                text = ""
+            } else {
+                text += "\n"
+            }
+
+            messageTv.text = text + "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
             return true
         }
     }

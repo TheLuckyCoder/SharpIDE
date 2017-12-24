@@ -28,18 +28,18 @@ class App : Application() {
         val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
 
         // Set in-app defaults
-        val remoteConfigDefaults = HashMap<String, Any>()
-        remoteConfigDefaults.put(UpdateChecker.KEY_UPDATE_REQUIRED, false)
-        remoteConfigDefaults.put(UpdateChecker.KEY_CURRENT_VERSION, BuildConfig.VERSION_CODE)
+        val remoteConfigDefaults = HashMap<String, Any>().apply {
+            put(UpdateChecker.KEY_UPDATE_REQUIRED, false)
+            put(UpdateChecker.KEY_CURRENT_VERSION, BuildConfig.VERSION_CODE)
+        }
 
         firebaseRemoteConfig.setDefaults(remoteConfigDefaults)
-        firebaseRemoteConfig.fetch(60) // Fetch every 60 minutes
-                .addOnCompleteListener { task ->
-                    if (task.isSuccessful) {
-                        Log.d("Firebase SharpIDE", "Remote config is fetched.")
-                        firebaseRemoteConfig.activateFetched()
-                    }
-                }
+        firebaseRemoteConfig.fetch(60).addOnCompleteListener { task ->  // Fetch every 60 minutes
+            if (task.isSuccessful) {
+                Log.d("Firebase SharpIDE", "Remote config is fetched.")
+                firebaseRemoteConfig.activateFetched()
+            }
+        }
     }
 
 }

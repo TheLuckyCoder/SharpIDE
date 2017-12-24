@@ -13,7 +13,7 @@ import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
-import net.theluckycoder.sharpide.utils.replaceUtil
+import net.theluckycoder.sharpide.utils.ktReplace
 import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import java.io.File
 
@@ -80,17 +80,17 @@ class MinifyActivity : AppCompatActivity() {
         }
 
         // uniform line endings, make them all line feed
-        fileContent = fileContent.replaceUtil("\r\n", "\n").replaceUtil("\r", "\n")
+        fileContent = fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
         // strip leading & trailing whitespace
-        .replaceUtil(" \n", "\n").replaceUtil("\n ", "\n")
+        .ktReplace(" \n", "\n").ktReplace("\n ", "\n")
         // collapse consecutive line feeds into just 1
         .replace("/\n+/".toRegex(), "\n")
         // remove comments
         .replace("/\\*.*\\*/".toRegex(), "").replace("//.*(?=\\n)".toRegex(), "")
-        .replaceUtil(" + ", "+").replaceUtil(" - ", "-").replaceUtil(" = ", "=")
-        .replaceUtil("if ", "if").replaceUtil("for ", "for").replaceUtil("( ", "(")
+        .ktReplace(" + ", "+").ktReplace(" - ", "-").ktReplace(" = ", "=")
+        .ktReplace("if ", "if").ktReplace("for ", "for").ktReplace("( ", "(")
         // remove the new lines and tabs
-        .replaceUtil("\n", "").replaceUtil("\t", "")
+        .ktReplace("\n", "").ktReplace("\t", "")
 
         val newFile = File(Const.MINIFY_FOLDER + file.name)
         newFile.writeText(fileContent)

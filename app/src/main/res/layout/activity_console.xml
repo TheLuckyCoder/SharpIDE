@@ -2,12 +2,12 @@
 <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.ConsoleActivity">
 
     <RelativeLayout
-        android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -15,14 +15,14 @@
             android:id="@+id/web_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/window" />
+            android:layout_above="@id/window"
+            android:background="@color/main_background" />
 
         <LinearLayout
             android:id="@+id/window"
             android:layout_width="match_parent"
             android:layout_height="150dp"
             android:layout_alignParentBottom="true"
-            android:background="@android:color/white"
             android:orientation="vertical">
 
             <View
@@ -47,6 +47,7 @@
             </android.support.v4.widget.NestedScrollView>
 
         </LinearLayout>
+
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton

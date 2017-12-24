@@ -1,6 +1,5 @@
 package net.theluckycoder.sharpide.activities
 
-import android.annotation.SuppressLint
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
@@ -10,55 +9,31 @@ import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
 import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle
-import android.support.v7.app.AlertDialog
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.app.AppCompatDelegate
+import android.support.v7.app.*
 import android.support.v7.widget.Toolbar
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.HorizontalScrollView
-import android.widget.LinearLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.Ads
-import net.theluckycoder.sharpide.utils.Const
+import net.theluckycoder.sharpide.utils.*
 import net.theluckycoder.sharpide.utils.Const.PERMISSION_REQUEST_CODE
-import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.UpdateChecker
-import net.theluckycoder.sharpide.utils.bind
-import net.theluckycoder.sharpide.utils.lazyFast
-import net.theluckycoder.sharpide.utils.replaceUtil
-import net.theluckycoder.sharpide.utils.saveFileInternally
-import net.theluckycoder.sharpide.utils.string
-import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import net.theluckycoder.sharpide.view.CodeEditText
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
-import java.io.BufferedReader
-import java.io.DataInputStream
-import java.io.File
-import java.io.FileInputStream
-import java.io.FileNotFoundException
-import java.io.IOException
-import java.io.InputStreamReader
+import java.io.*
 import java.util.regex.Pattern
 
 
-@SuppressLint("InflateParams")
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private companion object {
-        private const val LOAD_FILE_CODE = 10
-        private const val CHANGE_PATH_CODE = 11
+        private const val LOAD_FILE_REQUEST = 10
+        private const val CHANGE_PATH_REQUEST = 11
     }
 
     private val codeEditText: CodeEditText by bind(R.id.code_editor)
@@ -144,17 +119,19 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        // Setup UpdateChecker
-        UpdateChecker {
-            AlertDialog.Builder(this@MainActivity)
-                    .setTitle(R.string.updater_new_version)
-                    .setMessage(R.string.updater_new_update_desc)
-                    .setPositiveButton(R.string.updater_update, { _, _ ->
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Const.MARKET_LINK))
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(intent)
-                    }).setNegativeButton(R.string.updater_no, null)
-                    .show()
+        async(UI) {
+            // Setup UpdateChecker
+            UpdateChecker {
+                AlertDialog.Builder(this@MainActivity)
+                        .setTitle(R.string.updater_new_version)
+                        .setMessage(R.string.updater_new_update_desc)
+                        .setPositiveButton(R.string.updater_update, { _, _ ->
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Const.MARKET_LINK))
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                        }).setNegativeButton(R.string.updater_no, null)
+                        .show()
+            }
         }
 
         // Setup ads
@@ -190,7 +167,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_save_as -> saveAs(false)
             R.id.menu_open -> {
                 Chooser(this,
-                        requestCode = LOAD_FILE_CODE,
+                        requestCode = LOAD_FILE_REQUEST,
                         fileExtension = "js",
                         showHiddenFiles = mPreferences.showHiddenFiles(),
                         startPath = Const.MAIN_FOLDER)
@@ -222,7 +199,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onActivityResult(requestCode, resultCode, data)
         if (data == null) return
 
-        if (requestCode == LOAD_FILE_CODE && resultCode == RESULT_OK) {
+        if (requestCode == LOAD_FILE_REQUEST && resultCode == RESULT_OK) {
             val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
             if (newFile.length() >= 10485760) { // if the file is bigger than 10 MB
                 Toast.makeText(this, R.string.file_too_big, Toast.LENGTH_LONG).show()
@@ -235,7 +212,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
-        if (requestCode == CHANGE_PATH_CODE && resultCode == RESULT_OK) {
+        if (requestCode == CHANGE_PATH_REQUEST && resultCode == RESULT_OK) {
             mSaveDialog?.let {
                 it.dismiss()
                 saveAs(true, data.getStringExtra(Chooser.RESULT_PATH))
@@ -263,8 +240,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when(item.itemId) {
-           R.id.menu_find -> {
-                val dialogView = layoutInflater.inflate(R.layout.dialog_find, null)
+            R.id.menu_find -> {
+                val dialogView = layoutInflater inflate R.layout.dialog_find
                 AlertDialog.Builder(this)
                         .setTitle(R.string.menu_find)
                         .setView(dialogView)
@@ -281,7 +258,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .show()
             }
             R.id.menu_go_to_line -> {
-                val dialogView = layoutInflater.inflate(R.layout.dialog_goto_line, null)
+                val dialogView = layoutInflater inflate R.layout.dialog_goto_line
                 AlertDialog.Builder(this)
                         .setTitle(R.string.menu_go_to_line)
                         .setView(dialogView)
@@ -297,7 +274,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         .show()
             }
             R.id.menu_replace_all -> {
-                val dialogView = layoutInflater.inflate(R.layout.dialog_replace, null)
+                val dialogView = layoutInflater inflate R.layout.dialog_replace
                 AlertDialog.Builder(this)
                         .setTitle(R.string.replace_all)
                         .setView(dialogView)
@@ -307,7 +284,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                             if (etFind.text.isEmpty()) return@setPositiveButton
 
-                            val newText = codeEditText.text.string.replaceUtil(etFind.text.string, etReplace.text.string)
+                            val newText = codeEditText.text.string.ktReplace(etFind.text.string, etReplace.text.string)
                             codeEditText.setText(newText)
 
                             mAds.showInterstitial()
@@ -336,12 +313,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun getFileInfo() = "Size: ${getFileSize()}\nPath: ${mCurrentFile.path}\n"
 
-    private fun saveAs(newFile: Boolean, folderPath: String? = null) {
+    private fun saveAs(createNewFile: Boolean, folderPath: String? = null) {
         val dialogBuilder = AlertDialog.Builder(this)
 
-        dialogBuilder.setTitle(if (newFile) R.string.create_new_file else R.string.menu_save_file_as)
+        dialogBuilder.setTitle(if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as)
 
-        val dialogView = layoutInflater.inflate(R.layout.dialog_new_file, null)
+        val dialogView = layoutInflater inflate R.layout.dialog_new_file
         dialogBuilder.setView(dialogView)
         mSaveDialog = dialogBuilder.create()
 
@@ -355,7 +332,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         textSelectPath.text = folderPath ?: Const.MAIN_FOLDER
         textSelectPath.setOnClickListener {
             Chooser(this@MainActivity,
-                    requestCode = CHANGE_PATH_CODE,
+                    requestCode = CHANGE_PATH_REQUEST,
                     fileExtension = "js",
                     showHiddenFiles = mPreferences.showHiddenFiles(),
                     startPath = Const.MAIN_FOLDER,
@@ -373,10 +350,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 etFileName.error = getString(R.string.invalid_file_name)
                 return@setOnClickListener
             }
-            etFileName.error = null
 
             val file = File(textSelectPath.text.string + etFileName.text.string)
-            if (!file.exists() && newFile) {
+            if (!file.exists() && createNewFile) {
                 file.createNewFile()
                 Toast.makeText(this@MainActivity, R.string.new_file_created, Toast.LENGTH_SHORT).show()
             }
@@ -384,7 +360,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             mCurrentFile = file
             mPreferences.setLastFilePath(mCurrentFile.absolutePath)
 
-            if (newFile) {
+            if (createNewFile) {
                 loadFileTask()
             } else {
                 saveFileTask(false)
@@ -452,12 +428,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun loadFileTask() {
-        async(CommonPool) {
-            val fileContent = try {
+    private fun loadFileTask() = async(UI) {
+        val job = async(CommonPool) {
+            val result = try {
                 val dis = DataInputStream(FileInputStream(mCurrentFile))
                 val br = BufferedReader(InputStreamReader(dis))
                 val sb = StringBuilder()
+
                 try {
                     var line = br.readLine()
 
@@ -479,34 +456,34 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 e.printStackTrace()
                 ""
             }
-            runOnUiThread {
-                loadDocument(fileContent)
-            }
+            result
         }
+
+        loadDocument(job.await())
     }
 
-    private fun saveFileTask(startConsole: Boolean) {
-        async(CommonPool) {
-            val fileContent = codeEditText.text.string
+    private fun saveFileTask(startConsole: Boolean) = async(UI) {
+        val fileContent = codeEditText.text.string
+
+        val job = async(CommonPool) {
             mCurrentFile.writeText(fileContent)
 
             if (startConsole) {
                 try {
-                    this@MainActivity.saveFileInternally("main.js", fileContent)
-                    this@MainActivity.saveFileInternally("index.html", "<!DOCTYPE html>\n<html>\n<head>\n" +
+                    this@MainActivity.saveInternalFile("main.js", fileContent)
+                    this@MainActivity.saveInternalFile("index.html", "<!DOCTYPE html>\n<html>\n<head>\n" +
                             "<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>")
-                } catch (e: RuntimeException) {
+                } catch (e: Exception) {
                     e.printStackTrace()
                 }
             }
-
-            runOnUiThread {
-                Toast.makeText(this@MainActivity, R.string.file_saved, Toast.LENGTH_SHORT).show()
-
-                mAds.showInterstitial()
-
-                if (startConsole) startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
-            }
         }
+
+        job.await()
+
+        mAds.showInterstitial()
+
+        Toast.makeText(this@MainActivity, R.string.file_saved, Toast.LENGTH_SHORT).show()
+        if (startConsole) startActivity(Intent(this@MainActivity, ConsoleActivity::class.java))
     }
 }
