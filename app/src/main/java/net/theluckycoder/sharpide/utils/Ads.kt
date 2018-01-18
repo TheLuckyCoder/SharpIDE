@@ -9,7 +9,6 @@ import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 
-
 class Ads(private val activity: Activity) {
 
     private val interstitialAd by lazyFast { InterstitialAd(activity) }

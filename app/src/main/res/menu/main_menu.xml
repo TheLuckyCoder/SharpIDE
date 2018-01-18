@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item android:title="@string/group_search">
+    <item android:title="@android:string/search_go">
         <menu>
             <item
                 android:id="@+id/menu_find"
@@ -22,19 +22,19 @@
         <menu>
             <item
                 android:id="@+id/menu_edit_cut"
-                android:title="@string/menu_edit_cut" />
+                android:title="@android:string/cut" />
             <item
                 android:id="@+id/menu_edit_copy"
-                android:title="@string/menu_edit_copy" />
+                android:title="@android:string/copy" />
             <item
                 android:id="@+id/menu_edit_paste"
-                android:title="@string/menu_edit_paste" />
+                android:title="@android:string/paste" />
             <item
                 android:id="@+id/menu_edit_select_line"
                 android:title="@string/menu_edit_select_line" />
             <item
                 android:id="@+id/menu_edit_select_all"
-                android:title="@string/menu_edit_select_all" />
+                android:title="@android:string/selectAll" />
         </menu>
     </item>
 </menu>

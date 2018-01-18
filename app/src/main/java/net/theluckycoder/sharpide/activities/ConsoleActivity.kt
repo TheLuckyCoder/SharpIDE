@@ -12,18 +12,22 @@ import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import android.webkit.*
+import android.webkit.ConsoleMessage
+import android.webkit.JsPromptResult
+import android.webkit.JsResult
+import android.webkit.WebChromeClient
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.bind
 
-
 class ConsoleActivity : AppCompatActivity() {
 
     private val webView: WebView by bind(R.id.web_view)
-    private val windowLayout: LinearLayout by bind(R.id.window)
-    private val messageTv: TextView by bind(R.id.text_console_message)
+    private val windowLayout: LinearLayout by bind(R.id.layout_window)
+    private val messageTv: TextView by bind(R.id.tv_console_message)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,6 +57,7 @@ class ConsoleActivity : AppCompatActivity() {
         val state = Bundle()
         webView.saveState(state)
         outState?.putBundle("webViewState", state)
+
         super.onSaveInstanceState(outState)
     }
 
@@ -85,55 +90,56 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         ViewCompat.animate(view as FloatingActionButton)
-                .rotation(rotation)
-                .withLayer()
-                .setDuration(400)
-                .setInterpolator(OvershootInterpolator())
-                .start()
+            .rotation(rotation)
+            .withLayer()
+            .setDuration(400)
+            .setInterpolator(OvershootInterpolator())
+            .start()
     }
 
     private inner class MyChromeClient : WebChromeClient() {
         override fun onJsAlert(view: WebView, url: String, message: String, result: JsResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("JavaScript Alert")
-                    .setMessage(message)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                    .setCancelable(false)
-                    .show()
+                .setTitle("JavaScript Alert")
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
+                .setCancelable(false)
+                .show()
             return true
         }
 
-        override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String?, result: JsPromptResult): Boolean {
+        override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String?,
+                                result: JsPromptResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("JavaScript Prompt")
-                    .setMessage(message)
-                    .setView(AppCompatEditText(this@ConsoleActivity).apply { setText(defaultValue) })
-                    .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                    .setNegativeButton(android.R.string.cancel) { _, _ -> result.cancel() }
-                    .setCancelable(false)
-                    .show()
+                .setTitle("JavaScript Prompt")
+                .setMessage(message)
+                .setView(AppCompatEditText(this@ConsoleActivity).apply { setText(defaultValue) })
+                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
+                .setNegativeButton(android.R.string.cancel) { _, _ -> result.cancel() }
+                .setCancelable(false)
+                .show()
             return true
         }
 
         override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("JavaScript Confirm")
-                    .setMessage(message)
-                    .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                    .setNegativeButton(android.R.string.no) { _, _ -> result.cancel() }
-                    .setCancelable(false)
-                    .show()
+                .setTitle("JavaScript Confirm")
+                .setMessage(message)
+                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
+                .setNegativeButton(android.R.string.no) { _, _ -> result.cancel() }
+                .setCancelable(false)
+                .show()
             return true
         }
 
         override fun onJsBeforeUnload(view: WebView, url: String, message: String, result: JsResult): Boolean {
             AlertDialog.Builder(this@ConsoleActivity)
-                    .setTitle("Confirm Navigation")
-                    .setMessage(message + "\nAre your sure you want to leave this page?")
-                    .setPositiveButton("Leave page") { _, _ -> result.confirm() }
-                    .setNegativeButton("Stay on this page") { _, _ -> result.cancel() }
-                    .setCancelable(false)
-                    .show()
+                .setTitle("Confirm Navigation")
+                .setMessage(message + "\n\nAre you sure you want to navigate away from this page?")
+                .setPositiveButton("Leave this page") { _, _ -> result.confirm() }
+                .setNegativeButton("Stay on this page") { _, _ -> result.cancel() }
+                .setCancelable(false)
+                .show()
             return true
         }
 

@@ -3,7 +3,6 @@ package net.theluckycoder.sharpide.utils
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import net.theluckycoder.sharpide.BuildConfig
 
-
 class UpdateChecker(onUpdateNeeded: () -> Unit) {
 
     companion object {

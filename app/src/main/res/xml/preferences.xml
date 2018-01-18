@@ -82,7 +82,7 @@
             android:key="auto_close_brackets" />
 
         <CheckBoxPreference
-            android:title="Show code suggestions"
+            android:title="Code Completion"
             android:summary="This feature is still experimental and might not work as expected"
             android:defaultValue="false"
             android:key="show_code_suggestions" />

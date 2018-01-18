@@ -9,7 +9,6 @@ import com.google.firebase.remoteconfig.FirebaseRemoteConfig
 import io.fabric.sdk.android.Fabric
 import net.theluckycoder.sharpide.utils.UpdateChecker
 
-
 class App : Application() {
 
     override fun onCreate() {
@@ -34,12 +33,11 @@ class App : Application() {
         }
 
         firebaseRemoteConfig.setDefaults(remoteConfigDefaults)
-        firebaseRemoteConfig.fetch(60).addOnCompleteListener { task ->  // Fetch every 60 minutes
+        firebaseRemoteConfig.fetch(60).addOnCompleteListener { task -> // Fetch every 60 minutes
             if (task.isSuccessful) {
                 Log.d("Firebase SharpIDE", "Remote config is fetched.")
                 firebaseRemoteConfig.activateFetched()
             }
         }
     }
-
 }

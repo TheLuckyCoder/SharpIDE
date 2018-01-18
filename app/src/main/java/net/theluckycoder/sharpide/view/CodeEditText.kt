@@ -19,6 +19,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.TextUtils
 import android.text.TextWatcher
+import android.text.method.ScrollingMovementMethod
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.util.Log
@@ -29,28 +30,27 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
 import java.util.regex.Pattern
 
-
 class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     private companion object {
         private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch", "super", "class", "const", "continue",
-                "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {",
-                "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {", "typeof", "var",
-                "void", "while", "with", "null", "true", "false")
+            "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {",
+            "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {", "typeof", "var",
+            "void", "while", "with", "null", "true", "false")
 
         private val PATTERN_CLASSES = Pattern.compile(
-                "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
-                        "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
-                        "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
-                        "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
-                        "Reflect|Proxy|Intl)\\b",
-                Pattern.MULTILINE)
+            "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
+                    "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
+                    "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
+                    "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
+                    "Reflect|Proxy|Intl)\\b",
+            Pattern.MULTILINE)
         private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
-                "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
-                        "else|export|extends|finally|for|function|if|import|in|instanceof|" +
-                        "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
-                        "null|true|false)\\b")
+            "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
+                    "else|export|extends|finally|for|function|if|import|in|instanceof|" +
+                    "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
+                    "null|true|false)\\b")
         private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
         private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
@@ -84,7 +84,9 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     override fun onDraw(canvas: Canvas) {
         if (mPreferences.highlightCurrentLine()) {
-            getLineBounds(line, mLineBounds)
+            try {
+                getLineBounds(getLine(), mLineBounds)
+            } catch (e: Exception) {}
 
             val color = if (!mPreferences.useDarkTheme()) {
                 ContextCompat.getColor(context, R.color.line_highlight)
@@ -124,6 +126,9 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
     }
 
     private fun init(context: Context) {
+        // Enable Scrolling
+        isVerticalScrollBarEnabled = true
+        movementMethod = ScrollingMovementMethod()
         setHorizontallyScrolling(true)
 
         filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
@@ -216,7 +221,6 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
                     }
                 }
             }
-
         })
     }
 
@@ -233,13 +237,13 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
             while (n-- > 0) e.removeSpan(spans[n])
         }
 
-        // remove background color spans
-        //run {
-        //    val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
+        /* remove background color spans
+        run {
+            val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
 
-        //    var n = spans.size
-        //    while (n-- > 0) e.removeSpan(spans[n])
-        //}
+            var n = spans.size
+            while (n-- > 0) e.removeSpan(spans[n])
+        }*/
     }
 
     private fun cancelUpdate() {
@@ -293,56 +297,73 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
             run {
                 val m = PATTERN_CLASSES.matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = PATTERN_CUSTOM_CLASSES.matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = PATTERN_KEYWORDS.matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = PATTERN_SYMBOLS.matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = Pattern.compile("\\$\\w+").matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable)
                 while (m.find()) {
                     val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-                    for (span in spans)
+                    for (span in spans) {
                         editable.removeSpan(span)
-                    editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    }
+                    editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
 
             run {
                 val m = PATTERN_NUMBERS.matcher(editable)
-                while (m.find())
-                    editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                while (m.find()) {
+                    editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                }
             }
 
             run {
                 val m = PATTERN_COMMENTS.matcher(editable)
                 while (m.find()) {
                     val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-                    for (span in spans) editable.removeSpan(span)
-                    editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+                    for (span in spans) {
+                        editable.removeSpan(span)
+                    }
+                    editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(),
+                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
                 }
             }
         } catch (e: IllegalStateException) {
@@ -355,12 +376,13 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
         return editable
     }
 
-    private val line: Int
-        get() = if (selectionStart == -1 || layout == null) {
-            -1
+    private fun getLine(): Int {
+        return if (selectionStart == -1 || layout == null) {
+            0
         } else {
             layout.getLineForOffset(selectionStart)
         }
+    }
 
     private fun autoIndent(source: CharSequence, dest: Spanned, dStart: Int, dEnd: Int): CharSequence {
         var indent = ""
@@ -444,7 +466,7 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
     }
 
     private fun getPixels(dp: Int): Float =
-            TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
+        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
 
     private fun getSelectedText(): CharSequence {
         return if (selectionEnd > selectionStart) {

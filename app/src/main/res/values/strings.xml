@@ -64,11 +64,8 @@
     <string name="menu_go_to_line">Go To Line</string>
     <string name="menu_about">About</string>
     <string name="menu_edit">Edit</string>
-    <string name="menu_edit_cut">Cut</string>
-    <string name="menu_edit_copy">Copy</string>
-    <string name="menu_edit_paste">Paste</string>
+    <string name="menu_edit_duplicate_line">Duplicate Line</string>
     <string name="menu_edit_select_line">Select Line</string>
-    <string name="menu_edit_select_all">Select All</string>
 
     <!-- Updater -->
     <string name="updater_new_version">New version available</string>

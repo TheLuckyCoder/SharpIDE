@@ -15,11 +15,11 @@
             android:id="@+id/web_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/window"
+            android:layout_above="@id/layout_window"
             android:background="@color/main_background" />
 
         <LinearLayout
-            android:id="@+id/window"
+            android:id="@+id/layout_window"
             android:layout_width="match_parent"
             android:layout_height="150dp"
             android:layout_alignParentBottom="true"
@@ -39,7 +39,7 @@
                 android:paddingTop="@dimen/console_margin">
 
                 <TextView
-                    android:id="@+id/text_console_message"
+                    android:id="@+id/tv_console_message"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/no_errors"
@@ -51,7 +51,7 @@
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab"
+        android:id="@+id/fab_expand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"

@@ -18,7 +18,6 @@ import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Const
 
-
 class AboutActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,17 +94,17 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
             R.id.card_about_2_open_source -> {
                 val notices = Notices().apply {
                     addNotice(Notice("Android Support Libraries",
-                            "https://developer.android.com/topic/libraries/support-library/index.html",
-                            "Copyright 2005-2011 The Android Open Source Projec", ApacheSoftwareLicense20()))
+                        "https://developer.android.com/topic/libraries/support-library/index.html",
+                        "Copyright 2005-2011 The Android Open Source Project", ApacheSoftwareLicense20()))
                     addNotice(Notice("KeyboardVisibilityEvent", "http://yslibrary.net",
-                            "Copyright 2015-2017 Shimizu Yasuhiro (yshrsmz)", ApacheSoftwareLicense20()))
+                        "Copyright 2015-2017 Shimizu Yasuhiro (yshrsmz)", ApacheSoftwareLicense20()))
                 }
 
                 LicensesDialog.Builder(this)
-                        .setNotices(notices)
-                        .setIncludeOwnLicense(true)
-                        .build()
-                        .showAppCompat()
+                    .setNotices(notices)
+                    .setIncludeOwnLicense(true)
+                    .build()
+                    .showAppCompat()
             }
             R.id.fab_about_share -> {
                 intent.apply {

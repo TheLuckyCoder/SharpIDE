@@ -9,7 +9,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
         <android.support.design.widget.TextInputEditText
-            android:id="@+id/edit_find"
+            android:id="@+id/et_find"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:inputType="text"

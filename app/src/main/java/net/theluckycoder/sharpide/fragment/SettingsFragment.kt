@@ -5,14 +5,13 @@ import android.support.v7.app.AppCompatDelegate
 import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
 import net.theluckycoder.sharpide.R
 
-
 class SettingsFragment : PreferenceFragmentCompat() {
 
     override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
         addPreferencesFromResource(R.xml.preferences)
 
         findPreference("dark_theme").setOnPreferenceClickListener {
-            if (preferenceManager.sharedPreferences.getBoolean("dark_theme", false)){
+            if (preferenceManager.sharedPreferences.getBoolean("dark_theme", false)) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             } else {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -26,6 +25,4 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
     }
-
-
 }
