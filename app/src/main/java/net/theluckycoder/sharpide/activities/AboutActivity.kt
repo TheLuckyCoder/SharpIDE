@@ -1,7 +1,5 @@
 package net.theluckycoder.sharpide.activities
 
-import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.support.v4.app.ShareCompat
 import android.support.v7.app.AppCompatActivity
@@ -18,6 +16,8 @@ import de.psdev.licensesdialog.model.Notices
 import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Const
+import org.jetbrains.anko.browse
+import org.jetbrains.anko.email
 
 class AboutActivity : AppCompatActivity(), View.OnClickListener {
 
@@ -60,40 +60,10 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onClick(view: View) {
-        val intent = Intent()
-
         when (view.id) {
-            R.id.card_about_2_shop -> {
-                intent.apply {
-                    data = Uri.parse(Const.MARKET_LINK)
-                    action = Intent.ACTION_VIEW
-                }.run {
-                    if (intent.resolveActivity(packageManager) != null) {
-                        startActivity(this)
-                    }
-                }
-            }
-            R.id.card_about_2_email -> {
-                intent.apply {
-                    action = Intent.ACTION_SENDTO
-                    data = Uri.parse("mailto:mail@theluckycoder.net")
-                    putExtra(Intent.EXTRA_SUBJECT, "About: SharpIDE")
-                }.run {
-                    if (intent.resolveActivity(packageManager) != null) {
-                        startActivity(this)
-                    }
-                }
-            }
-            R.id.card_about_2_website -> {
-                intent.apply {
-                    data = Uri.parse("http://theluckycoder.net/")
-                    action = Intent.ACTION_VIEW
-                }.run {
-                    if (intent.resolveActivity(packageManager) != null) {
-                        startActivity(this)
-                    }
-                }
-            }
+            R.id.card_about_2_shop -> browse(Const.MARKET_LINK)
+            R.id.card_about_2_email -> email("mail@theluckycoder.net", "About: SharpIDE")
+            R.id.card_about_2_website -> browse("http://theluckycoder.net/")
             R.id.card_about_2_open_source -> {
                 val notices = Notices().apply {
                     addNotice(Notice("Android Support Libraries",

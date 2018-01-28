@@ -6,7 +6,6 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
-import android.widget.Toast
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import net.theluckycoder.materialchooser.Chooser
@@ -18,6 +17,8 @@ import net.theluckycoder.sharpide.utils.bind
 import net.theluckycoder.sharpide.utils.ktReplace
 import net.theluckycoder.sharpide.utils.lazyFast
 import net.theluckycoder.sharpide.utils.verifyStoragePermission
+import org.jetbrains.anko.longToast
+import org.jetbrains.anko.toast
 import java.io.File
 
 class MinifyActivity : AppCompatActivity() {
@@ -40,9 +41,11 @@ class MinifyActivity : AppCompatActivity() {
         //Init AdMob
         Ads(this).loadBanner()
 
-        savedInstanceState?.let { mFilePath = it.getString("filePath", "") }
-
         obfuscateBtn.setOnClickListener { obfuscateFile() }
+
+        savedInstanceState?.let {
+            mFilePath = it.getString("filePath", "")
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle?) {
@@ -71,9 +74,10 @@ class MinifyActivity : AppCompatActivity() {
 
     fun selectFile(@Suppress("UNUSED_PARAMETER") view: View) {
         Chooser(this, 10,
-                fileExtension = "js",
-                showHiddenFiles = mPreferences.showHiddenFiles())
-                .start()
+            fileExtension = "js",
+            showHiddenFiles = mPreferences.showHiddenFiles(),
+            startPath = Const.MAIN_FOLDER)
+            .start()
     }
 
     private fun obfuscateFile() = async(UI) {
@@ -81,7 +85,7 @@ class MinifyActivity : AppCompatActivity() {
         val fileContent = file.readText()
 
         if (fileContent.isBlank()) {
-            Toast.makeText(this@MinifyActivity, R.string.error_empty_file, Toast.LENGTH_SHORT).show()
+            toast(R.string.error_empty_file)
             return@async
         }
 
@@ -104,6 +108,6 @@ class MinifyActivity : AppCompatActivity() {
         val newFile = File(Const.MINIFY_FOLDER + file.name)
         newFile.writeText(job.await())
 
-        Toast.makeText(this@MinifyActivity, R.string.file_minify_ready, Toast.LENGTH_LONG).show()
+        longToast(R.string.file_minify_ready)
     }
 }

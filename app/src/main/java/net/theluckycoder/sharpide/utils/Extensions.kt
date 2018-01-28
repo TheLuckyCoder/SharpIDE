@@ -3,7 +3,6 @@ package net.theluckycoder.sharpide.utils
 import android.Manifest
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.support.annotation.IdRes
 import android.support.annotation.LayoutRes
@@ -14,9 +13,6 @@ import java.io.FileNotFoundException
 import java.io.IOException
 
 val Any.string get() = toString()
-
-inline fun <reified T : Activity> Activity.startActivity(): Unit =
-    this.startActivity(Intent(this, T::class.java))
 
 fun String.ktReplace(oldString: String, newString: String): String {
     if (this.isEmpty() || oldString.isEmpty()) return this
@@ -38,7 +34,7 @@ fun String.ktReplace(oldString: String, newString: String): String {
     }
     builder.append(this.substring(start))
 
-    return builder.string
+    return builder.toString()
 }
 
 infix fun LayoutInflater.inflate(@LayoutRes resource: Int): View = inflate(resource, null)

@@ -18,8 +18,8 @@ class App : Application() {
 
         // Set up Crashlytics, disabled for debug builds
         val crashlyticsKit = Crashlytics.Builder()
-                .core(CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
-                .build()
+            .core(CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
+            .build()
 
         Fabric.with(this, crashlyticsKit)
 
@@ -28,7 +28,6 @@ class App : Application() {
 
         // Set in-app defaults
         val remoteConfigDefaults = HashMap<String, Any>().apply {
-            put(UpdateChecker.KEY_UPDATE_REQUIRED, false)
             put(UpdateChecker.KEY_CURRENT_VERSION, BuildConfig.VERSION_CODE)
         }
 

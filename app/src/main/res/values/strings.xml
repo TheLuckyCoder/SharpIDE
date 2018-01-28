@@ -97,4 +97,5 @@
     <string name="about_feedback">Feedback by Email</string>
     <string name="about_website">My Website</string>
     <string name="about_open_source">Open Source Licenses</string>
+    <string name="permission_required">External Storage permission is required in order for the app to work</string>
 </resources>
