@@ -154,6 +154,7 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
             override fun afterTextChanged(e: Editable) {
                 if (mPreferences.autoCloseBrackets()) autoCloseBrackets(e, count)
+                if (mPreferences.autoCloseQuotes()) autoCloseQuotes(e, count)
                 cancelUpdate()
 
                 if (!mModified) return
@@ -230,12 +231,10 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
-        run {
-            val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
+        val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
 
-            var n = spans.size
-            while (n-- > 0) e.removeSpan(spans[n])
-        }
+        var n = spans.size
+        while (n-- > 0) e.removeSpan(spans[n])
 
         /* remove background color spans
         run {
@@ -274,6 +273,32 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
                 setSelection(startSelection)
             } else if (!(c != '[' || nextC == ']' || prevC == '[')) {
                 e.insert(startSelection, "]")
+                setSelection(startSelection)
+            }
+        }
+    }
+
+    private fun autoCloseQuotes(e: Editable, count: Int) {
+        val selectedStr = SpannableStringBuilder(text)
+        val startSelection = selectionStart
+        val endSelection = selectionEnd
+
+        if (count > 0 && selectedStr.isNotEmpty() && startSelection > 0 && startSelection == endSelection) {
+            val c = selectedStr[startSelection - 1]
+            var nextC = 'x'
+            var prevC = 'x'
+
+            if (selectedStr.length > startSelection) {
+                nextC = selectedStr[startSelection]
+            }
+            if (startSelection > 1) {
+                prevC = selectedStr[startSelection - 2]
+            }
+            if (!(c != '\'' || nextC == '\'' || prevC == '\'')) {
+                e.insert(startSelection, "\'")
+                setSelection(startSelection)
+            } else if (!(c != '\"' || nextC == '\"' || prevC == '\"')) {
+                e.insert(startSelection, "\"")
                 setSelection(startSelection)
             }
         }
@@ -561,7 +586,7 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
         val item = clipboard.primaryClip.getItemAt(0)
         val clipboardText = item.text.toString()
 
-        if (clipboardText.isBlank()) return
+        if (clipboardText.isBlank() || selectionStart < 0 || selectionEnd < 0) return
 
         if (selectionEnd > selectionStart) {
             text.replace(selectionStart, selectionEnd, clipboardText)

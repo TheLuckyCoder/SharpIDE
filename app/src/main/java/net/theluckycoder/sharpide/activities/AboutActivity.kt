@@ -3,6 +3,7 @@ package net.theluckycoder.sharpide.activities
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.support.v4.app.ShareCompat
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.Toolbar
 import android.view.MenuItem
@@ -45,7 +46,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         findViewById<TextView>(R.id.tv_about_version).apply {
-            text = "Version: ${BuildConfig.VERSION_NAME}"
+            append(" ${BuildConfig.VERSION_NAME}")
             startAnimation(alphaAnimation)
         }
     }
@@ -67,7 +68,9 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
                     data = Uri.parse(Const.MARKET_LINK)
                     action = Intent.ACTION_VIEW
                 }.run {
-                    startActivity(this)
+                    if (intent.resolveActivity(packageManager) != null) {
+                        startActivity(this)
+                    }
                 }
             }
             R.id.card_about_2_email -> {
@@ -76,10 +79,8 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
                     data = Uri.parse("mailto:mail@theluckycoder.net")
                     putExtra(Intent.EXTRA_SUBJECT, "About: SharpIDE")
                 }.run {
-                    try {
+                    if (intent.resolveActivity(packageManager) != null) {
                         startActivity(this)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
                     }
                 }
             }
@@ -88,7 +89,9 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
                     data = Uri.parse("http://theluckycoder.net/")
                     action = Intent.ACTION_VIEW
                 }.run {
-                    startActivity(this)
+                    if (intent.resolveActivity(packageManager) != null) {
+                        startActivity(this)
+                    }
                 }
             }
             R.id.card_about_2_open_source -> {
@@ -107,13 +110,11 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
                     .showAppCompat()
             }
             R.id.fab_about_share -> {
-                intent.apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, "Create your own MCPE Mods using Mod Maker:\n${Const.MARKET_LINK}")
-                    type = "text/plain"
-                }.run {
-                    startActivity(Intent.createChooser(this , getString(R.string.abc_shareactionprovider_share_with)))
-                }
+                ShareCompat.IntentBuilder.from(this)
+                    .setChooserTitle(R.string.abc_shareactionprovider_share_with)
+                    .setType("text/plain")
+                    .setText(Const.MARKET_LINK)
+                    .startChooser()
             }
         }
     }

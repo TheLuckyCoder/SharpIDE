@@ -43,6 +43,9 @@
             android:text="&quot;" />
         <TextView
             style="@style/SymbolView"
+            android:text="&apos;" />
+        <TextView
+            style="@style/SymbolView"
             android:text="|" />
         <TextView
             style="@style/SymbolView"

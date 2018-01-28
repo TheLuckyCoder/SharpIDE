@@ -25,29 +25,47 @@
     <string name="file_too_big">File is too big</string>
     <string name="file_minify_ready">Minified file saved in SharpIDE/Minify folder</string>
     <string name="action_apply">Apply</string>
+    <string name="version">Version</string>
 
     <!-- Settings -->
     <string name="pref_category_general">General</string>
     <string name="pref_category_editor">Editor</string>
     <string name="pref_load_last_file">Load last opened file</string>
+    <string name="pref_load_last_file_key" translatable="false">load_last_file</string>
     <string name="pref_quit_confirm">Confirm exit from app</string>
     <string name="pref_quit_confirm_desc">Show confirm dialog when trying to quit the app</string>
+    <string name="pref_quit_confirm_key" translatable="false">quit_confirm</string>
     <string name="pref_hidden_files">Show hidden files</string>
     <string name="pref_hidden_files_desc">Show hidden files and folders when choosing a file</string>
+    <string name="pref_hidden_files_key" translatable="false">show_hidden_files</string>
     <string name="pref_new_files_name">New Files Name</string>
     <string name="pref_new_files_name_desc">Set the default name of new files</string>
+    <string name="pref_new_files_name_key" translatable="false">New Files Name</string>
     <string name="pref_font_size">Editor Font Size</string>
     <string name="pref_font_size_desc">Specify the font size of the editor</string>
+    <string name="pref_font_size_key" translatable="false">editor_font_size</string>
     <string name="pref_line_numbers">Show line numbers</string>
-    <string name="pref_line_numbers_desc">Show line numbers in the editor</string>
+    <string name="pref_line_numbers_desc">Display the line numbers in the editor</string>
+    <string name="pref_line_numbers_key" translatable="false">show_line_numbers</string>
     <string name="pref_symbols_bar">Show symbol bar</string>
     <string name="pref_symbols_bar_desc">Show symbol bar while writing</string>
+    <string name="pref_symbols_bar_key" translatable="false">show_symbols_bar</string>
     <string name="pref_syntax_highlighting">Syntax Highlighting</string>
+    <string name="pref_syntax_highlighting_key" translatable="false">enable_syntax_highlighting</string>
     <string name="pref_highlight_current_line">Highlight Current Line</string>
-    <string name="pref_auto_close_brackets">Brackets Auto-Closing</string>
-    <string name="pref_auto_close_brackets_desc">Auto Close Brackets while writing</string>
+    <string name="pref_highlight_current_line_key" translatable="false">highlight_current_line</string>
+    <string name="pref_auto_close_brackets">Auto-Close Brackets</string>
+    <string name="pref_auto_close_brackets_desc">Automatically close open parenthesis/bracket/brace when typing</string>
+    <string name="pref_auto_close_brackets_key" translatable="false">auto_close_brackets</string>
+    <string name="pref_auto_close_quotes">Auto-Close Quotes</string>
+    <string name="pref_auto_close_quotes_desc">Automatically close single or double quote when typing</string>
+    <string name="pref_auto_close_quotes_key" translatable="false">auto_close_quotes</string>
     <string name="pref_dark_theme">Use Dark Theme</string>
     <string name="pref_dark_theme_desc">An app restart might be required in order to apply this settings</string>
+    <string name="pref_dark_theme_key" translatable="false">dark_theme</string>
+    <string name="pref_code_completion">Code Completion</string>
+    <string name="pref_code_completion_desc">This feature is still experimental and might not work as expected</string>
+    <string name="pref_code_completion_key" translatable="false">show_code_suggestions</string>
 
     <!-- Menu -->
     <string name="group_files">Files</string>

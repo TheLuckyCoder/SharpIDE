@@ -7,35 +7,35 @@
             android:title="@string/pref_load_last_file"
             android:icon="@drawable/ic_pref_last_file"
             android:defaultValue="true"
-            android:key="load_last_file" />
+            android:key="@string/pref_load_last_file_key" />
 
         <CheckBoxPreference
             android:title="@string/pref_quit_confirm"
             android:summary="@string/pref_quit_confirm_desc"
             android:icon="@drawable/ic_pref_exit_confirm"
             android:defaultValue="true"
-            android:key="quit_confirm" />
+            android:key="@string/pref_quit_confirm_key" />
 
         <SwitchPreference
             android:title="@string/pref_dark_theme"
             android:summary="@string/pref_dark_theme_desc"
             android:icon="@drawable/ic_pref_dark_theme"
             android:defaultValue="false"
-            android:key="dark_theme" />
+            android:key="@string/pref_dark_theme_key" />
 
         <CheckBoxPreference
             android:title="@string/pref_hidden_files"
             android:summary="@string/pref_hidden_files_desc"
             android:icon="@drawable/ic_pref_hidden_files"
             android:defaultValue="false"
-            android:key="show_hidden_files" />
+            android:key="@string/pref_hidden_files_key" />
 
         <EditTextPreference
             android:title="@string/pref_new_files_name"
             android:summary="@string/pref_new_files_name_desc"
             android:icon="@drawable/ic_pref_new_files"
             android:defaultValue="Untitled"
-            android:key="new_files_name" />
+            android:key="@string/pref_new_files_name_key" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_editor">
@@ -44,7 +44,7 @@
             android:title="@string/pref_font_size"
             android:summary="@string/pref_font_size_desc"
             android:icon="@drawable/ic_pref_font_size"
-            android:key="editor_font_size"
+            android:key="@string/pref_font_size_key"
             app:min="8"
             android:max="35"
             android:defaultValue="18" />
@@ -52,7 +52,7 @@
         <CheckBoxPreference
             android:title="@string/pref_line_numbers"
             android:summary="@string/pref_line_numbers_desc"
-            android:key="show_line_numbers"
+            android:key="@string/pref_line_numbers_key"
             android:icon="@drawable/ic_pref_line_numbers"
             android:defaultValue="true" />
 
@@ -61,31 +61,37 @@
             android:summary="@string/pref_symbols_bar_desc"
             android:icon="@drawable/ic_pref_symbols"
             android:defaultValue="true"
-            android:key="show_symbols_bar" />
+            android:key="@string/pref_symbols_bar_key" />
 
         <CheckBoxPreference
             android:title="@string/pref_syntax_highlighting"
             android:icon="@drawable/ic_pref_syntax_highlighting"
             android:defaultValue="true"
-            android:key="enable_syntax_highlighting" />
+            android:key="@string/pref_syntax_highlighting_key" />
 
         <CheckBoxPreference
             android:title="@string/pref_highlight_current_line"
             android:icon="@drawable/ic_pref_highlight_current_line"
             android:defaultValue="true"
-            android:key="highlight_current_line" />
+            android:key="@string/pref_highlight_current_line_key" />
 
         <CheckBoxPreference
             android:title="@string/pref_auto_close_brackets"
             android:summary="@string/pref_auto_close_brackets_desc"
             android:defaultValue="true"
-            android:key="auto_close_brackets" />
+            android:key="@string/pref_auto_close_brackets_key" />
 
         <CheckBoxPreference
-            android:title="Code Completion"
-            android:summary="This feature is still experimental and might not work as expected"
+            android:title="@string/pref_auto_close_quotes"
+            android:summary="@string/pref_auto_close_quotes_desc"
+            android:defaultValue="true"
+            android:key="@string/pref_auto_close_quotes" />
+
+        <CheckBoxPreference
+            android:title="@string/pref_code_completion"
+            android:summary="@string/pref_code_completion_desc"
             android:defaultValue="false"
-            android:key="show_code_suggestions" />
+            android:key="@string/pref_code_completion_key" />
     </PreferenceCategory>
 
 </PreferenceScreen>

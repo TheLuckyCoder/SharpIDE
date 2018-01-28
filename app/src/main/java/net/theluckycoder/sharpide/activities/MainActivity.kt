@@ -27,7 +27,6 @@ import android.widget.Toast
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
@@ -49,7 +48,6 @@ import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
 import java.io.BufferedReader
 import java.io.DataInputStream
 import java.io.File
-import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
@@ -141,23 +139,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Setup keyboard checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
             if (mPreferences.showSymbolsBar()) {
-                symbolScrollView.visibility = if (isOpen) View.VISIBLE else View.GONE
+                symbolScrollView.visibility = if (isOpen && codeEditText.isFocused) View.VISIBLE else View.GONE
             }
         }
 
-        launch(UI) {
-            // Setup UpdateChecker
-            UpdateChecker {
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle(R.string.updater_new_version)
-                    .setMessage(R.string.updater_new_update_desc)
-                    .setPositiveButton(R.string.updater_update, { _, _ ->
-                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Const.MARKET_LINK))
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(intent)
-                    }).setNegativeButton(R.string.updater_no, null)
-                    .show()
-            }
+        UpdateChecker {
+            AlertDialog.Builder(this)
+                .setTitle(R.string.updater_new_version)
+                .setMessage(R.string.updater_new_update_desc)
+                .setPositiveButton(R.string.updater_update, { _, _ ->
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(Const.MARKET_LINK))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    startActivity(intent)
+                }).setNegativeButton(R.string.updater_no, null)
+                .show()
         }
 
         // Setup ads
@@ -223,7 +218,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (data == null) return
+        data ?: return
 
         if (requestCode == LOAD_FILE_REQUEST && resultCode == RESULT_OK) {
             val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
@@ -457,15 +452,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun loadFileAsync() = async(UI) {
         val job = async(CommonPool) {
             val result = try {
-                val dis = DataInputStream(FileInputStream(mCurrentFile))
+                val dis = DataInputStream(mCurrentFile.inputStream())
                 val br = BufferedReader(InputStreamReader(dis))
-                val sb = StringBuilder()
+                val builder = StringBuilder()
 
                 try {
                     var line = br.readLine()
 
                     while (line != null) {
-                        sb.append(line).append("\n")
+                        builder.append(line).append("\n")
                         line = br.readLine()
                     }
                 } catch (e: IOException) {
@@ -477,7 +472,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         e.printStackTrace()
                     }
                 }
-                sb.string
+                builder.string
             } catch (e: FileNotFoundException) {
                 e.printStackTrace()
                 ""
@@ -497,7 +492,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             if (startConsole) {
                 this@MainActivity.saveInternalFile("main.js", fileContent)
                 this@MainActivity.saveInternalFile("index.html", "<!DOCTYPE html>\n<html>\n<head>\n" +
-                    "<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>")
+                    "<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>\n")
             }
         }
 

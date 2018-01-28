@@ -2,12 +2,16 @@ package net.theluckycoder.sharpide.utils
 
 import android.content.Context
 import android.preference.PreferenceManager
+import android.support.annotation.StringRes
+import net.theluckycoder.sharpide.R
 
-class Preferences(context: Context) {
+class Preferences(private val context: Context) {
 
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-    fun getLoadLastFile() = preferences.getBoolean("load_last_file", true)
+    private fun string(@StringRes id: Int) = context.getString(id)
+
+    fun getLoadLastFile() = preferences.getBoolean(string(R.string.pref_load_last_file_key), true)
 
     fun getLastFilePath() = preferences.getString("last_file_path", Const.MAIN_FOLDER) ?: ""
 
@@ -15,29 +19,31 @@ class Preferences(context: Context) {
         preferences.edit().putString("last_file_path", path).apply()
     }
 
-    fun confirmAppQuit() = preferences.getBoolean("quit_confirm", true)
+    fun confirmAppQuit() = preferences.getBoolean(string(R.string.pref_quit_confirm_key), true)
 
-    fun useDarkTheme() = preferences.getBoolean("dark_theme", false)
+    fun useDarkTheme() = preferences.getBoolean(string(R.string.pref_dark_theme_key), false)
 
-    fun showHiddenFiles() = preferences.getBoolean("show_hidden_files", false)
+    fun showHiddenFiles() = preferences.getBoolean(string(R.string.pref_hidden_files_key), false)
 
     fun getNewFilesName(): String {
-        var result = preferences.getString("new_files_name", "Untitled")
+        var result = preferences.getString(string(R.string.pref_new_files_name_key), "Untitled")
         if (!result.endsWith(".js")) result += ".js"
         return result
     }
 
-    fun getFontSize() = preferences.getInt("editor_font_size", 17)
+    fun getFontSize() = preferences.getInt(string(R.string.pref_font_size_key), 17)
 
-    fun showLineNumbers() = preferences.getBoolean("show_line_numbers", true)
+    fun showLineNumbers() = preferences.getBoolean(string(R.string.pref_line_numbers_key), true)
 
-    fun showSymbolsBar() = preferences.getBoolean("show_symbols_bar", true)
+    fun showSymbolsBar() = preferences.getBoolean(string(R.string.pref_symbols_bar_key), true)
 
-    fun isSyntaxHighlightingEnabled() = preferences.getBoolean("enable_syntax_highlighting", true)
+    fun isSyntaxHighlightingEnabled() = preferences.getBoolean(string(R.string.pref_syntax_highlighting_key), true)
 
-    fun highlightCurrentLine() = preferences.getBoolean("highlight_current_line", true)
+    fun highlightCurrentLine() = preferences.getBoolean(string(R.string.pref_syntax_highlighting_key), true)
 
-    fun autoCloseBrackets() = preferences.getBoolean("auto_close_brackets", true)
+    fun autoCloseBrackets() = preferences.getBoolean(string(R.string.pref_auto_close_brackets_key), true)
 
-    fun showSuggestions() = preferences.getBoolean("show_code_suggestions", false)
+    fun autoCloseQuotes() = preferences.getBoolean(string(R.string.pref_auto_close_quotes_key), true)
+
+    fun showSuggestions() = preferences.getBoolean(string(R.string.pref_code_completion_key), false)
 }

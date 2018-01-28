@@ -54,6 +54,7 @@
                 android:layout_below="@id/tv_card_about_1_1"
                 android:layout_marginTop="@dimen/view_margin"
                 android:lineSpacingExtra="@dimen/view_margin"
+                android:text="@string/version"
                 android:textStyle="italic" />
 
         </RelativeLayout>

@@ -21,7 +21,7 @@
         <LinearLayout
             android:id="@+id/layout_window"
             android:layout_width="match_parent"
-            android:layout_height="150dp"
+            android:layout_height="160dp"
             android:layout_alignParentBottom="true"
             android:orientation="vertical">
 
