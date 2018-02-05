@@ -14,18 +14,16 @@ import android.text.Editable
 import android.text.InputFilter
 import android.text.Layout
 import android.text.Spannable
-import android.text.SpannableString
 import android.text.SpannableStringBuilder
 import android.text.Spanned
-import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
+import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
-import android.util.Log
 import android.util.TypedValue
 import android.widget.ArrayAdapter
-import android.widget.MultiAutoCompleteTextView
+import net.theluckycoder.sharpide.CompletionTokenizer
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
 import java.util.regex.Pattern
@@ -33,24 +31,23 @@ import java.util.regex.Pattern
 class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     private companion object {
-        private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch", "super", "class", "const", "continue",
-            "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {",
-            "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {", "typeof", "var",
+        private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch {\n}", "super", "class", "const", "continue",
+            "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {\n}",
+            "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {\n}", "typeof", "var",
             "void", "while", "with", "null", "true", "false")
 
         private val PATTERN_CLASSES = Pattern.compile(
             "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
-                    "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
-                    "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
-                    "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
-                    "Reflect|Proxy|Intl)\\b",
-            Pattern.MULTILINE)
+            "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
+            "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
+            "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
+            "Reflect|Proxy|Intl)\\b", Pattern.MULTILINE)
         private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
             "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
-                    "else|export|extends|finally|for|function|if|import|in|instanceof|" +
-                    "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
-                    "null|true|false)\\b")
+            "else|export|extends|finally|for|function|if|import|in|instanceof|" +
+            "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
+            "null|true|false)\\b")
         private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
         private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
@@ -98,9 +95,11 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
             canvas.drawRect(mLineBounds, mPaintHighlight)
         }
 
+        val normalPadding = getPixels(6).toInt()
+
         if (mPreferences.showLineNumbers()) {
             val padding = getPixels(digitCount * 10 + 14).toInt()
-            setPadding(padding, 0, 0, 0)
+            setPadding(padding, normalPadding, normalPadding, normalPadding)
 
             val firstLine = mLayout.getLineForVertical(scrollY)
             val lastLine = try {
@@ -119,7 +118,7 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
                 drawLineNumber(canvas, mLayout, positionY, i)
             }
         } else {
-            setPadding(getPixels(4).toInt(), 0, 0, 0)
+            setPadding(normalPadding, normalPadding, normalPadding, normalPadding)
         }
 
         super.onDraw(canvas)
@@ -180,49 +179,7 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
         // Set Adapter
         val adapter = ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, COMPLETION_KEYWORDS)
         setAdapter(adapter)
-        setTokenizer(object : MultiAutoCompleteTextView.Tokenizer {
-            override fun findTokenStart(text: CharSequence, cursor: Int): Int {
-                var i = cursor
-
-                while (i > 0 && text[i - 1] != ' ') i--
-                while (i < cursor && text[i] == ' ') i++
-
-                return i
-            }
-
-            override fun findTokenEnd(text: CharSequence, cursor: Int): Int {
-                var i = cursor
-                val len = text.length
-
-                while (i < len) {
-                    if (text[i] == ' ') {
-                        return i
-                    } else {
-                        i++
-                    }
-                }
-
-                return len
-            }
-
-            override fun terminateToken(text: CharSequence): CharSequence {
-                var i = text.length
-
-                while (i > 0 && text[i - 1] != ' ') i--
-
-                return if (i > 0 && text[i - 1] == ' ') {
-                    text
-                } else {
-                    if (text is Spanned) {
-                        val sp = SpannableString(text.toString() + " ")
-                        TextUtils.copySpansFrom(text, 0, text.length, Any::class.java, sp, 0)
-                        sp
-                    } else {
-                        text.toString() + " "
-                    }
-                }
-            }
-        })
+        setTokenizer(CompletionTokenizer())
     }
 
     override fun showDropDown() {
@@ -231,18 +188,20 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
-        val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
+        run {
+            val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
 
-        var n = spans.size
-        while (n-- > 0) e.removeSpan(spans[n])
+            var i = spans.size
+            while (i-- > 0) e.removeSpan(spans[i])
+        }
 
-        /* remove background color spans
+        // remove background color spans
         run {
             val spans = e.getSpans(0, e.length, BackgroundColorSpan::class.java)
 
-            var n = spans.size
-            while (n-- > 0) e.removeSpan(spans[n])
-        }*/
+            var i = spans.size
+            while (i-- > 0) e.removeSpan(spans[i])
+        }
     }
 
     private fun cancelUpdate() {
@@ -311,91 +270,68 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
     }
 
     private fun highlight(editable: Editable): Editable {
-        if (!mPreferences.isSyntaxHighlightingEnabled()) return editable
+        if (!mPreferences.isSyntaxHighlightingEnabled() || editable.isEmpty()) {
+            return editable
+        }
 
-        try {
-            // don't use e.clearSpans() because it will
-            // remove too much
-            clearSpans(editable)
+        // don't use e.clearSpans() because it will remove too much
+        clearSpans(editable)
 
-            if (editable.isEmpty()) return editable
+        if (editable.isEmpty()) return editable
 
-            run {
-                val m = PATTERN_CLASSES.matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
+        var m = PATTERN_CLASSES.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        m = PATTERN_CUSTOM_CLASSES.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        m = PATTERN_KEYWORDS.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        m = PATTERN_SYMBOLS.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        m = Pattern.compile("\\$\\w+").matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
+        m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable)
+        while (m.find()) {
+            val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
+            for (span in spans) {
+                editable.removeSpan(span)
             }
+            editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
 
-            run {
-                val m = PATTERN_CUSTOM_CLASSES.matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorClasses), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
+        m = PATTERN_NUMBERS.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
 
-            run {
-                val m = PATTERN_KEYWORDS.matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
+        m = PATTERN_COMMENTS.matcher(editable)
+        while (m.find()) {
+            val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
+            for (span in spans) editable.removeSpan(span)
 
-            run {
-                val m = PATTERN_SYMBOLS.matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-
-            run {
-                val m = Pattern.compile("\\$\\w+").matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorKeyword), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-
-            run {
-                val m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable)
-                while (m.find()) {
-                    val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-                    for (span in spans) {
-                        editable.removeSpan(span)
-                    }
-                    editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-
-            run {
-                val m = PATTERN_NUMBERS.matcher(editable)
-                while (m.find()) {
-                    editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-
-            run {
-                val m = PATTERN_COMMENTS.matcher(editable)
-                while (m.find()) {
-                    val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-                    for (span in spans) {
-                        editable.removeSpan(span)
-                    }
-                    editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(),
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-                }
-            }
-        } catch (e: IllegalStateException) {
-            Log.e("IllegalStateException", e.message, e)
-            // raised by Matcher.start()/.end() when
-            // no successful match has been made what
-            // shouldn't ever happen because of find()
+            editable.setSpan(ForegroundColorSpan(mColorComment), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
         return editable
@@ -600,5 +536,19 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
             val line = layout.getLineForOffset(selectionEnd)
             setSelection(layout.getLineStart(line), layout.getLineEnd(line))
         }
+    }
+
+    fun deleteLine() {
+        val at = selectionEnd
+        if (at == -1) return
+
+        val line = layout.getLineForOffset(at)
+        var startAt = layout.getLineStart(line)
+        val endAt = layout.getLineEnd(line)
+        val len = text.length
+        if (startAt > 1 && endAt > 1 && len == endAt) {
+            startAt--
+        }
+        editableText.delete(startAt, endAt)
     }
 }

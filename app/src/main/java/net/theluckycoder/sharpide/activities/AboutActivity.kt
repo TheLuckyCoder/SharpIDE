@@ -1,5 +1,6 @@
 package net.theluckycoder.sharpide.activities
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v4.app.ShareCompat
 import android.support.v7.app.AppCompatActivity
@@ -46,7 +47,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         }
 
         findViewById<TextView>(R.id.tv_about_version).apply {
-            append(" ${BuildConfig.VERSION_NAME}")
+            text = String.format(getString(R.string.version), BuildConfig.VERSION_NAME)
             startAnimation(alphaAnimation)
         }
     }
@@ -59,6 +60,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         return super.onOptionsItemSelected(item)
     }
 
+    @SuppressLint("PrivateResource")
     override fun onClick(view: View) {
         when (view.id) {
             R.id.card_about_2_shop -> browse(Const.MARKET_LINK)

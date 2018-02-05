@@ -5,8 +5,8 @@ apply plugin: 'io.fabric'
 ext {
     versionMajor = 1
     versionMinor = 6
-    versionPatch = 3
-    versionBuild = 1
+    versionPatch = 4
+    versionBuild = 0
 }
 
 android {
@@ -27,7 +27,7 @@ android {
             resValue "bool", "debug_build", "true"
             ext.enableCrashlytics = false
             ext.alwaysUpdateBuildId = false
-            versionNameSuffix ".$versionBuild DEBUG"
+            versionNameSuffix ".$versionBuild"
         }
         release {
             resValue "bool", "debug_build", "false"
@@ -54,7 +54,7 @@ ktlint {
 
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:0.22.1'
     implementation "org.jetbrains.anko:anko-appcompat-v7-commons:0.10.4"
 
     implementation 'com.android.support:appcompat-v7:27.0.2'

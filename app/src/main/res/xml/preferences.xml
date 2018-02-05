@@ -76,6 +76,14 @@
             android:key="@string/pref_highlight_current_line_key" />
 
         <CheckBoxPreference
+            android:title="@string/pref_code_completion"
+            android:summary="@string/pref_code_completion_desc"
+            android:defaultValue="false"
+            android:key="@string/pref_code_completion_key" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_code_style">
+        <CheckBoxPreference
             android:title="@string/pref_auto_close_brackets"
             android:summary="@string/pref_auto_close_brackets_desc"
             android:defaultValue="true"
@@ -85,13 +93,7 @@
             android:title="@string/pref_auto_close_quotes"
             android:summary="@string/pref_auto_close_quotes_desc"
             android:defaultValue="true"
-            android:key="@string/pref_auto_close_quotes" />
-
-        <CheckBoxPreference
-            android:title="@string/pref_code_completion"
-            android:summary="@string/pref_code_completion_desc"
-            android:defaultValue="false"
-            android:key="@string/pref_code_completion_key" />
+            android:key="@string/pref_auto_close_quotes_key" />
     </PreferenceCategory>
 
 </PreferenceScreen>

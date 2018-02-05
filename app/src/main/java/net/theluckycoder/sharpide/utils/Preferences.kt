@@ -9,11 +9,11 @@ class Preferences(private val context: Context) {
 
     private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
 
-    private fun string(@StringRes id: Int) = context.getString(id)
+    private fun string(@StringRes resId: Int) = context.getString(resId)
 
     fun getLoadLastFile() = preferences.getBoolean(string(R.string.pref_load_last_file_key), true)
 
-    fun getLastFilePath() = preferences.getString("last_file_path", Const.MAIN_FOLDER) ?: ""
+    fun getLastFilePath() = preferences.getString("last_file_path", Const.MAIN_FOLDER) ?: Const.MAIN_FOLDER
 
     fun setLastFilePath(path: String) {
         preferences.edit().putString("last_file_path", path).apply()
