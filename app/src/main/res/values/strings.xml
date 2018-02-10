@@ -16,6 +16,7 @@
     <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file. Also some of the whitespaces</string>
     <string name="directory">Directory:</string>
     <string name="no_errors">No Errors Found</string>
+    <string name="error">Something went wrong</string>
     <string name="quit_confirm">Are you sure you want to quit?</string>
     <string name="replace_all">Replace All</string>
     <string name="text_to_replace">Text to replace</string>
@@ -71,7 +72,6 @@
     <!-- Menu -->
     <string name="group_files">Files</string>
     <string name="group_tools">Tools</string>
-    <string name="group_search">Search</string>
     <string name="menu_new_file">New File</string>
     <string name="menu_file_info">File Information</string>
     <string name="menu_save_file">Save File</string>

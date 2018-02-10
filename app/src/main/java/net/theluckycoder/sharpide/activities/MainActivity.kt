@@ -89,7 +89,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val symbolLayout: LinearLayout = findViewById(R.id.layout_symbols)
         for (i in 0 until symbolLayout.childCount) {
             symbolLayout.getChildAt(i).setOnClickListener { view ->
-                codeEditText.text.insert(codeEditText.selectionStart, (view as TextView).text.string)
+                val selection = codeEditText.selectionStart
+                if (selection != -1) {
+                    codeEditText.text.insert(selection, (view as TextView).text.string)
+                }
             }
         }
 
@@ -389,8 +392,13 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             val file = File(tvSelectPath.text.string + etFileName.text.string)
             if (!file.exists() && createNewFile) {
-                file.createNewFile()
-                toast(R.string.new_file_created)
+                try {
+                    file.createNewFile()
+                    toast(R.string.new_file_created)
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    toast(R.string.error)
+                }
             }
 
             mCurrentFile = file

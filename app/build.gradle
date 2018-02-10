@@ -6,7 +6,7 @@ ext {
     versionMajor = 1
     versionMinor = 6
     versionPatch = 4
-    versionBuild = 0
+    versionBuild = 1
 }
 
 android {
