@@ -8,14 +8,13 @@
     tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <net.theluckycoder.sharpide.view.CodeEditText
+    <net.theluckycoder.sharpide.view.CodeEditor
         android:id="@+id/code_editor"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@android:color/transparent"
         android:completionThreshold="1"
         android:gravity="top"
-        android:imeOptions="flagNoExtractUi"
         android:inputType="textVisiblePassword|textMultiLine" />
 
     <LinearLayout

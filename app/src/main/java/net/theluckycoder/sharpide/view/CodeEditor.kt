@@ -22,13 +22,15 @@ import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.KeyEvent
 import android.widget.ArrayAdapter
 import net.theluckycoder.sharpide.CompletionTokenizer
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.lazyFast
 import java.util.regex.Pattern
 
-class CodeEditText : AppCompatMultiAutoCompleteTextView {
+class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
     private companion object {
         private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch {\n}", "super", "class", "const", "continue",
@@ -72,12 +74,18 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
     private val mUpdateHandler = Handler()
     private var mModified = true
     private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
+    private val mPreferences by lazyFast { Preferences(context) }
+
     private var mColorNumber = 0
     private var mColorKeyword = 0
     private var mColorClasses = 0
     private var mColorComment = 0
     private var mColorString = 0
-    private val mPreferences by lazy { Preferences(context) }
+
+    /*private var mIsDoingUndoRedo = false
+    private var mUpdateLastChange: TextChange? = null
+    private var mRedoStack = UndoStack()
+    private val mUndoStack = UndoStack()*/
 
     override fun onDraw(canvas: Canvas) {
         if (mPreferences.highlightCurrentLine()) {
@@ -185,6 +193,42 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
     override fun showDropDown() {
         if (mPreferences.showSuggestions()) super.showDropDown()
     }
+
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if (event.isCtrlPressed) {
+            return when (keyCode) {
+                KeyEvent.KEYCODE_X -> {
+                    cut()
+                    true
+                }
+                KeyEvent.KEYCODE_C -> {
+                    copy()
+                    true
+                }
+                KeyEvent.KEYCODE_V -> {
+                    paste()
+                    true
+                }
+                KeyEvent.KEYCODE_A -> {
+                    selectAll()
+                    true
+                }
+                KeyEvent.KEYCODE_DEL -> {
+                    deleteLine()
+                    true
+                }
+                KeyEvent.KEYCODE_D -> {
+                    duplicateLine()
+                    true
+                }
+                //KeyEvent.KEYCODE_S -> saveFile()
+                else -> super.onKeyDown(keyCode, event)
+            }
+        }
+        return super.onKeyDown(keyCode, event)
+    }
+
+    // ------------------------------------------------------------------
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
@@ -437,6 +481,8 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
         }
     }
 
+    // --------------------------------------------------------------------------------
+
     fun setTextHighlighted(text: CharSequence) {
         cancelUpdate()
 
@@ -551,4 +597,51 @@ class CodeEditText : AppCompatMultiAutoCompleteTextView {
         }
         editableText.delete(startAt, endAt)
     }
+
+    fun duplicateLine() {
+        var start = Math.min(selectionStart, selectionEnd)
+        var end = Math.max(selectionStart, selectionEnd)
+        if (end > start) {
+            end--
+        }
+        while (end < text.length && text[end] != '\n') {
+            end++
+        }
+        while (start > 0 && text[start - 1] != '\n') {
+            start--
+        }
+        editableText.insert(end, "\n" + text.subSequence(start, end).toString())
+    }
+
+    /*private fun updateUndoRedoOnTextChanged(s: CharSequence, start: Int, count: Int) {
+        val updateLastChange = mUpdateLastChange
+        updateLastChange ?: return
+        if(count < UndoStack.MAX_SIZE) {
+            updateLastChange.newText = s.subSequence(start, start + count).toString()
+            if(start == updateLastChange.start &&
+                ((updateLastChange.oldText.isNotEmpty()
+                    || updateLastChange.newText.isNotEmpty())
+                    && updateLastChange.oldText != updateLastChange.newText)) {
+                mUndoStack.push(updateLastChange)
+                mRedoStack.removeAll()
+            }
+        } else {
+            mUndoStack.removeAll()
+            mRedoStack.removeAll()
+        }
+        mUpdateLastChange = null
+    }
+
+    private fun updateUndoRedoBeforeTextChanged(s: CharSequence, start: Int, count: Int) {
+        if (count < UndoStack.MAX_SIZE) {
+            mUpdateLastChange = TextChange().apply {
+                this.oldText = s.subSequence(start, start + count).toString()
+                this.start = start
+            }
+            return
+        }
+        mUndoStack.removeAll()
+        mRedoStack.removeAll()
+        mUpdateLastChange = null;
+    }*/
 }

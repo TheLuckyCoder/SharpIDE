@@ -7,12 +7,8 @@ import android.content.pm.PackageManager
 import android.support.annotation.IdRes
 import android.support.annotation.LayoutRes
 import android.support.v4.app.ActivityCompat
-import android.view.LayoutInflater
 import android.view.View
-import java.io.FileNotFoundException
 import java.io.IOException
-
-val Any.string get() = toString()
 
 fun String.ktReplace(oldString: String, newString: String): String {
     if (this.isEmpty() || oldString.isEmpty()) return this
@@ -37,7 +33,7 @@ fun String.ktReplace(oldString: String, newString: String): String {
     return builder.toString()
 }
 
-infix fun LayoutInflater.inflate(@LayoutRes resource: Int): View = inflate(resource, null)
+fun Context.inflate(@LayoutRes resource: Int): View = View.inflate(this, resource, null)
 
 fun Activity.verifyStoragePermission() {
     val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -49,12 +45,9 @@ fun Activity.verifyStoragePermission() {
     }
 }
 
-fun <T : View> Activity.bind(@IdRes res: Int): Lazy<T> =
-    lazyFast { findViewById<T>(res) }
+fun <T : View> Activity.bind(@IdRes res: Int): Lazy<T> = lazyFast { findViewById<T>(res) }
 
-fun <T> lazyFast(operation: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) {
-    operation()
-}
+fun <T> lazyFast(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) { initializer() }
 
 fun Context.saveInternalFile(fileName: String, content: String): Boolean {
     return try {
@@ -63,9 +56,6 @@ fun Context.saveInternalFile(fileName: String, content: String): Boolean {
         fos.close()
         true
     } catch (e: IOException) {
-        e.printStackTrace()
-        false
-    } catch (e: FileNotFoundException) {
         e.printStackTrace()
         false
     }

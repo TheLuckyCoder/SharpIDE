@@ -38,6 +38,9 @@
             <item
                 android:id="@+id/menu_edit_delete_line"
                 android:title="@string/menu_edit_delete_line" />
+            <item
+                android:id="@+id/menu_edit_duplicate_line"
+                android:title="@string/menu_edit_duplicate_line" />
         </menu>
     </item>
 </menu>
