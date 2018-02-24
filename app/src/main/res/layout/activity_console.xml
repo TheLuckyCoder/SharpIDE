@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/container"
@@ -7,56 +7,52 @@
     android:layout_height="match_parent"
     tools:context=".activities.ConsoleActivity">
 
-    <RelativeLayout
+    <WebView
+        android:id="@+id/web_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_above="@id/layout_window"
+        android:background="@color/main_background" />
 
-        <WebView
-            android:id="@+id/web_view"
+    <LinearLayout
+        android:id="@+id/layout_window"
+        android:layout_width="match_parent"
+        android:layout_height="160dp"
+        android:layout_alignParentBottom="true"
+        android:orientation="vertical">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:background="@color/colorAccent" />
+
+        <android.support.v4.widget.NestedScrollView
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@id/layout_window"
-            android:background="@color/main_background" />
+            android:paddingBottom="@dimen/console_margin"
+            android:paddingLeft="@dimen/activity_margin"
+            android:paddingRight="@dimen/activity_margin"
+            android:paddingTop="@dimen/console_margin">
 
-        <LinearLayout
-            android:id="@+id/layout_window"
-            android:layout_width="match_parent"
-            android:layout_height="160dp"
-            android:layout_alignParentBottom="true"
-            android:orientation="vertical">
+            <TextView
+                android:id="@+id/tv_console_message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/no_errors"
+                android:textSize="16sp" />
+        </android.support.v4.widget.NestedScrollView>
 
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="4dp"
-                android:background="@color/colorAccent" />
-
-            <android.support.v4.widget.NestedScrollView
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:paddingBottom="@dimen/console_margin"
-                android:paddingLeft="@dimen/activity_margin"
-                android:paddingRight="@dimen/activity_margin"
-                android:paddingTop="@dimen/console_margin">
-
-                <TextView
-                    android:id="@+id/tv_console_message"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/no_errors"
-                    android:textSize="16sp" />
-            </android.support.v4.widget.NestedScrollView>
-
-        </LinearLayout>
-
-    </RelativeLayout>
+    </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/fab_expand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
         android:layout_margin="@dimen/fab_margin"
         android:onClick="expand"
         app:srcCompat="@drawable/ic_arrow_up" />
 
-</android.support.design.widget.CoordinatorLayout>
+</RelativeLayout>

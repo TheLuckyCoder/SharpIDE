@@ -4,7 +4,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
-import android.preference.PreferenceManager
 import android.support.design.widget.FloatingActionButton
 import android.support.design.widget.NavigationView
 import android.support.v4.view.GravityCompat
@@ -261,7 +260,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_find -> {
                 val dialogView = inflate(R.layout.dialog_find)
                 alert(Appcompat) {
-                    setTitle(R.string.menu_find)
+                    titleResource = R.string.menu_find
                     customView = dialogView
                     positiveButton(R.string.action_apply) {
                         val etFind: EditText = dialogView.findViewById(R.id.et_find)
@@ -279,7 +278,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_go_to_line -> {
                 val dialogView = inflate(R.layout.dialog_goto_line)
                 alert(Appcompat) {
-                    setTitle(R.string.menu_go_to_line)
+                    titleResource = R.string.menu_go_to_line
                     customView = dialogView
                     positiveButton(R.string.action_apply) {
                         val etLine: EditText = dialogView.findViewById(R.id.et_line)
@@ -296,7 +295,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_replace_all -> {
                 val dialogView = inflate(R.layout.dialog_replace)
                 alert(Appcompat) {
-                    setTitle(R.string.replace_all)
+                    titleResource = R.string.replace_all
                     customView = dialogView
                     positiveButton(R.string.replace_all) {
                         val etFind: EditText = dialogView.findViewById(R.id.et_find)
@@ -304,7 +303,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                         if (etFind.text.isEmpty()) return@positiveButton
 
-                        val newText = mCodeEditor.text.toString().ktReplace(etFind.text.toString(), etReplace.text.toString())
+                        val newText = mCodeEditor.text.ktReplace(etFind.text.toString(), etReplace.text.toString())
                         mCodeEditor.setText(newText)
 
                         mAds.showInterstitial()
@@ -375,12 +374,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun saveFileAs(createNewFile: Boolean, folderPath: String? = null) {
         val dialogView = inflate(R.layout.dialog_new_file)
-        AlertDialog.Builder(this).apply {
-            setTitle(if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as)
-            setView(dialogView)
-
-            mSaveDialog = create()
-        }
+        mSaveDialog = alert(Appcompat) {
+            titleResource = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
+            customView = dialogView
+        }.build()
 
         val etFileName: EditText = dialogView.findViewById(R.id.et_file_name)
         val tvSelectPath: TextView = dialogView.findViewById(R.id.tv_select_path)
@@ -468,7 +465,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun openChooser(requestCode: Int, @ChooserType type: Int) {
-         val extension = if (type == Chooser.FILE_CHOOSER) "js" else ""
+        val extension = if (type == Chooser.FILE_CHOOSER) "js" else ""
         Chooser(this, requestCode,
             fileExtension = extension,
             showHiddenFiles = mPreferences.showHiddenFiles(),

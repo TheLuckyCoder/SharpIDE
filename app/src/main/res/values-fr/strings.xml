@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_settings">Paramètres</string>
+    <string name="file_name">Nom de fichier</string>
+    <string name="new_file_created">Nouveau fichier créé</string>
+    <string name="create_new_file">Créez un nouveau fichier</string>
+    <string name="invalid_file_name">Nom de fichier non valide</string>
+    <string name="action_close">Fermez</string>
+    <string name="error_empty_file">Fichier vide</string>
+    <string name="select_file">Sélectionnez un fichier</string>
+    <string name="action_minify">Réduisez</string>
+    <string name="obfuscation_desc">Toutes les nouvelles lignes, les onglets et les commentaires seront supprimés du fichier, ainsi que quelques espaces blancs.</string>
+    <string name="directory">Annuaire:</string>
+    <string name="no_errors">Aucune erreur trouvée</string>
+    <string name="error">Quelque chose n\'a pas bien marché</string>
+    <string name="quit_confirm">Êtes-vous sûr de vouloir quitter?</string>
+    <string name="replace_all">Remplacez tout</string>
+    <string name="text_to_replace">Texte à remplacer</string>
+    <string name="text_to_replace_with">Texte à remplacer avec</string>
+    <string name="text_to_find">Texte à trouver</string>
+    <string name="ignore_case">Ignorez le cas</string>
+    <string name="file_too_big">Le fichier est trop grand</string>
+    <string name="file_minify_ready">Fichier réduit enregistré dans le dossier SharpIDE / Réduisez le dossier</string>
+    <string name="action_apply">Appliquez</string>
+    <string name="version">Version %s</string>
+
+    <!-- Settings -->
+    <string name="pref_category_general">Général</string>
+    <string name="pref_category_editor">Éditeur</string>
+    <string name="pref_category_code_style">Style de code</string>
+    <string name="pref_load_last_file">Chargez le dernier fichier ouvert</string>
+    <string name="pref_quit_confirm">Confirmez la sortie de l\'application</string>
+    <string name="pref_quit_confirm_desc">Affichez la boîte de dialogue de confirmation lorsque vous tentez de quitter l\'application</string>
+    <string name="pref_hidden_files">Affichez les fichiers cachés</string>
+    <string name="pref_hidden_files_desc">Affichez les fichiers et les dossiers cachés lorsque vous choisissez un fichier</string>
+    <string name="pref_new_files_name">Nom de nouveaux fichiers</string>
+    <string name="pref_new_files_name_desc">Définissez le nom par défaut des nouveaux fichiers</string>
+    <string name="pref_font_size">Taille de police de l\'éditeur</string>
+    <string name="pref_font_size_desc">Spécifiez la taille de  police de l\'éditeur</string>
+    <string name="pref_line_numbers">Affichez les numéros de ligne</string>
+    <string name="pref_line_numbers_desc">Affichez les numéros de ligne dans l\'éditeur</string>
+    <string name="pref_symbols_bar">Affichez la barre de symboles</string>
+    <string name="pref_symbols_bar_desc">Affichez la barre de symboles en écrivant</string>
+    <string name="pref_syntax_highlighting">Mise en surbrillance de la syntaxe</string>
+    <string name="pref_highlight_current_line">Mettez en surbrillance la ligne actuelle</string>
+    <string name="pref_auto_close_brackets">Fermeture automatique des accolades</string>
+    <string name="pref_auto_close_brackets_desc">Fermez ouvrez automatiquement des crochets /des parenthèses /des accolades lors de la frappe</string>
+    <string name="pref_auto_close_quotes">Auto_fermeture de citations</string>
+    <string name="pref_auto_close_quotes_desc">Fermez automatiquement citation simple ou double en tapant</string>
+    <string name="pref_dark_theme">Utilisez un thème sombre</string>
+    <string name="pref_dark_theme_desc">Un redémarrage de l\'application peut être nécessaire pour appliquer ces paramètres</string>
+    <string name="pref_code_completion">Achèvement du code</string>
+    <string name="pref_code_completion_desc">Cette fonctionnalité est encore au stade expérimental et  pourrait ne pas fonctionner  comme prévu</string>
+
+    <!-- Menu -->
+    <string name="group_files">Fichiers</string>
+    <string name="group_tools">Outils</string>
+    <string name="menu_new_file">Nouveau Fichier</string>
+    <string name="menu_file_info">Informations sur le fichier</string>
+    <string name="menu_save_file">Sauvegardez le fichier</string>
+    <string name="menu_save_file_as">Sauvegardez le fichier comme</string>
+    <string name="menu_open_file">Ouvrez le fichier</string>
+    <string name="menu_find">Trouvez</string>
+    <string name="menu_run">Exécutez</string>
+    <string name="title_console">Lanceur/Console</string>
+    <string name="file_saved">Fichier sauvegardé</string>
+    <string name="menu_minify_tool">Outil de réduction</string>
+    <string name="menu_go_to_line">Allez à la ligne</string>
+    <string name="menu_about">à propos</string>
+    <string name="menu_edit">Midifiez</string>
+    <string name="menu_edit_duplicate_line">Dupliquez la ligne</string>
+    <string name="menu_edit_select_line">Sélectionnez une ligne</string>
+    <string name="menu_edit_delete_line">Supprimez la ligne</string>
+
+    <!-- Updater -->
+    <string name="updater_new_version">Version nouvelle disponible</string>
+    <string name="updater_new_update_desc">Veuillez mettre à jour l\'application à la dernière version afin d\' avoir les dernières fonctionnalités!</string>
+    <string name="updater_update">Mettez à jour</string>
+    <string name="updater_no">Non, merci</string>
+
+    <!-- About -->
+    <string name="about_title">Si vous avez aimé l\'application, n\'hésitez pas à me contacter.</string>
+    <string name="about_rate">Évaluez sur Google Play</string>
+    <string name="about_feedback">Feed-back par Email</string>
+    <string name="about_website">Mes sites Web</string>
+    <string name="about_open_source">Licences à Source ouverte</string>
+    <string name="permission_required">Une autorisation de stockage externe est requise pour que l\'application puisse fonctionner</string>
+</resources>

@@ -10,13 +10,13 @@ import android.support.v4.app.ActivityCompat
 import android.view.View
 import java.io.IOException
 
-fun String.ktReplace(oldString: String, newString: String): String {
-    if (this.isEmpty() || oldString.isEmpty()) return this
+fun CharSequence.ktReplace(oldString: String, newString: String): String {
+    if (this.isEmpty() || oldString.isEmpty()) return this.toString()
 
     var start = 0
     var end = this.indexOf(oldString, start)
 
-    if (end == -1) return this
+    if (end == -1) return this.toString()
 
     var increase = newString.length - oldString.length
     increase = if (increase < 0) 0 else increase

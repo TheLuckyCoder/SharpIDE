@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="title_settings">Настройки</string>
+    <string name="file_name">Имя файла</string>
+    <string name="new_file_created">Новый файл создан</string>
+    <string name="create_new_file">Создать новый файл</string>
+    <string name="invalid_file_name">Недопустимое имя файла</string>
+    <string name="action_close">Закрыть</string>
+    <string name="error_empty_file">Файл пуст</string>
+    <string name="select_file">Выберите файл</string>
+    <string name="action_minify">Минифицировать</string>
+    <string name="obfuscation_desc">Все новые строки, вкладки и комментарии будут удалены. Также будут удалены и некоторые пробельные символы</string>
+    <string name="directory">Каталог:</string>
+    <string name="no_errors">Ошибок не найдено</string>
+    <string name="error">Что-то пошло не так</string>
+    <string name="quit_confirm">Вы уверены, что хотите закончить?</string>
+    <string name="replace_all">Заменить всё</string>
+    <string name="text_to_replace">Замена: впишите</string>
+    <string name="text_to_replace_with">Замена текстом: впишите</string>
+    <string name="text_to_find">Поиск: впишите</string>
+    <string name="ignore_case">Игнорировать регистр знаков</string>
+    <string name="file_too_big">Файл слишком тяжёлый</string>
+    <string name="file_minify_ready">Минифицированный файл сохранён в папку SharpIDE/Minify folder</string>
+    <string name="action_apply">Применить</string>
+    <string name="version">Версия %s</string>
+
+    <!-- Settings -->
+    <string name="pref_category_general">Общее</string>
+    <string name="pref_category_editor">Редактор</string>
+    <string name="pref_category_code_style">Стиль оформления кода</string>
+    <string name="pref_load_last_file">Загрузить последний отрытый файл</string>
+    <string name="pref_quit_confirm">Подтверждать выход из приложения</string>
+    <string name="pref_quit_confirm_desc">Запрашивать подтверждение при выходе из приложения</string>
+    <string name="pref_hidden_files">Показывать скрытые файлы</string>
+    <string name="pref_hidden_files_desc">При выборе файла показывать скрытые файлы и вкладки</string>
+    <string name="pref_new_files_name">Имя новых файлов</string>
+    <string name="pref_new_files_name_desc">Установить</string>
+    <string name="pref_font_size">Размер шрифта в редакторе</string>
+    <string name="pref_font_size_desc">Установить размер шрифта в редакторе</string>
+    <string name="pref_line_numbers">Показывать номера строк</string>
+    <string name="pref_line_numbers_desc">Показывать номера строк в редакторе</string>
+    <string name="pref_symbols_bar">Показывать таблицу символов</string>
+    <string name="pref_symbols_bar_desc">Показывать таблицу символов при написании</string>
+    <string name="pref_syntax_highlighting">Выделение синтаксиса</string>
+    <string name="pref_highlight_current_line">Выделять текущую строку</string>
+    <string name="pref_auto_close_brackets">Закрывать квадратные скобки автоматически</string>
+    <string name="pref_auto_close_brackets_desc">При написании автоматически закрывать круглые, квадратные и фигурные скобки</string>
+    <string name="pref_auto_close_quotes">Закрывать кавычки автоматически</string>
+    <string name="pref_auto_close_quotes_desc">При написании кода автоматически закрывать одинарные и двойные кавычки</string>
+    <string name="pref_dark_theme">Использовать тёмную тему</string>
+    <string name="pref_dark_theme_desc">Чтобы применить эти настойки, может потребоваться перезагрузка приложения</string>
+    <string name="pref_code_completion">Завершённость кода</string>
+    <string name="pref_code_completion_desc">Это экспериментальная функция, она может сработать не так, как ожидается.</string>
+
+    <!-- Menu -->
+    <string name="group_files">Файлы</string>
+    <string name="group_tools">Инструменты</string>
+    <string name="menu_new_file">Новый файл</string>
+    <string name="menu_file_info">Информация о файле</string>
+    <string name="menu_save_file">Сохранить файл</string>
+    <string name="menu_save_file_as">Сохранить файл как</string>
+    <string name="menu_open_file">Открыть файл</string>
+    <string name="menu_find">Найти</string>
+    <string name="menu_run">Запустить</string>
+    <string name="title_console">Старт/Консоль</string>
+    <string name="file_saved">Файл сохранён</string>
+    <string name="menu_minify_tool">Минификатор</string>
+    <string name="menu_go_to_line">Перейти к строке</string>
+    <string name="menu_about">Информация</string>
+    <string name="menu_edit">Редактировать</string>
+    <string name="menu_edit_duplicate_line">Повторить строку</string>
+    <string name="menu_edit_select_line">Выбрать строку</string>
+    <string name="menu_edit_delete_line">Удалить строку</string>
+
+    <!-- Updater -->
+    <string name="updater_new_version">Доступна новая версия</string>
+    <string name="updater_new_update_desc">Пожалуйста, обновите приложение до последней версии, чтобы получить доступ к новым функциям!</string>
+    <string name="updater_update">Обновить</string>
+    <string name="updater_no">Нет, спасибо</string>
+
+    <!-- About -->
+    <string name="about_title">Если вам понравилось приложение, не стесняйтесь обратиться ко мне.</string>
+    <string name="about_rate">Оценить на Google Play</string>
+    <string name="about_feedback">Отправить отзыв по e-mail</string>
+    <string name="about_website">Мой сайт</string>
+    <string name="about_open_source">Лицензии на открытое ПО</string>
+    <string name="permission_required">Для работы приложения требуется разрешение хранить данные во внешнем хранилище</string>
+</resources>

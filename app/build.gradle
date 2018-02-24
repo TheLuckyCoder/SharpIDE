@@ -6,7 +6,7 @@ ext {
     versionMajor = 1
     versionMinor = 6
     versionPatch = 5
-    versionBuild = 0
+    versionBuild = 1
 }
 
 android {
@@ -18,7 +18,7 @@ android {
         targetSdkVersion 26
         versionName "$versionMajor.$versionMinor.$versionPatch"
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch * 10 + versionBuild
-        resConfigs "en"
+        resConfigs "en", "fr", "ru"
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -46,7 +46,7 @@ android {
 kotlin.experimental.coroutines "enable"
 
 ktlint {
-    version = "0.14.0"
+    version = "0.15.1"
     verbose = true
     android = true
     ignoreFailures = true

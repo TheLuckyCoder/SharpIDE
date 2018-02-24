@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name" translatable="false">SharpIDE</string>
+    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1279472163660969/8935487535</string>
+
+    <string name="pref_load_last_file_key" translatable="false">load_last_file</string>
+    <string name="pref_quit_confirm_key" translatable="false">quit_confirm</string>
+    <string name="pref_hidden_files_key" translatable="false">show_hidden_files</string>
+    <string name="pref_new_files_name_key" translatable="false">New Files Name</string>
+    <string name="pref_font_size_key" translatable="false">editor_font_size</string>
+    <string name="pref_line_numbers_key" translatable="false">show_line_numbers</string>
+    <string name="pref_symbols_bar_key" translatable="false">show_symbols_bar</string>
+    <string name="pref_syntax_highlighting_key" translatable="false">enable_syntax_highlighting</string>
+    <string name="pref_highlight_current_line_key" translatable="false">highlight_current_line</string>
+    <string name="pref_auto_close_brackets_key" translatable="false">auto_close_brackets</string>
+    <string name="pref_auto_close_quotes_key" translatable="false">auto_close_quotes</string>
+    <string name="pref_dark_theme_key" translatable="false">dark_theme</string>
+    <string name="pref_code_completion_key" translatable="false">show_code_suggestions</string>
+</resources>

@@ -599,17 +599,16 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     fun duplicateLine() {
-        var start = Math.min(selectionStart, selectionEnd)
-        var end = Math.max(selectionStart, selectionEnd)
-        if (end > start) {
-            end--
-        }
-        while (end < text.length && text[end] != '\n') {
-            end++
-        }
-        while (start > 0 && text[start - 1] != '\n') {
-            start--
-        }
+        var start = selectionStart
+        var end = selectionEnd
+        if (start < 0 || end < 0) return
+        start = Math.min(start, end)
+        end = Math.max(start, end)
+
+        if (end > start) end--
+        while (end < text.length && text[end] != '\n') end++
+        while (start > 0 && text[start - 1] != '\n') start--
+
         editableText.insert(end, "\n" + text.subSequence(start, end).toString())
     }
 
