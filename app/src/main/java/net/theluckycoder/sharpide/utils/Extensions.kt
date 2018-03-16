@@ -7,11 +7,11 @@ import android.content.pm.PackageManager
 import android.support.annotation.IdRes
 import android.support.annotation.LayoutRes
 import android.support.v4.app.ActivityCompat
+import android.util.TypedValue
 import android.view.View
-import java.io.IOException
 
 fun CharSequence.ktReplace(oldString: String, newString: String): String {
-    if (this.isEmpty() || oldString.isEmpty()) return this.toString()
+    if (isEmpty() || oldString.isEmpty()) return this.toString()
 
     var start = 0
     var end = this.indexOf(oldString, start)
@@ -33,6 +33,34 @@ fun CharSequence.ktReplace(oldString: String, newString: String): String {
     return builder.toString()
 }
 
+fun CharSequence.containsAny(searchChars: CharArray): Boolean {
+    if (isEmpty() || searchChars.isEmpty()) return false
+
+    val last = length - 1
+    val searchLast = searchChars.size - 1
+
+    for (i in 0 until length) {
+        val ch = this[i]
+        for (j in 0 until searchChars.size) {
+            if (searchChars[j] == ch) {
+                if (Character.isHighSurrogate(ch)) {
+                    if (j == searchLast) {
+                        // missing low surrogate, fine, like String.indexOf(String)
+                        return true
+                    }
+                    if (i < last && searchChars[j + 1] == this[i + 1]) {
+                        return true
+                    }
+                } else {
+                    // ch is in the Basic Multilingual Plane
+                    return true
+                }
+            }
+        }
+    }
+    return false
+}
+
 fun Context.inflate(@LayoutRes resource: Int): View = View.inflate(this, resource, null)
 
 fun Activity.verifyStoragePermission() {
@@ -49,14 +77,5 @@ fun <T : View> Activity.bind(@IdRes res: Int): Lazy<T> = lazyFast { findViewById
 
 fun <T> lazyFast(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) { initializer() }
 
-fun Context.saveInternalFile(fileName: String, content: String): Boolean {
-    return try {
-        val fos = openFileOutput(fileName, Context.MODE_PRIVATE)
-        fos.write(content.toByteArray())
-        fos.close()
-        true
-    } catch (e: IOException) {
-        e.printStackTrace()
-        false
-    }
-}
+fun Context.dpToPx(dp: Int): Float =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), resources.displayMetrics)

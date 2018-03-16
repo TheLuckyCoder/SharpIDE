@@ -25,21 +25,21 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.materialchooser.ChooserType
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.repository.MainRepository
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.bind
+import net.theluckycoder.sharpide.utils.containsAny
 import net.theluckycoder.sharpide.utils.inflate
 import net.theluckycoder.sharpide.utils.ktReplace
 import net.theluckycoder.sharpide.utils.lazyFast
-import net.theluckycoder.sharpide.utils.saveInternalFile
 import net.theluckycoder.sharpide.utils.verifyStoragePermission
 import net.theluckycoder.sharpide.view.CodeEditor
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
@@ -55,7 +55,6 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
-import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
@@ -82,15 +81,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
         }
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         // Set Toolbar
-        val toolbar: Toolbar = findViewById(R.id.toolbar)
+        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         // Views
-        val symbolLayout: LinearLayout = findViewById(R.id.layout_symbols)
+        val symbolLayout = findViewById<LinearLayout>(R.id.layout_symbols)
         for (i in 0 until symbolLayout.childCount) {
             symbolLayout.getChildAt(i).setOnClickListener { view ->
                 val selection = mCodeEditor.selectionStart
@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         // Setup Navigation View
-        val navigationView: NavigationView = findViewById(R.id.nav_view)
+        val navigationView = findViewById<NavigationView>(R.id.nav_view)
         navigationView.setNavigationItemSelectedListener(this)
         val header = navigationView.getHeaderView(0)
         header.findViewById<View>(R.id.header_layout_main).setOnClickListener {
@@ -128,7 +128,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Load preferences
         mCurrentFile = File(mPreferences.getNewFilesName())
-        supportActionBar?.subtitle = mCurrentFile.name
+        toolbar.subtitle = mCurrentFile.name
 
         if (!Build.MANUFACTURER.equals("samsung", true)) {
             mCodeEditor.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI
@@ -154,8 +154,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
 
+        // Setup Update Checker
         UpdateChecker {
-            alert(Appcompat, R.string.updater_new_update_desc, R.string.updater_new_version) {
+            alert(Appcompat, R.string.updater_new_update_desc, R.string.updater_new_update) {
                 positiveButton(R.string.updater_update) {
                     browse(Const.MARKET_LINK, true)
                 }
@@ -268,7 +269,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                         if (etFind.text.isEmpty()) return@positiveButton
 
-                        updateFabVisibility(etFind.text.toString(), cbIgnoreCase.isChecked)
+                        updateSearchFabVisibility(etFind.text.toString(), cbIgnoreCase.isChecked)
 
                         mAds.showInterstitial()
                     }
@@ -396,7 +397,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         btnOk.setOnClickListener {
-            if (!Pattern.compile("[_a-zA-Z0-9 \\-.]+").matcher(etFileName.text.toString()).matches()) {
+            if (etFileName.text.containsAny("|\\?*<\":>+[]/'".toCharArray())) {
                 toast(R.string.invalid_file_name)
                 etFileName.error = getString(R.string.invalid_file_name)
                 return@setOnClickListener
@@ -420,6 +421,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 loadFileAsync()
             } else {
                 saveFileAsync(false)
+                supportActionBar?.subtitle = mCurrentFile.name
             }
 
             mSaveDialog?.dismiss()
@@ -428,7 +430,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         mSaveDialog?.show()
     }
 
-    private fun updateFabVisibility(searchText: String?, ignoreCase: Boolean) {
+    private fun updateSearchFabVisibility(searchText: String?, ignoreCase: Boolean) {
         val fabPrevious: FloatingActionButton = findViewById(R.id.fab_previous)
         val fabNext: FloatingActionButton = findViewById(R.id.fab_next)
         val fabClose: FloatingActionButton = findViewById(R.id.fab_close)
@@ -441,7 +443,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             fabPrevious.setOnClickListener { mCodeEditor.findPreviousText(searchText, ignoreCase) }
             fabNext.setOnClickListener { mCodeEditor.findText(searchText, ignoreCase) }
-            fabClose.setOnClickListener { updateFabVisibility(null, false) }
+            fabClose.setOnClickListener { updateSearchFabVisibility(null, false) }
         } else {
             fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
@@ -474,18 +476,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .start()
     }
 
-    private fun loadDocument(fileContent: String) {
+    private fun loadFileAsync() = async(UI) {
+        val content = MainRepository.loadFileContent(mCurrentFile).await()
+
         mPreferences.setLastFilePath(mCurrentFile.absolutePath)
         mCodeEditor.scrollTo(0, 0)
 
         val chunkSize = 20000
         val loaded = StringBuilder()
 
-        if (fileContent.length > chunkSize) {
-            loaded.append(fileContent.substring(0, chunkSize))
+        if (content.length > chunkSize) {
+            loaded.append(content.substring(0, chunkSize))
             mCodeEditor.setTextHighlighted(loaded)
         } else {
-            loaded.append(fileContent)
+            loaded.append(content)
             mCodeEditor.setTextHighlighted(loaded)
         }
 
@@ -494,41 +498,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mCurrentFile.exists()) mAds.showInterstitial()
     }
 
-    private fun loadFileAsync() = async(UI) {
-        val job = async(CommonPool) {
-            var result = ""
-
-            try {
-                result = mCurrentFile.readText()
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-            result
-        }
-
-        loadDocument(job.await())
-    }
-
     private fun saveFileAsync(startConsole: Boolean) = async(UI) {
         val fileContent = mCodeEditor.text.toString()
-
-        async(CommonPool) {
-            try {
-                mCurrentFile.writeText(fileContent)
-            } catch (e: IOException) {
-                e.printStackTrace()
-            }
-
-            if (startConsole) {
-                saveInternalFile("main.js", fileContent)
-                saveInternalFile("index.html", "<!DOCTYPE html>\n<html>\n<head>\n" +
-                    "<script type=\"text/javascript\" src=\"main.js\"></script>\n</head>\n<body>\n</body>\n</html>\n")
-            }
-        }.await()
+        MainRepository.saveFile(mCurrentFile, fileContent).await()
 
         mAds.showInterstitial()
-
         toast(R.string.file_saved)
-        if (startConsole) startActivity<ConsoleActivity>()
+
+        if (startConsole) {
+            MainRepository.saveConsoleFiles(this@MainActivity, fileContent).await()
+            startActivity<ConsoleActivity>()
+        }
     }
 }

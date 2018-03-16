@@ -73,7 +73,7 @@
     <string name="menu_edit_delete_line">Удалить строку</string>
 
     <!-- Updater -->
-    <string name="updater_new_version">Доступна новая версия</string>
+    <string name="updater_new_update">Доступна новая версия</string>
     <string name="updater_new_update_desc">Пожалуйста, обновите приложение до последней версии, чтобы получить доступ к новым функциям!</string>
     <string name="updater_update">Обновить</string>
     <string name="updater_no">Нет, спасибо</string>

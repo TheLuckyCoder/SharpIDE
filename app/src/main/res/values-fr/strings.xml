@@ -73,7 +73,7 @@
     <string name="menu_edit_delete_line">Supprimez la ligne</string>
 
     <!-- Updater -->
-    <string name="updater_new_version">Version nouvelle disponible</string>
+    <string name="updater_new_update">Version nouvelle disponible</string>
     <string name="updater_new_update_desc">Veuillez mettre à jour l\'application à la dernière version afin d\' avoir les dernières fonctionnalités!</string>
     <string name="updater_update">Mettez à jour</string>
     <string name="updater_no">Non, merci</string>

@@ -6,6 +6,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
 import android.widget.Button
+import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import net.theluckycoder.materialchooser.Chooser
@@ -35,10 +36,10 @@ class MinifyActivity : AppCompatActivity() {
 
         verifyStoragePermission()
 
-        //Create main folder
+        // Create main folder
         File(Const.MINIFY_FOLDER).mkdirs()
 
-        //Init AdMob
+        // Init AdMob
         Ads(this).loadBanner()
 
         obfuscateBtn.setOnClickListener { obfuscateFile() }
@@ -89,7 +90,7 @@ class MinifyActivity : AppCompatActivity() {
             return@async
         }
 
-        val job = async(UI) {
+        val job = async(CommonPool) {
             // uniform line endings, make them all line feed
             fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
                 // strip leading & trailing whitespace
@@ -97,7 +98,8 @@ class MinifyActivity : AppCompatActivity() {
                 // collapse consecutive line feeds into just 1
                 .replace("/\n+/".toRegex(), "\n")
                 // remove comments
-                .replace("/\\*.*\\*/".toRegex(), "").replace("//.*(?=\\n)".toRegex(), "")
+                .replace("/\\*(?:.|[\\n])*?\\*/|//.*".toRegex(), "")
+                // remove other spaces
                 .ktReplace(" + ", "+").ktReplace(" - ", "-").ktReplace(" = ", "=")
                 .ktReplace("if ", "if").ktReplace("for ", "for").ktReplace("while ", "while")
                 .ktReplace("( ", "(")

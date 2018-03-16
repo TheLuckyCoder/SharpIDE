@@ -11,7 +11,7 @@
     <color name="syntax_string">#009b00</color>
 
     <color name="line_highlight">#f5f5f5</color>
-    <color name="line_highlight_dark">#222</color>
+    <color name="line_highlight_dark">#212121</color>
     <color name="gray_very_light">#e0e0e0</color>
     <color name="main_background">#eee</color>
     <color name="textColorPrimary">#000</color>

@@ -21,12 +21,11 @@ import android.text.method.ScrollingMovementMethod
 import android.text.style.BackgroundColorSpan
 import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
-import android.util.TypedValue
 import android.view.KeyEvent
 import android.widget.ArrayAdapter
-import net.theluckycoder.sharpide.CompletionTokenizer
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.dpToPx
 import net.theluckycoder.sharpide.utils.lazyFast
 import java.util.regex.Pattern
 
@@ -91,7 +90,9 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         if (mPreferences.highlightCurrentLine()) {
             try {
                 getLineBounds(getLine(), mLineBounds)
-            } catch (e: Exception) {}
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
 
             val color = if (!mPreferences.useDarkTheme()) {
                 ContextCompat.getColor(context, R.color.line_highlight)
@@ -103,10 +104,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             canvas.drawRect(mLineBounds, mPaintHighlight)
         }
 
-        val normalPadding = getPixels(6).toInt()
+        val normalPadding = context.dpToPx(6).toInt()
 
         if (mPreferences.showLineNumbers()) {
-            val padding = getPixels(digitCount * 10 + 14).toInt()
+            val padding = context.dpToPx(digitCount * 10 + 14).toInt()
             setPadding(padding, normalPadding, normalPadding, normalPadding)
 
             val firstLine = mLayout.getLineForVertical(scrollY)
@@ -177,12 +178,16 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
         mColorString = ContextCompat.getColor(context, R.color.syntax_string)
 
-        mPaint.style = Paint.Style.FILL
-        mPaint.isAntiAlias = true
-        mPaint.color = Color.parseColor("#bbbbbb")
-        mPaint.textSize = getPixels(mPreferences.getFontSize())
+        with(mPaint) {
+            style = Paint.Style.FILL
+            isAntiAlias = true
+            color = Color.parseColor("#bbbbbb")
+            textSize = context.dpToPx(mPreferences.getFontSize())
+        }
 
-        viewTreeObserver.addOnGlobalLayoutListener { mLayout = layout }
+        viewTreeObserver.addOnGlobalLayoutListener {
+            layout?.let { mLayout = it }
+        }
 
         // Set Adapter
         val adapter = ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, COMPLETION_KEYWORDS)
@@ -228,7 +233,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         return super.onKeyDown(keyCode, event)
     }
 
-    // ------------------------------------------------------------------
+    /***** Private Functions *****/
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
@@ -467,11 +472,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
     private fun drawLineNumber(canvas: Canvas, layout: Layout, positionY: Int, line: Int) {
         val positionX = layout.getLineLeft(line).toInt()
-        canvas.drawText((line + 1).toString(), positionX + getPixels(2), positionY.toFloat(), mPaint)
+        canvas.drawText((line + 1).toString(), positionX + context.dpToPx(2), positionY.toFloat(), mPaint)
     }
-
-    private fun getPixels(dp: Int): Float =
-        TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), context.resources.displayMetrics)
 
     private fun getSelectedText(): CharSequence {
         return if (selectionEnd > selectionStart) {
@@ -481,7 +483,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    // --------------------------------------------------------------------------------
+    /***** Public Functions *****/
 
     fun setTextHighlighted(text: CharSequence) {
         cancelUpdate()

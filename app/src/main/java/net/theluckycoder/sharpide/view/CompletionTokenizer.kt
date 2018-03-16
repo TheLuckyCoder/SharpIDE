@@ -1,11 +1,11 @@
-package net.theluckycoder.sharpide
+package net.theluckycoder.sharpide.view
 
 import android.text.SpannableString
 import android.text.Spanned
 import android.text.TextUtils
 import android.widget.MultiAutoCompleteTextView
 
-class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
+internal class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
 
     override fun findTokenStart(text: CharSequence, cursor: Int): Int {
         var i = cursor
