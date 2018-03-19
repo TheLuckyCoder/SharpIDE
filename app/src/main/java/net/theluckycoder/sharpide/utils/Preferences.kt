@@ -15,7 +15,7 @@ class Preferences(private val context: Context) {
 
     fun getLastFilePath() = preferences.getString("last_file_path", Const.MAIN_FOLDER) ?: Const.MAIN_FOLDER
 
-    fun setLastFilePath(path: String) {
+    fun putLastFilePath(path: String) {
         preferences.edit().putString("last_file_path", path).apply()
     }
 

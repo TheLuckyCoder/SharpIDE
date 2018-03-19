@@ -415,7 +415,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             mCurrentFile = file
-            mPreferences.setLastFilePath(mCurrentFile.absolutePath)
+            mPreferences.putLastFilePath(mCurrentFile.absolutePath)
 
             if (createNewFile) {
                 loadFileAsync()
@@ -472,6 +472,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             fileExtension = extension,
             showHiddenFiles = mPreferences.showHiddenFiles(),
             startPath = Const.MAIN_FOLDER,
+            useNightTheme = mPreferences.useDarkTheme(),
             chooserType = type)
             .start()
     }
@@ -479,7 +480,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun loadFileAsync() = async(UI) {
         val content = MainRepository.loadFileContent(mCurrentFile).await()
 
-        mPreferences.setLastFilePath(mCurrentFile.absolutePath)
+        mPreferences.putLastFilePath(mCurrentFile.absolutePath)
         mCodeEditor.scrollTo(0, 0)
 
         val chunkSize = 20000

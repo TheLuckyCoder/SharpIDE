@@ -46,6 +46,7 @@ class MinifyActivity : AppCompatActivity() {
 
         savedInstanceState?.let {
             mFilePath = it.getString("filePath", "")
+            obfuscateBtn.isEnabled = true
         }
     }
 
@@ -77,7 +78,8 @@ class MinifyActivity : AppCompatActivity() {
         Chooser(this, 10,
             fileExtension = "js",
             showHiddenFiles = mPreferences.showHiddenFiles(),
-            startPath = Const.MAIN_FOLDER)
+            startPath = Const.MAIN_FOLDER,
+            useNightTheme = mPreferences.useDarkTheme())
             .start()
     }
 
