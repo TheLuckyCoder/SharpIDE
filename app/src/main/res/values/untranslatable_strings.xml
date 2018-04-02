@@ -3,6 +3,7 @@
     <string name="app_name" translatable="false">SharpIDE</string>
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1279472163660969/8935487535</string>
 
+    <string name="pref_last_file_path" translatable="false">last_file_path</string>
     <string name="pref_load_last_file_key" translatable="false">load_last_file</string>
     <string name="pref_quit_confirm_key" translatable="false">quit_confirm</string>
     <string name="pref_hidden_files_key" translatable="false">show_hidden_files</string>
@@ -16,4 +17,5 @@
     <string name="pref_auto_close_quotes_key" translatable="false">auto_close_quotes</string>
     <string name="pref_dark_theme_key" translatable="false">dark_theme</string>
     <string name="pref_code_completion_key" translatable="false">show_code_suggestions</string>
+    <string name="pref_console_open_by_default_key" translatable="false">console_open_default</string>
 </resources>

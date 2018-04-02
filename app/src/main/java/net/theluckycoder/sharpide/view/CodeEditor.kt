@@ -475,11 +475,16 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         canvas.drawText((line + 1).toString(), positionX + context.dpToPx(2), positionY.toFloat(), mPaint)
     }
 
-    private fun getSelectedText(): CharSequence {
-        return if (selectionEnd > selectionStart) {
-            text.subSequence(selectionStart, selectionEnd)
+    private fun getSelectedText(): CharSequence? {
+        val start = selectionStart
+        val end = selectionEnd
+
+        return if (start == -1 || end == -1) {
+            null
+        } else if (end > start) {
+            text.subSequence(start, end)
         } else {
-            text.subSequence(selectionEnd, selectionStart)
+            text.subSequence(end, start)
         }
     }
 
@@ -519,20 +524,24 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     fun findPreviousText(searchText: String, ignoreCase: Boolean) {
-        var needle = searchText
-
-        if (needle.isEmpty()) return
-
         val endSelection = selectionStart
+        var needle = searchText
         var haystack = text.toString()
+
+        if (endSelection == -1 || needle.isEmpty() || haystack.isEmpty()) return
+
         if (ignoreCase) {
             needle = needle.toLowerCase()
             haystack = haystack.toLowerCase()
         }
 
         var foundPosition = haystack.substring(0, endSelection).lastIndexOf(needle)
-        if (foundPosition == -1) foundPosition = haystack.lastIndexOf(needle)
-        if (foundPosition != -1) setSelection(foundPosition, needle.length + foundPosition)
+        if (foundPosition == -1) {
+            foundPosition = haystack.lastIndexOf(needle)
+        }
+        if (foundPosition != -1) {
+            setSelection(foundPosition, needle.length + foundPosition)
+        }
     }
 
     fun goToLine(toLine: Int) {
@@ -557,14 +566,16 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     fun copy() {
-        val clipboard: ClipboardManager? = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
 
-        val clipData = ClipData.newPlainText("text", getSelectedText())
-        clipboard?.primaryClip = clipData
+        getSelectedText()?.let {
+            val clipData = ClipData.newPlainText("text", it)
+            clipboard?.primaryClip = clipData
+        }
     }
 
     fun paste() {
-        val clipboard: ClipboardManager? = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
         if (clipboard == null || !clipboard.hasPrimaryClip()) return
 
         val item = clipboard.primaryClip.getItemAt(0)

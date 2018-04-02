@@ -85,4 +85,6 @@
     <string name="about_website">Mes sites Web</string>
     <string name="about_open_source">Licences à Source ouverte</string>
     <string name="permission_required">Une autorisation de stockage externe est requise pour que l\'application puisse fonctionner</string>
+    <string name="pref_console_open_by_default">Console open by default</string>
+    <string name="pref_console_open_by_default_desc">Open the console automatically when Running code</string>
 </resources>

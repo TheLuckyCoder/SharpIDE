@@ -85,4 +85,6 @@
     <string name="about_website">Мой сайт</string>
     <string name="about_open_source">Лицензии на открытое ПО</string>
     <string name="permission_required">Для работы приложения требуется разрешение хранить данные во внешнем хранилище</string>
+    <string name="pref_console_open_by_default">Console open by default</string>
+    <string name="pref_console_open_by_default_desc">Open the console automatically when Running code</string>
 </resources>

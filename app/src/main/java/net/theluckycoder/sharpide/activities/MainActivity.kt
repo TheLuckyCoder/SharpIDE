@@ -192,7 +192,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     longToast("File is not saved")
                     return true
                 }
-                alert(Appcompat, getFileInfo(), getString(R.string.menu_file_info)) {
+                alert(Appcompat, getFileInfo()) {
+                    titleResource = R.string.menu_file_info
                     positiveButton(R.string.action_close) {}
                 }.show()
             }
@@ -473,8 +474,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             showHiddenFiles = mPreferences.showHiddenFiles(),
             startPath = Const.MAIN_FOLDER,
             useNightTheme = mPreferences.useDarkTheme(),
-            chooserType = type)
-            .start()
+            chooserType = type).start()
     }
 
     private fun loadFileAsync() = async(UI) {

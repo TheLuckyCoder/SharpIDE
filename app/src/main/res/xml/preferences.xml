@@ -36,6 +36,13 @@
             android:icon="@drawable/ic_pref_new_files"
             android:defaultValue="Untitled"
             android:key="@string/pref_new_files_name_key" />
+
+        <CheckBoxPreference
+            android:title="@string/pref_console_open_by_default"
+            android:summary="@string/pref_console_open_by_default_desc"
+            android:icon="@drawable/ic_pref_hidden_files"
+            android:defaultValue="false"
+            android:key="@string/pref_console_open_by_default_key" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_editor">

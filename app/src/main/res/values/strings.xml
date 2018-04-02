@@ -50,9 +50,11 @@
     <string name="pref_auto_close_quotes">Auto-Close Quotes</string>
     <string name="pref_auto_close_quotes_desc">Automatically close single or double quote when typing</string>
     <string name="pref_dark_theme">Use Dark Theme</string>
-    <string name="pref_dark_theme_desc">An app restart might be required in order to apply this settings</string>
+    <string name="pref_dark_theme_desc">An app restart might be required in order to apply this setting</string>
     <string name="pref_code_completion">Code Completion</string>
     <string name="pref_code_completion_desc">This feature is still experimental and might not work as expected</string>
+    <string name="pref_console_open_by_default">Console open by default</string>
+    <string name="pref_console_open_by_default_desc">Open the console automatically when Running code</string>
 
     <!-- Menu -->
     <string name="group_files">Files</string>

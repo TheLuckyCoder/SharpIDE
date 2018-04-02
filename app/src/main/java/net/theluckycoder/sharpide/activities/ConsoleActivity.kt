@@ -6,7 +6,6 @@ import android.support.design.widget.FloatingActionButton
 import android.support.transition.TransitionManager
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewCompat
-import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
@@ -21,13 +20,16 @@ import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.bind
+import org.jetbrains.anko.alert
+import org.jetbrains.anko.appcompat.v7.Appcompat
 
 class ConsoleActivity : AppCompatActivity() {
 
-    private val webView: WebView by bind(R.id.web_view)
-    private val windowLayout: LinearLayout by bind(R.id.layout_window)
-    private val messageTv: TextView by bind(R.id.tv_console_message)
+    private val webView by bind<WebView>(R.id.web_view)
+    private val windowLayout by bind<LinearLayout>(R.id.layout_window)
+    private val messageTv by bind<TextView>(R.id.tv_console_message)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +38,14 @@ class ConsoleActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         windowLayout.visibility = View.GONE
+
+        val fab = findViewById<FloatingActionButton>(R.id.fab_expand)
+        fab.setOnClickListener {
+            expand(fab)
+        }
+        if (Preferences(this).consoleOpenByDefault()) {
+            expand(fab)
+        }
 
         // WebView Setup
         with(webView) {
@@ -78,7 +88,7 @@ class ConsoleActivity : AppCompatActivity() {
         return super.onOptionsItemSelected(item)
     }
 
-    fun expand(view: View) {
+    private fun expand(view: FloatingActionButton) {
         TransitionManager.beginDelayedTransition(findViewById(R.id.container))
 
         val rotation = if (windowLayout.visibility == View.VISIBLE) {
@@ -89,7 +99,7 @@ class ConsoleActivity : AppCompatActivity() {
             180f
         }
 
-        ViewCompat.animate(view as FloatingActionButton)
+        ViewCompat.animate(view)
             .rotation(rotation)
             .withLayer()
             .setDuration(400)
@@ -98,48 +108,50 @@ class ConsoleActivity : AppCompatActivity() {
     }
 
     private inner class MyChromeClient : WebChromeClient() {
+
         override fun onJsAlert(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            AlertDialog.Builder(this@ConsoleActivity)
-                .setTitle("JavaScript Alert")
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                .setCancelable(false)
-                .show()
+            alert(Appcompat, message, "JavaScript Alert") {
+                isCancelable = false
+                positiveButton(android.R.string.ok) { result.confirm() }
+            }.show()
             return true
         }
 
-        override fun onJsPrompt(view: WebView, url: String, message: String, defaultValue: String?,
-                                result: JsPromptResult): Boolean {
-            AlertDialog.Builder(this@ConsoleActivity)
-                .setTitle("JavaScript Prompt")
-                .setMessage(message)
-                .setView(AppCompatEditText(this@ConsoleActivity).apply { setText(defaultValue) })
-                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                .setNegativeButton(android.R.string.cancel) { _, _ -> result.cancel() }
-                .setCancelable(false)
-                .show()
+        override fun onJsPrompt(
+            view: WebView,
+            url: String,
+            message: String,
+            defaultValue: String?,
+            result: JsPromptResult
+        ): Boolean {
+            val editText = AppCompatEditText(this@ConsoleActivity).apply {
+                setText(defaultValue)
+            }
+            alert(Appcompat, message, "JavaScript Prompt") {
+                customView = editText
+                isCancelable = false
+                positiveButton(android.R.string.ok) { result.confirm(editText.text.toString()) }
+                negativeButton(android.R.string.cancel) { result.cancel() }
+            }.show()
             return true
         }
 
         override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            AlertDialog.Builder(this@ConsoleActivity)
-                .setTitle("JavaScript Confirm")
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok) { _, _ -> result.confirm() }
-                .setNegativeButton(android.R.string.no) { _, _ -> result.cancel() }
-                .setCancelable(false)
-                .show()
+            alert(Appcompat, message, "JavaScript Confirm") {
+                isCancelable = false
+                positiveButton(android.R.string.ok) { result.confirm() }
+                negativeButton(android.R.string.cancel) { result.cancel() }
+            }.show()
             return true
         }
 
         override fun onJsBeforeUnload(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            AlertDialog.Builder(this@ConsoleActivity)
-                .setTitle("Confirm Navigation")
-                .setMessage(message + "\n\nAre you sure you want to navigate away from this page?")
-                .setPositiveButton("Leave this page") { _, _ -> result.confirm() }
-                .setNegativeButton("Stay on this page") { _, _ -> result.cancel() }
-                .setCancelable(false)
-                .show()
+            alert(Appcompat, "$message\n\nAre you sure you want to navigate away from this page?",
+                "Confirm Navigation") {
+                isCancelable = false
+                positiveButton("Leave this page") { result.confirm() }
+                negativeButton("Stay on this page") { result.cancel() }
+            }.show()
             return true
         }
 

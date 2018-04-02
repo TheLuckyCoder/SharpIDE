@@ -13,10 +13,10 @@ class Preferences(private val context: Context) {
 
     fun getLoadLastFile() = preferences.getBoolean(string(R.string.pref_load_last_file_key), true)
 
-    fun getLastFilePath() = preferences.getString("last_file_path", Const.MAIN_FOLDER) ?: Const.MAIN_FOLDER
+    fun getLastFilePath(): String = preferences.getString(string(R.string.pref_last_file_path), Const.MAIN_FOLDER)
 
     fun putLastFilePath(path: String) {
-        preferences.edit().putString("last_file_path", path).apply()
+        preferences.edit().putString(string(R.string.pref_last_file_path), path).apply()
     }
 
     fun confirmAppQuit() = preferences.getBoolean(string(R.string.pref_quit_confirm_key), true)
@@ -46,4 +46,6 @@ class Preferences(private val context: Context) {
     fun autoCloseQuotes() = preferences.getBoolean(string(R.string.pref_auto_close_quotes_key), true)
 
     fun showSuggestions() = preferences.getBoolean(string(R.string.pref_code_completion_key), false)
+
+    fun consoleOpenByDefault() = preferences.getBoolean(string(R.string.pref_console_open_by_default_key), false)
 }
