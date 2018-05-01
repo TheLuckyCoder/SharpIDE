@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.os.Bundle
 import android.support.v4.app.ShareCompat
 import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.Toolbar
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.AlphaAnimation
 import android.view.animation.AnimationUtils
 import android.widget.TextView
@@ -17,6 +17,7 @@ import de.psdev.licensesdialog.model.Notices
 import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Const
+import net.theluckycoder.sharpide.utils.Preferences
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.email
 
@@ -27,10 +28,15 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         setContentView(R.layout.activity_about)
 
         // Set Toolbar
-        val toolbar: Toolbar = findViewById(R.id.toolbar_about)
-        setSupportActionBar(toolbar)
-
+        setSupportActionBar(findViewById(R.id.toolbar_about))
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Set Fullscreen
+        if (Preferences(this).isFullscreen()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
 
         val animation = AnimationUtils.loadAnimation(this, R.anim.anim_about_card_show)
         findViewById<View>(R.id.scroll_about).startAnimation(animation)
@@ -53,11 +59,10 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
+        return if (item.itemId == android.R.id.home) {
             onBackPressed()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
     @SuppressLint("PrivateResource")

@@ -17,12 +17,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
 
-            activity?.let {
-                val intent = it.intent
-                it.finish()
-                startActivity(intent)
-            }
+            tryToRestartActivity()
             true
+        }
+
+        findPreference("fullscreen").setOnPreferenceClickListener {
+            tryToRestartActivity()
+            true
+        }
+    }
+
+    private fun tryToRestartActivity() {
+        activity?.let {
+            val intent = it.intent
+            it.finish()
+            startActivity(intent)
         }
     }
 }

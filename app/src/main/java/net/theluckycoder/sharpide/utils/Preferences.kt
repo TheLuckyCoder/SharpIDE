@@ -47,5 +47,7 @@ class Preferences(private val context: Context) {
 
     fun showSuggestions() = preferences.getBoolean(string(R.string.pref_code_completion_key), false)
 
-    fun consoleOpenByDefault() = preferences.getBoolean(string(R.string.pref_console_open_by_default_key), false)
+    fun isConsoleOpenByDefault() = preferences.getBoolean(string(R.string.pref_console_open_by_default_key), false)
+
+    fun isFullscreen() = preferences.getBoolean(string(R.string.pref_fullscreen_key), false)
 }

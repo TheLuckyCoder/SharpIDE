@@ -25,8 +25,8 @@ import android.view.KeyEvent
 import android.widget.ArrayAdapter
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.dpToPx
-import net.theluckycoder.sharpide.utils.lazyFast
+import net.theluckycoder.sharpide.utils.extensions.dpToPx
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import java.util.regex.Pattern
 
 class CodeEditor : AppCompatMultiAutoCompleteTextView {

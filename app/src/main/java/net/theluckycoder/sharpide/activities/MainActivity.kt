@@ -1,5 +1,6 @@
 package net.theluckycoder.sharpide.activities
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
@@ -17,6 +18,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.CheckBox
@@ -27,25 +29,25 @@ import android.widget.TextView
 import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.materialchooser.ChooserType
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.repository.MainRepository
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
-import net.theluckycoder.sharpide.utils.bind
-import net.theluckycoder.sharpide.utils.containsAny
-import net.theluckycoder.sharpide.utils.inflate
-import net.theluckycoder.sharpide.utils.ktReplace
-import net.theluckycoder.sharpide.utils.lazyFast
-import net.theluckycoder.sharpide.utils.verifyStoragePermission
+import net.theluckycoder.sharpide.utils.extensions.alertDialog
+import net.theluckycoder.sharpide.utils.extensions.bind
+import net.theluckycoder.sharpide.utils.extensions.containsAny
+import net.theluckycoder.sharpide.utils.extensions.inflate
+import net.theluckycoder.sharpide.utils.extensions.ktReplace
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
+import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
+import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import net.theluckycoder.sharpide.view.CodeEditor
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
-import org.jetbrains.anko.alert
-import org.jetbrains.anko.appcompat.v7.Appcompat
 import org.jetbrains.anko.browse
 import org.jetbrains.anko.bundleOf
 import org.jetbrains.anko.longToast
@@ -101,8 +103,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         // Set up Drawer Layout
-        val drawer: DrawerLayout = findViewById(R.id.drawer_layout)
-        val toggle = object : ActionBarDrawerToggle(this, drawer, toolbar, 0, 0) {
+        val toggle = object : ActionBarDrawerToggle(this, mDrawerLayout, toolbar, 0, 0) {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 super.onDrawerSlide(drawerView, slideOffset)
 
@@ -110,7 +111,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 mCodeEditor.clearFocus()
             }
         }
-        drawer.addDrawerListener(toggle)
+        mDrawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
         // Setup Navigation View
@@ -119,11 +120,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val header = navigationView.getHeaderView(0)
         header.findViewById<View>(R.id.header_layout_main).setOnClickListener {
             startActivity<AboutActivity>()
-            drawer.closeDrawer(GravityCompat.START)
+            mDrawerLayout.closeDrawer(GravityCompat.START)
         }
         header.findViewById<View>(R.id.header_image_settings).setOnClickListener {
             startActivity<SettingsActivity>()
-            drawer.closeDrawer(GravityCompat.START)
+            mDrawerLayout.closeDrawer(GravityCompat.START)
         }
 
         // Load preferences
@@ -156,26 +157,39 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup Update Checker
         UpdateChecker {
-            alert(Appcompat, R.string.updater_new_update_desc, R.string.updater_new_update) {
-                positiveButton(R.string.updater_update) {
+            alertDialog(R.style.AppTheme_Dialog)
+                .setTitleWithColor(R.string.updater_new_update, R.color.textColorPrimary)
+                .setMessage(R.string.updater_new_update_desc)
+                .setPositiveButton(R.string.updater_update) { _, _ ->
                     browse(Const.MARKET_LINK, true)
-                }
-                negativeButton(R.string.updater_no) {}
-            }.show()
+                }.setNegativeButton(R.string.updater_no, null)
+                .show()
         }
 
         // Setup ads
         mAds.initAds().loadInterstitial()
     }
 
+    override fun onResume() {
+        super.onResume()
+        if (mPreferences.isFullscreen()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
+    }
+
     override fun onBackPressed() {
         when {
             mDrawerLayout.isDrawerOpen(GravityCompat.START) -> mDrawerLayout.closeDrawer(GravityCompat.START)
             mPreferences.confirmAppQuit() -> {
-                alert(Appcompat, R.string.quit_confirm, R.string.app_name) {
-                    positiveButton(android.R.string.yes) { finish() }
-                    negativeButton(android.R.string.no) {}
-                }.show()
+                alertDialog(R.style.AppTheme_Dialog)
+                    .setTitleWithColor(R.string.app_name, R.color.textColorPrimary)
+                    .setMessage(R.string.quit_confirm)
+                    .setPositiveButton(android.R.string.yes) { _, _ ->
+                        finish()
+                    }.setNegativeButton(android.R.string.no, null)
+                    .show()
             }
             else -> return super.onBackPressed()
         }
@@ -189,13 +203,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_new -> saveFileAs(true)
             R.id.menu_file_info -> {
                 if (!mCurrentFile.exists()) {
-                    longToast("File is not saved")
+                    longToast(R.string.error_file_not_saved)
                     return true
                 }
-                alert(Appcompat, getFileInfo()) {
-                    titleResource = R.string.menu_file_info
-                    positiveButton(R.string.action_close) {}
-                }.show()
+                alertDialog(R.style.AppTheme_Dialog)
+                    .setTitleWithColor(R.string.menu_file_info, R.color.textColorPrimary)
+                    .setMessage(getFileInfo())
+                    .setPositiveButton(R.string.action_close, null)
+                    .show()
             }
             R.id.menu_run -> {
                 if (mCurrentFile.path != mPreferences.getNewFilesName()) {
@@ -211,7 +226,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_minify -> startActivity<MinifyActivity>()
         }
 
-        findViewById<DrawerLayout>(R.id.drawer_layout).closeDrawer(GravityCompat.START)
+        mDrawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
 
@@ -261,57 +276,55 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         when (item.itemId) {
             R.id.menu_find -> {
                 val dialogView = inflate(R.layout.dialog_find)
-                alert(Appcompat) {
-                    titleResource = R.string.menu_find
-                    customView = dialogView
-                    positiveButton(R.string.action_apply) {
+                alertDialog(R.style.AppTheme)
+                    .setTitleWithColor(R.string.menu_find, R.color.textColorPrimary)
+                    .setView(dialogView)
+                    .setPositiveButton(R.string.action_apply) { _, _ ->
                         val etFind: EditText = dialogView.findViewById(R.id.et_find)
                         val cbIgnoreCase: CheckBox = dialogView.findViewById(R.id.cb_ignore_case)
 
-                        if (etFind.text.isEmpty()) return@positiveButton
+                        if (etFind.text.isEmpty()) return@setPositiveButton
 
                         updateSearchFabVisibility(etFind.text.toString(), cbIgnoreCase.isChecked)
 
                         mAds.showInterstitial()
-                    }
-                    negativeButton(android.R.string.cancel) {}
-                }.show()
+                    }.setNegativeButton(android.R.string.cancel, null)
+                    .show()
             }
             R.id.menu_go_to_line -> {
                 val dialogView = inflate(R.layout.dialog_goto_line)
-                alert(Appcompat) {
-                    titleResource = R.string.menu_go_to_line
-                    customView = dialogView
-                    positiveButton(R.string.action_apply) {
+                alertDialog(R.style.AppTheme)
+                    .setTitle(R.string.menu_go_to_line)
+                    .setView(dialogView)
+                    .setPositiveButton(R.string.action_apply) { _, _ ->
                         val etLine: EditText = dialogView.findViewById(R.id.et_line)
 
-                        if (etLine.text.isEmpty()) return@positiveButton
+                        if (etLine.text.isEmpty()) return@setPositiveButton
 
                         mCodeEditor.goToLine(etLine.text.toString().toInt())
 
                         mAds.showInterstitial()
-                    }
-                    negativeButton(android.R.string.cancel) {}
-                }.show()
+                    }.setNegativeButton(android.R.string.cancel, null)
+                    .show()
             }
             R.id.menu_replace_all -> {
                 val dialogView = inflate(R.layout.dialog_replace)
-                alert(Appcompat) {
-                    titleResource = R.string.replace_all
-                    customView = dialogView
-                    positiveButton(R.string.replace_all) {
+                alertDialog(R.style.AppTheme)
+                    .setTitleWithColor(R.string.replace_all, R.color.textColorPrimary)
+                    .setTitle(R.string.replace_all)
+                    .setView(dialogView)
+                    .setPositiveButton(R.string.replace_all) { _, _ ->
                         val etFind: EditText = dialogView.findViewById(R.id.et_find)
                         val etReplace: EditText = dialogView.findViewById(R.id.et_replace)
 
-                        if (etFind.text.isEmpty()) return@positiveButton
+                        if (etFind.text.isEmpty()) return@setPositiveButton
 
                         val newText = mCodeEditor.text.ktReplace(etFind.text.toString(), etReplace.text.toString())
                         mCodeEditor.setText(newText)
 
                         mAds.showInterstitial()
-                    }
-                    negativeButton(android.R.string.cancel) {}
-                }.show()
+                    }.setNegativeButton(android.R.string.cancel, null)
+                    .show()
             }
             R.id.menu_edit_cut -> mCodeEditor.cut()
             R.id.menu_edit_copy -> mCodeEditor.copy()
@@ -376,10 +389,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun saveFileAs(createNewFile: Boolean, folderPath: String? = null) {
         val dialogView = inflate(R.layout.dialog_new_file)
-        mSaveDialog = alert(Appcompat) {
-            titleResource = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
-            customView = dialogView
-        }.build()
+        val title = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
+        mSaveDialog = alertDialog(R.style.AppTheme_Dialog)
+            .setTitleWithColor(title, R.color.textColorPrimary)
+            .setView(dialogView)
+            .show()
 
         val etFileName: EditText = dialogView.findViewById(R.id.et_file_name)
         val tvSelectPath: TextView = dialogView.findViewById(R.id.tv_select_path)
@@ -467,18 +481,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun openChooser(requestCode: Int, @ChooserType type: Int) {
-        val extension = if (type == Chooser.FILE_CHOOSER) "js" else ""
-        Chooser(this, requestCode,
-            fileExtension = extension,
-            showHiddenFiles = mPreferences.showHiddenFiles(),
-            startPath = Const.MAIN_FOLDER,
-            useNightTheme = mPreferences.useDarkTheme(),
-            chooserType = type).start()
+    private fun openChooser(requestCode: Int, @ChooserType chooserType: Int) {
+        val extension = if (chooserType == Chooser.FILE_CHOOSER) "js" else ""
+        Chooser(this, requestCode)
+            .setFileExtension(extension)
+            .setShowHiddenFiles(mPreferences.showHiddenFiles())
+            .setStartPath(Const.MAIN_FOLDER)
+            .setNightTheme(mPreferences.useDarkTheme())
+            .setChooserType(chooserType)
+            .start()
     }
 
-    private fun loadFileAsync() = async(UI) {
-        val content = MainRepository.loadFileContent(mCurrentFile).await()
+    private fun loadFileAsync() = launch(UI) {
+        val content = try {
+            async {
+                mCurrentFile.readText()
+            }.await()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            toast(R.string.error)
+            return@launch
+        }
 
         mPreferences.putLastFilePath(mCurrentFile.absolutePath)
         mCodeEditor.scrollTo(0, 0)
@@ -499,16 +522,43 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mCurrentFile.exists()) mAds.showInterstitial()
     }
 
-    private fun saveFileAsync(startConsole: Boolean) = async(UI) {
+    private fun saveFileAsync(startConsole: Boolean) = launch(UI) {
         val fileContent = mCodeEditor.text.toString()
-        MainRepository.saveFile(mCurrentFile, fileContent).await()
-
-        mAds.showInterstitial()
-        toast(R.string.file_saved)
+        try {
+            async {
+                mCurrentFile.writeText(fileContent)
+            }.await()
+            mAds.showInterstitial()
+            toast(R.string.file_saved)
+        } catch (e: Exception) {
+            e.printStackTrace()
+            toast(R.string.error)
+        }
 
         if (startConsole) {
-            MainRepository.saveConsoleFiles(this@MainActivity, fileContent).await()
-            startActivity<ConsoleActivity>()
+            try {
+                saveConsoleFiles(fileContent).await()
+                startActivity<ConsoleActivity>()
+            } catch (e: IOException) {
+                e.printStackTrace()
+                toast(R.string.error)
+            }
+        }
+    }
+
+    @Throws(IOException::class)
+    private fun saveConsoleFiles(fileContent: String) = async {
+        openFileOutput("main.js", Context.MODE_PRIVATE).use {
+            it.write(fileContent.toByteArray())
+        }
+
+        if (!fileList().contains("index.html")) {
+            openFileOutput("index.html", Context.MODE_PRIVATE).use {
+                val content = "<!DOCTYPE html><html><head>" +
+                    "<script type=\"text/javascript\" src=\"main.js\"></script>" +
+                    "</head><body></body></html>"
+                it.write(content.toByteArray())
+            }
         }
     }
 }

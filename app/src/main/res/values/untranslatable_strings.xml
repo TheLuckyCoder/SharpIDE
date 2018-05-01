@@ -18,4 +18,5 @@
     <string name="pref_dark_theme_key" translatable="false">dark_theme</string>
     <string name="pref_code_completion_key" translatable="false">show_code_suggestions</string>
     <string name="pref_console_open_by_default_key" translatable="false">console_open_default</string>
+    <string name="pref_fullscreen_key">fullscreen</string>
 </resources>

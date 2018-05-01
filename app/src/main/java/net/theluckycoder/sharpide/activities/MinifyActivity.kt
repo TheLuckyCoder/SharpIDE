@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.widget.Button
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
@@ -14,10 +15,10 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.bind
-import net.theluckycoder.sharpide.utils.ktReplace
-import net.theluckycoder.sharpide.utils.lazyFast
-import net.theluckycoder.sharpide.utils.verifyStoragePermission
+import net.theluckycoder.sharpide.utils.extensions.bind
+import net.theluckycoder.sharpide.utils.extensions.ktReplace
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
+import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
 import java.io.File
@@ -33,6 +34,13 @@ class MinifyActivity : AppCompatActivity() {
         setContentView(R.layout.activity_minify)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
+
+        // Set Fullscreen
+        if (Preferences(this).isFullscreen()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        }
 
         verifyStoragePermission()
 

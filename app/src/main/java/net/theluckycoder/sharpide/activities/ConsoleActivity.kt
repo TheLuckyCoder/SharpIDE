@@ -10,6 +10,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
+import android.view.WindowManager
 import android.view.animation.OvershootInterpolator
 import android.webkit.ConsoleMessage
 import android.webkit.JsPromptResult
@@ -21,15 +22,16 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.bind
+import net.theluckycoder.sharpide.utils.extensions.bind
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import org.jetbrains.anko.alert
-import org.jetbrains.anko.appcompat.v7.Appcompat
 
 class ConsoleActivity : AppCompatActivity() {
 
     private val webView by bind<WebView>(R.id.web_view)
     private val windowLayout by bind<LinearLayout>(R.id.layout_window)
     private val messageTv by bind<TextView>(R.id.tv_console_message)
+    private val mPreferences by lazyFast { Preferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,19 +45,27 @@ class ConsoleActivity : AppCompatActivity() {
         fab.setOnClickListener {
             expand(fab)
         }
-        if (Preferences(this).consoleOpenByDefault()) {
+
+        val preferences = Preferences(this)
+        if (preferences.isConsoleOpenByDefault()) {
             expand(fab)
+        }
+
+        // Set Fullscreen
+        if (preferences.isFullscreen()) {
+            window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
+        } else {
+            window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         }
 
         // WebView Setup
         with(webView) {
             loadUrl("about:blank")
-            val url = "file://" + filesDir.absolutePath + "/index.html"
             settings.javaScriptEnabled = true
-            setBackgroundColor(ContextCompat.getColor(this@ConsoleActivity, R.color.main_background))
+            setBackgroundColor(ContextCompat.getColor(context, R.color.main_background))
             webViewClient = WebViewClient()
             webChromeClient = MyChromeClient()
-            loadUrl(url)
+            loadUrl("file://" + filesDir.absolutePath + "/index.html")
         }
 
         savedInstanceState?.let {
@@ -110,7 +120,7 @@ class ConsoleActivity : AppCompatActivity() {
     private inner class MyChromeClient : WebChromeClient() {
 
         override fun onJsAlert(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert(Appcompat, message, "JavaScript Alert") {
+            alert(message, "JavaScript Alert") {
                 isCancelable = false
                 positiveButton(android.R.string.ok) { result.confirm() }
             }.show()
@@ -127,7 +137,7 @@ class ConsoleActivity : AppCompatActivity() {
             val editText = AppCompatEditText(this@ConsoleActivity).apply {
                 setText(defaultValue)
             }
-            alert(Appcompat, message, "JavaScript Prompt") {
+            alert(message, "JavaScript Prompt") {
                 customView = editText
                 isCancelable = false
                 positiveButton(android.R.string.ok) { result.confirm(editText.text.toString()) }
@@ -137,7 +147,7 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert(Appcompat, message, "JavaScript Confirm") {
+            alert(message, "JavaScript Confirm") {
                 isCancelable = false
                 positiveButton(android.R.string.ok) { result.confirm() }
                 negativeButton(android.R.string.cancel) { result.cancel() }
@@ -146,7 +156,7 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         override fun onJsBeforeUnload(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert(Appcompat, "$message\n\nAre you sure you want to navigate away from this page?",
+            alert("$message\n\nAre you sure you want to navigate away from this page?",
                 "Confirm Navigation") {
                 isCancelable = false
                 positiveButton("Leave this page") { result.confirm() }

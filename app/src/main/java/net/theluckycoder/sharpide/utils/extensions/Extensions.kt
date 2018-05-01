@@ -1,4 +1,4 @@
-package net.theluckycoder.sharpide.utils
+package net.theluckycoder.sharpide.utils.extensions
 
 import android.Manifest
 import android.app.Activity
@@ -9,6 +9,7 @@ import android.support.annotation.LayoutRes
 import android.support.v4.app.ActivityCompat
 import android.util.TypedValue
 import android.view.View
+import net.theluckycoder.sharpide.utils.Const
 
 fun CharSequence.ktReplace(oldString: String, newString: String): String {
     if (isEmpty() || oldString.isEmpty()) return this.toString()

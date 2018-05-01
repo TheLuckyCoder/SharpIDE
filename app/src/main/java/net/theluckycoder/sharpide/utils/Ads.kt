@@ -8,6 +8,7 @@ import com.google.android.gms.ads.InterstitialAd
 import com.google.android.gms.ads.MobileAds
 import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
 
 class Ads(private val activity: Activity) {
 

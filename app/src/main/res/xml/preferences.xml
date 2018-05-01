@@ -16,13 +16,6 @@
             android:defaultValue="true"
             android:key="@string/pref_quit_confirm_key" />
 
-        <SwitchPreference
-            android:title="@string/pref_dark_theme"
-            android:summary="@string/pref_dark_theme_desc"
-            android:icon="@drawable/ic_pref_dark_theme"
-            android:defaultValue="false"
-            android:key="@string/pref_dark_theme_key" />
-
         <CheckBoxPreference
             android:title="@string/pref_hidden_files"
             android:summary="@string/pref_hidden_files_desc"
@@ -43,6 +36,22 @@
             android:icon="@drawable/ic_pref_hidden_files"
             android:defaultValue="false"
             android:key="@string/pref_console_open_by_default_key" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/pref_category_look_and_feel">
+        <SwitchPreference
+            android:title="@string/pref_dark_theme"
+            android:summary="@string/pref_dark_theme_desc"
+            android:icon="@drawable/ic_pref_dark_theme"
+            android:defaultValue="false"
+            android:key="@string/pref_dark_theme_key" />
+
+        <SwitchPreference
+            android:title="@string/pref_fullscreen"
+            android:summary="@string/pref_fullscreen_desc"
+            android:icon="@drawable/ic_pref_fullscreen"
+            android:defaultValue="false"
+            android:key="@string/pref_fullscreen_key" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_editor">
