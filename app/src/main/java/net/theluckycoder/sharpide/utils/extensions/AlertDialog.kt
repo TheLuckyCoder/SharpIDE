@@ -10,7 +10,7 @@ import android.text.SpannableStringBuilder
 import android.text.Spanned
 import android.text.style.ForegroundColorSpan
 
-fun Context.alertDialog(@StyleRes style: Int = 0) = AlertDialog.Builder(this,style)
+fun Context.alertDialog(@StyleRes style: Int) = AlertDialog.Builder(this, style)
 
 fun AlertDialog.Builder.setTitleWithColor(titleText: CharSequence, @ColorRes color: Int): AlertDialog.Builder {
     // Initialize a new foreground color span instance

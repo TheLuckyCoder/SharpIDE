@@ -226,7 +226,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                     duplicateLine()
                     true
                 }
-                //KeyEvent.KEYCODE_S -> saveFile()
+                // KeyEvent.KEYCODE_S -> saveFile()
                 else -> super.onKeyDown(keyCode, event)
             }
         }

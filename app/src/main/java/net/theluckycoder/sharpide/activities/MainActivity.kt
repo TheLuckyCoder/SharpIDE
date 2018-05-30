@@ -212,17 +212,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .setPositiveButton(R.string.action_close, null)
                     .show()
             }
-            R.id.menu_run -> {
-                if (mCurrentFile.path != mPreferences.getNewFilesName()) {
-                    saveFileAsync(true)
-                    val params = bundleOf(
-                        "size" to mCurrentFile.length(),
-                        "lines" to mCodeEditor.lineCount)
-                    mFirebaseAnalytics.logEvent("file_run", params)
-                } else {
-                    saveFileAs(false)
-                }
-            }
             R.id.menu_minify -> startActivity<MinifyActivity>()
         }
 
@@ -274,6 +263,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.menu_run -> {
+                if (mCurrentFile.path != mPreferences.getNewFilesName()) {
+                    saveFileAsync(true)
+                    val params = bundleOf(
+                        "size" to mCurrentFile.length(),
+                        "lines" to mCodeEditor.lineCount)
+                    mFirebaseAnalytics.logEvent("file_run", params)
+                } else {
+                    saveFileAs(false)
+                }
+            }
             R.id.menu_find -> {
                 val dialogView = inflate(R.layout.dialog_find)
                 alertDialog(R.style.AppTheme)
@@ -462,19 +462,16 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    super.onHidden(fab)
                     fab.visibility = View.GONE
                 }
             })
             fabNext.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    super.onHidden(fab)
                     fab.visibility = View.GONE
                 }
             })
             fabClose.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    super.onHidden(fab)
                     fab.visibility = View.GONE
                 }
             })
@@ -530,19 +527,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }.await()
             mAds.showInterstitial()
             toast(R.string.file_saved)
+
+            if (startConsole) {
+                saveConsoleFiles(fileContent).await()
+                startActivity<ConsoleActivity>()
+            }
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)
-        }
-
-        if (startConsole) {
-            try {
-                saveConsoleFiles(fileContent).await()
-                startActivity<ConsoleActivity>()
-            } catch (e: IOException) {
-                e.printStackTrace()
-                toast(R.string.error)
-            }
         }
     }
 

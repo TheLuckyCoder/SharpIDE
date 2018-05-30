@@ -10,6 +10,7 @@ import android.widget.Button
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
+import kotlinx.coroutines.experimental.launch
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
@@ -91,16 +92,22 @@ class MinifyActivity : AppCompatActivity() {
             .start()
     }
 
-    private fun obfuscateFile() = async(UI) {
+    private fun obfuscateFile() = launch(UI) {
         val file = File(mFilePath)
-        val fileContent = file.readText()
+        val fileContent = try {
+            file.readText()
+        } catch (e: Exception) {
+            e.printStackTrace()
+            toast(R.string.error)
+            return@launch
+        }
 
         if (fileContent.isBlank()) {
             toast(R.string.error_empty_file)
-            return@async
+            return@launch
         }
 
-        val job = async(CommonPool) {
+        async(CommonPool) {
             // uniform line endings, make them all line feed
             fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
                 // strip leading & trailing whitespace
@@ -115,10 +122,10 @@ class MinifyActivity : AppCompatActivity() {
                 .ktReplace("( ", "(")
                 // remove the new lines and tabs
                 .ktReplace("\n", "").ktReplace("\t", "")
-        }
 
-        val newFile = File(Const.MINIFY_FOLDER + file.name)
-        newFile.writeText(job.await())
+            val newFile = File(Const.MINIFY_FOLDER + file.name)
+            newFile.writeText(fileContent)
+        }.await()
 
         longToast(R.string.file_minify_ready)
     }

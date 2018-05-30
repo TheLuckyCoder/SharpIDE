@@ -30,10 +30,6 @@
     <item android:title="@string/group_tools">
         <menu>
             <item
-                android:id="@+id/menu_run"
-                android:icon="@drawable/ic_menu_run"
-                android:title="@string/menu_run" />
-            <item
                 android:id="@+id/menu_minify"
                 android:icon="@drawable/ic_menu_minify"
                 android:title="@string/menu_minify_tool" />
