@@ -7,7 +7,6 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
-import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
@@ -16,9 +15,9 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
-import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import org.jetbrains.anko.longToast
 import org.jetbrains.anko.toast
@@ -27,7 +26,7 @@ import java.io.File
 class MinifyActivity : AppCompatActivity() {
 
     private val obfuscateBtn by bind<Button>(R.id.btn_obfuscate)
-    private val mPreferences by lazyFast { Preferences(this) }
+    private val mPreferences = Preferences(this)
     private var mFilePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,22 +54,20 @@ class MinifyActivity : AppCompatActivity() {
 
         savedInstanceState?.let {
             mFilePath = it.getString("filePath", "")
-            obfuscateBtn.isEnabled = true
+            if (mFilePath.isNotEmpty()) obfuscateBtn.isEnabled = true
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
-        super.onSaveInstanceState(outState)
-        outState ?: return
+    override fun onSaveInstanceState(outState: Bundle) {
         outState.putString("filePath", mFilePath)
+        super.onSaveInstanceState(outState)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        if (item.itemId == android.R.id.home) {
+        return if (item.itemId == android.R.id.home) {
             onBackPressed()
-            return true
-        }
-        return super.onOptionsItemSelected(item)
+            true
+        } else super.onOptionsItemSelected(item)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -93,21 +90,22 @@ class MinifyActivity : AppCompatActivity() {
     }
 
     private fun obfuscateFile() = launch(UI) {
-        val file = File(mFilePath)
-        val fileContent = try {
-            file.readText()
-        } catch (e: Exception) {
-            e.printStackTrace()
-            toast(R.string.error)
-            return@launch
-        }
+        async(BackgroundPool) {
+            val file = File(mFilePath)
 
-        if (fileContent.isBlank()) {
-            toast(R.string.error_empty_file)
-            return@launch
-        }
+            val fileContent = try {
+                file.readText()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                toast(R.string.error)
+                return@async
+            }
 
-        async(CommonPool) {
+            if (fileContent.isBlank()) {
+                toast(R.string.error_empty_file)
+                return@async
+            }
+
             // uniform line endings, make them all line feed
             fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
                 // strip leading & trailing whitespace

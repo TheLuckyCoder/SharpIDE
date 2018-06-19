@@ -30,6 +30,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.materialchooser.ChooserType
 import net.theluckycoder.sharpide.R
@@ -37,6 +38,7 @@ import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
+import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.containsAny
@@ -70,7 +72,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val mSymbolScrollView by bind<HorizontalScrollView>(R.id.sv_symbols)
 
     private val mFirebaseAnalytics by lazyFast { FirebaseAnalytics.getInstance(this) }
-    private val mPreferences by lazyFast { Preferences(this) }
+    private val mPreferences = Preferences(this)
     private val mAds = Ads(this)
     private var mSaveDialog: AlertDialog? = null
     private lateinit var mCurrentFile: File
@@ -266,6 +268,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_run -> {
                 if (mCurrentFile.path != mPreferences.getNewFilesName()) {
                     saveFileAsync(true)
+
                     val params = bundleOf(
                         "size" to mCurrentFile.length(),
                         "lines" to mCodeEditor.lineCount)
@@ -341,7 +344,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (event.isCtrlPressed) {
             return when (keyCode) {
                 KeyEvent.KEYCODE_S -> {
-                    if (event.isShiftPressed) {
+                    if (!event.isShiftPressed) {
                         saveFile()
                     } else {
                         saveFileAs(false)
@@ -358,7 +361,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return super.onKeyDown(keyCode, event)
     }
 
-    /***** Private Functions *****/
+    //region Private Functions
     private fun getFileSize(): String {
         val fileSize = mCurrentFile.length().toDouble()
 
@@ -378,6 +381,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun saveFile() {
         if (mCurrentFile.path != mPreferences.getNewFilesName()) {
             saveFileAsync(false)
+
             val params = bundleOf(
                 "size" to mCurrentFile.length(),
                 "lines" to mCodeEditor.lineCount)
@@ -491,9 +495,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun loadFileAsync() = launch(UI) {
         val content = try {
-            async {
-                mCurrentFile.readText()
-            }.await()
+            withContext(BackgroundPool) { mCurrentFile.readText() }
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)
@@ -520,11 +522,10 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun saveFileAsync(startConsole: Boolean) = launch(UI) {
-        val fileContent = mCodeEditor.text.toString()
         try {
-            async {
-                mCurrentFile.writeText(fileContent)
-            }.await()
+            val fileContent = mCodeEditor.text.toString()
+
+            withContext(BackgroundPool) { mCurrentFile.writeText(fileContent) }
             mAds.showInterstitial()
             toast(R.string.file_saved)
 
@@ -539,7 +540,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     @Throws(IOException::class)
-    private fun saveConsoleFiles(fileContent: String) = async {
+    private fun saveConsoleFiles(fileContent: String) = async(BackgroundPool) {
         openFileOutput("main.js", Context.MODE_PRIVATE).use {
             it.write(fileContent.toByteArray())
         }
@@ -553,4 +554,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
         }
     }
+
+    //endregion Private Functions
 }

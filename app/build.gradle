@@ -17,7 +17,7 @@ android {
         applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion Versions.min_sdk
         targetSdkVersion Versions.target_sdk
-        versionName "$versionMajor.$versionMinor.$versionPatch"
+        versionName "$versionMajor.$versionMinor.$versionPatch.$versionBuild"
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch * 10 + versionBuild
         resConfigs "en", "fr", "ro", "ru"
         vectorDrawables.useSupportLibrary = true
@@ -28,7 +28,6 @@ android {
             resValue "bool", "debug_build", "true"
             ext.enableCrashlytics = false
             ext.alwaysUpdateBuildId = false
-            versionNameSuffix ".$versionBuild"
         }
         release {
             resValue "bool", "debug_build", "false"

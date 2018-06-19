@@ -4,10 +4,11 @@ import android.content.Context
 import android.preference.PreferenceManager
 import android.support.annotation.StringRes
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
 
 class Preferences(private val context: Context) {
 
-    private val preferences = PreferenceManager.getDefaultSharedPreferences(context)
+    private val preferences by lazyFast { PreferenceManager.getDefaultSharedPreferences(context) }
 
     private fun string(@StringRes resId: Int) = context.getString(resId)
 
@@ -50,4 +51,6 @@ class Preferences(private val context: Context) {
     fun isConsoleOpenByDefault() = preferences.getBoolean(string(R.string.pref_console_open_by_default_key), false)
 
     fun isFullscreen() = preferences.getBoolean(string(R.string.pref_fullscreen_key), false)
+
+    fun autoIndent() = preferences.getBoolean(string(R.string.pref_auto_indent_key), true)
 }

@@ -5,13 +5,17 @@ import android.text.Spanned
 import android.text.TextUtils
 import android.widget.MultiAutoCompleteTextView
 
-internal class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
+class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
+
+    private companion object {
+        private const val TOKEN = "!@#$%^&*()_+-={}|[]:;'<>/<.? \r\n\t"
+    }
 
     override fun findTokenStart(text: CharSequence, cursor: Int): Int {
         var i = cursor
 
-        while (i > 0 && text[i - 1] != '\n') i--
-        while (i < cursor && text[i] == '\n') i++
+        while (i > 0 && !TOKEN.contains(text[i - 1])) i--
+        while (i < cursor && text[i] == ' ') i++
 
         return i
     }
@@ -21,7 +25,7 @@ internal class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
         val len = text.length
 
         while (i < len) {
-            if (text[i] == '\n') {
+            if (TOKEN.contains(text[i - 1])) {
                 return i
             } else {
                 i++
@@ -34,9 +38,9 @@ internal class CompletionTokenizer : MultiAutoCompleteTextView.Tokenizer {
     override fun terminateToken(text: CharSequence): CharSequence {
         var i = text.length
 
-        while (i > 0 && text[i - 1] != '\n') i--
+        while (i > 0 && !TOKEN.contains(text[i - 1])) i--
 
-        return if (i > 0 && text[i - 1] == '\n') {
+        return if (i > 0 && TOKEN.contains(text[i - 1])) {
             text
         } else {
             if (text is Spanned) {

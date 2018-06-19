@@ -23,18 +23,21 @@ import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.widget.ArrayAdapter
+import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.launch
+import kotlinx.coroutines.experimental.withContext
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.dpToPx
-import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import java.util.regex.Pattern
 
 class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
     private companion object {
         private val COMPLETION_KEYWORDS = arrayOf("break", "case", "catch {\n}", "super", "class", "const", "continue",
-            "default", "delete", "do", "yield", "else", "export", "extends", "finally", "for", "function", "if {\n}",
-            "import", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {\n}", "typeof", "var",
+            "default", "delete", "do", "yield", "else {\n}", "extends", "let", "finally {\n}", "for", "function",
+            "if {\n}", "in", "instanceof", "new", "return", "switch", "this", "throw", "try {\n}", "typeof", "var",
             "void", "while", "with", "null", "true", "false")
 
         private val PATTERN_CLASSES = Pattern.compile(
@@ -45,14 +48,35 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             "Reflect|Proxy|Intl)\\b", Pattern.MULTILINE)
         private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
-            "\\b(break|case|catch|class|const|continue|debugger|default|delete|do|yield|" +
-            "else|export|extends|finally|for|function|if|import|in|instanceof|" +
-            "new|return|super|switch|this|throw|try|typeof|var|void|while|with|" +
-            "null|true|false)\\b")
+            "\\b(break|case|catch|class|const|continue|default|delete|do|else|export|extends|false|finally|" +
+            "for|function|if|import|in|instanceof|interface|new|null|static|super|switch|this|throw|true|try|typeof|" +
+            "var|void|while|with)\\b")
         private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
         private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
     }
+
+    @Transient private val mPaint = Paint()
+    private val mPaintHighlight = Paint()
+    private val mLineBounds = Rect()
+    private lateinit var mLayout: Layout
+    private val mUpdateHandler = Handler()
+    private var mModified = true
+    private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
+    private val mPreferences = Preferences(context)
+
+    private var mColorNumber = 0
+    private var mColorKeyword = 0
+    private var mColorClasses = 0
+    private var mColorComment = 0
+    private var mColorString = 0
+
+    /*private var mIsDoingUndoRedo = false
+    private var mUpdateLastChange: TextChange? = null
+    private var mRedoStack = UndoStack()
+    private val mUndoStack = UndoStack()*/
+
+    //region Constructor
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -66,25 +90,71 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         init(context)
     }
 
-    @Transient private val mPaint = Paint()
-    private val mPaintHighlight = Paint()
-    private val mLineBounds = Rect()
-    private lateinit var mLayout: Layout
-    private val mUpdateHandler = Handler()
-    private var mModified = true
-    private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
-    private val mPreferences by lazyFast { Preferences(context) }
+    private fun init(context: Context) {
+        // Enable Scrolling
+        isVerticalScrollBarEnabled = true
+        movementMethod = ScrollingMovementMethod()
+        setHorizontallyScrolling(true)
 
-    private var mColorNumber = 0
-    private var mColorKeyword = 0
-    private var mColorClasses = 0
-    private var mColorComment = 0
-    private var mColorString = 0
+        filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
+            if (mModified &&
+                end - start == 1 &&
+                start < source.length &&
+                dStart < dest.length) {
+                val c = source[start]
 
-    /*private var mIsDoingUndoRedo = false
-    private var mUpdateLastChange: TextChange? = null
-    private var mRedoStack = UndoStack()
-    private val mUndoStack = UndoStack()*/
+                if (mPreferences.autoIndent() && c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
+            }
+
+            source
+        })
+
+        addTextChangedListener(object : TextWatcher {
+            private var count = 0
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                this.count = count
+            }
+
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
+
+            override fun afterTextChanged(e: Editable) {
+                if (mPreferences.autoCloseBrackets()) autoCloseBrackets(e, count)
+                if (mPreferences.autoCloseQuotes()) autoCloseQuotes(e, count)
+                cancelUpdate()
+
+                if (!mModified) return
+
+                mUpdateHandler.postDelayed(mUpdateRunnable, 250)
+            }
+        })
+
+        // Set Syntax Colors
+        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
+        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
+        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
+        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
+        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
+
+        with(mPaint) {
+            style = Paint.Style.FILL
+            isAntiAlias = true
+            color = Color.parseColor("#bbbbbb")
+            textSize = context.dpToPx(mPreferences.getFontSize())
+        }
+
+        viewTreeObserver.addOnGlobalLayoutListener {
+            layout?.let { mLayout = it }
+        }
+
+        // Set Adapter
+        val adapter = ArrayAdapter<String>(context, R.layout.item_suggestion, COMPLETION_KEYWORDS)
+        setAdapter(adapter)
+        dropDownVerticalOffset = 20
+        setDropDownBackgroundResource(R.color.main_background)
+        setTokenizer(CompletionTokenizer())
+    }
+
+    //endregion Constructor
 
     override fun onDraw(canvas: Canvas) {
         if (mPreferences.highlightCurrentLine()) {
@@ -133,68 +203,6 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         super.onDraw(canvas)
     }
 
-    private fun init(context: Context) {
-        // Enable Scrolling
-        isVerticalScrollBarEnabled = true
-        movementMethod = ScrollingMovementMethod()
-        setHorizontallyScrolling(true)
-
-        filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
-            if (mModified &&
-                    end - start == 1 &&
-                    start < source.length &&
-                    dStart < dest.length) {
-                val c = source[start]
-
-                if (c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
-            }
-
-            source
-        })
-
-        addTextChangedListener(object : TextWatcher {
-            private var count = 0
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                this.count = count
-            }
-
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
-
-            override fun afterTextChanged(e: Editable) {
-                if (mPreferences.autoCloseBrackets()) autoCloseBrackets(e, count)
-                if (mPreferences.autoCloseQuotes()) autoCloseQuotes(e, count)
-                cancelUpdate()
-
-                if (!mModified) return
-
-                mUpdateHandler.postDelayed(mUpdateRunnable, 250)
-            }
-        })
-
-        // Set Syntax Colors
-        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
-        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
-        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
-        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
-        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
-
-        with(mPaint) {
-            style = Paint.Style.FILL
-            isAntiAlias = true
-            color = Color.parseColor("#bbbbbb")
-            textSize = context.dpToPx(mPreferences.getFontSize())
-        }
-
-        viewTreeObserver.addOnGlobalLayoutListener {
-            layout?.let { mLayout = it }
-        }
-
-        // Set Adapter
-        val adapter = ArrayAdapter<String>(context, android.R.layout.simple_dropdown_item_1line, COMPLETION_KEYWORDS)
-        setAdapter(adapter)
-        setTokenizer(CompletionTokenizer())
-    }
-
     override fun showDropDown() {
         if (mPreferences.showSuggestions()) super.showDropDown()
     }
@@ -226,14 +234,13 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                     duplicateLine()
                     true
                 }
-                // KeyEvent.KEYCODE_S -> saveFile()
                 else -> super.onKeyDown(keyCode, event)
             }
         }
         return super.onKeyDown(keyCode, event)
     }
 
-    /***** Private Functions *****/
+    //region Private Functions
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
@@ -442,8 +449,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                     break
                 }
 
-                if (c != ' ' && c != '\t')
-                    break
+                if (c != ' ' && c != '\t') break
                 ++iEnd
             }
 
@@ -488,13 +494,15 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    /***** Public Functions *****/
+    //endregion Private Functions
 
-    fun setTextHighlighted(text: CharSequence) {
+    //region Public Functions
+
+    fun setTextHighlighted(text: CharSequence) = launch(UI) {
         cancelUpdate()
 
         mModified = false
-        setText(highlight(SpannableStringBuilder(text)))
+        setText(withContext(BackgroundPool) { highlight(SpannableStringBuilder(text)) })
         mModified = true
     }
 
@@ -545,11 +553,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     fun goToLine(toLine: Int) {
-        var line = toLine - 1
-
-        when {
-            line < 0 -> line = 0
-            line > lineCount - 1 -> line = lineCount - 1
+        val line = when {
+            toLine - 1 < 0 -> 0
+            toLine > lineCount -> lineCount - 1
+            else -> toLine - 1
         }
 
         setSelection(layout.getLineStart(line))
@@ -624,6 +631,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
         editableText.insert(end, "\n" + text.subSequence(start, end).toString())
     }
+
+    //endregion Public Functions
 
     /*private fun updateUndoRedoOnTextChanged(s: CharSequence, start: Int, count: Int) {
         val updateLastChange = mUpdateLastChange

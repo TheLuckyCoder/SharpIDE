@@ -15,7 +15,7 @@ object Versions {
 
 object Libs {
     // Kotlin
-    const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${Versions.kotlin_version}"
+    const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin_version}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.kotlin_coroutines}"
     const val kotlin_anko = "org.jetbrains.anko:anko-appcompat-v7-commons:${Versions.kotlin_anko}"
 
@@ -23,9 +23,8 @@ object Libs {
     private const val support_v4 = "com.android.support:support-v4:${Versions.support_lib}"
     private const val support_appcompat = "com.android.support:appcompat-v7:${Versions.support_lib}"
     private const val support_design = "com.android.support:design:${Versions.support_lib}"
-    private const val support_cardview = "com.android.support:cardview-v7:${Versions.support_lib}"
     @JvmField
-    val libs_support = arrayOf(support_v4, support_appcompat, support_design, support_cardview)
+    val libs_support = arrayOf(support_v4, support_appcompat, support_design)
 
     // Firebase
     const val firebase_core = "com.google.firebase:firebase-core:16.0.1"

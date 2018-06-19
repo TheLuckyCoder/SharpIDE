@@ -23,7 +23,6 @@ import android.widget.TextView
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.extensions.bind
-import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import org.jetbrains.anko.alert
 
 class ConsoleActivity : AppCompatActivity() {
@@ -31,7 +30,6 @@ class ConsoleActivity : AppCompatActivity() {
     private val webView by bind<WebView>(R.id.web_view)
     private val windowLayout by bind<LinearLayout>(R.id.layout_window)
     private val messageTv by bind<TextView>(R.id.tv_console_message)
-    private val mPreferences by lazyFast { Preferences(this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

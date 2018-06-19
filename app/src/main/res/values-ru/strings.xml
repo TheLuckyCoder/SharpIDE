@@ -87,4 +87,5 @@
     <string name="permission_required">Для работы приложения требуется разрешение хранить данные во внешнем хранилище</string>
     <string name="pref_console_open_by_default">Console open by default</string>
     <string name="pref_console_open_by_default_desc">Open the console automatically when Running code</string>
+    <string name="pref_auto_indent">Auto Indent</string>
 </resources>
