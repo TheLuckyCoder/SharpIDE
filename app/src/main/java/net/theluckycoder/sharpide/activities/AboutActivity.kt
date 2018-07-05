@@ -32,7 +32,7 @@ class AboutActivity : AppCompatActivity(), View.OnClickListener {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
-        if (Preferences(this).isFullscreen()) {
+        if (Preferences(this).isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)

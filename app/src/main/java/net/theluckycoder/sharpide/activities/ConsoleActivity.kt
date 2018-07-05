@@ -45,12 +45,12 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         val preferences = Preferences(this)
-        if (preferences.isConsoleOpenByDefault()) {
+        if (preferences.isConsoleOpenByDefault) {
             expand(fab)
         }
 
         // Set Fullscreen
-        if (preferences.isFullscreen()) {
+        if (preferences.isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)

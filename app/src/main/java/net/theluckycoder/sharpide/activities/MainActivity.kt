@@ -18,6 +18,7 @@ import android.view.KeyEvent
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.view.ViewStub
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -27,6 +28,7 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.firebase.analytics.FirebaseAnalytics
+import kotlinx.coroutines.experimental.DefaultDispatcher
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
@@ -38,7 +40,6 @@ import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
-import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.containsAny
@@ -80,7 +81,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onCreate(savedInstanceState: Bundle?) {
         // Set the Theme
         setTheme(R.style.AppTheme_NoActionBar)
-        if (mPreferences.useDarkTheme()) {
+        if (mPreferences.useDarkTheme) {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
         } else {
             AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
@@ -130,15 +131,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         // Load preferences
-        mCurrentFile = File(mPreferences.getNewFilesName())
-        toolbar.subtitle = mCurrentFile.name
+        mCurrentFile = File(mPreferences.newFilesName)
+        supportActionBar?.subtitle = mCurrentFile.name
 
         if (!Build.MANUFACTURER.equals("samsung", true)) {
             mCodeEditor.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI
         }
-        mCodeEditor.textSize = mPreferences.getFontSize().toFloat()
-        if (mPreferences.getLoadLastFile()) {
-            val lastFile = File(mPreferences.getLastFilePath())
+        mCodeEditor.textSize = mPreferences.fontSize.toFloat()
+        if (mPreferences.loadLastFile) {
+            val lastFile = File(mPreferences.lastFilePath)
 
             if (lastFile.isFile && lastFile.canRead()) {
                 mCurrentFile = lastFile
@@ -152,7 +153,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup Keyboard Checker
         KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
-            if (mPreferences.showSymbolsBar()) {
+            if (mPreferences.showSymbolsBar) {
                 mSymbolScrollView.visibility = if (isOpen && mCodeEditor.isFocused) View.VISIBLE else View.GONE
             }
         }
@@ -169,12 +170,12 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         // Setup ads
-        mAds.initAds().loadInterstitial()
+        mAds.loadInterstitial()
     }
 
     override fun onResume() {
         super.onResume()
-        if (mPreferences.isFullscreen()) {
+        if (mPreferences.isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -184,7 +185,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onBackPressed() {
         when {
             mDrawerLayout.isDrawerOpen(GravityCompat.START) -> mDrawerLayout.closeDrawer(GravityCompat.START)
-            mPreferences.confirmAppQuit() -> {
+            mPreferences.confirmAppQuit -> {
                 alertDialog(R.style.AppTheme_Dialog)
                     .setTitleWithColor(R.string.app_name, R.color.textColorPrimary)
                     .setMessage(R.string.quit_confirm)
@@ -208,6 +209,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     longToast(R.string.error_file_not_saved)
                     return true
                 }
+
                 alertDialog(R.style.AppTheme_Dialog)
                     .setTitleWithColor(R.string.menu_file_info, R.color.textColorPrimary)
                     .setMessage(getFileInfo())
@@ -266,7 +268,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.menu_run -> {
-                if (mCurrentFile.path != mPreferences.getNewFilesName()) {
+                if (mCurrentFile.path != mPreferences.newFilesName) {
                     saveFileAsync(true)
 
                     val params = bundleOf(
@@ -279,7 +281,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             R.id.menu_find -> {
                 val dialogView = inflate(R.layout.dialog_find)
-                alertDialog(R.style.AppTheme)
+
+                alertDialog(R.style.AppTheme_Dialog)
                     .setTitleWithColor(R.string.menu_find, R.color.textColorPrimary)
                     .setView(dialogView)
                     .setPositiveButton(R.string.action_apply) { _, _ ->
@@ -296,7 +299,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             R.id.menu_go_to_line -> {
                 val dialogView = inflate(R.layout.dialog_goto_line)
-                alertDialog(R.style.AppTheme)
+
+                alertDialog(R.style.AppTheme_Dialog)
                     .setTitle(R.string.menu_go_to_line)
                     .setView(dialogView)
                     .setPositiveButton(R.string.action_apply) { _, _ ->
@@ -312,7 +316,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
             R.id.menu_replace_all -> {
                 val dialogView = inflate(R.layout.dialog_replace)
-                alertDialog(R.style.AppTheme)
+
+                alertDialog(R.style.AppTheme_Dialog)
                     .setTitleWithColor(R.string.replace_all, R.color.textColorPrimary)
                     .setTitle(R.string.replace_all)
                     .setView(dialogView)
@@ -361,7 +366,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return super.onKeyDown(keyCode, event)
     }
 
-    //region Private Functions
+    // region Private Functions
     private fun getFileSize(): String {
         val fileSize = mCurrentFile.length().toDouble()
 
@@ -379,7 +384,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         "Lines Count: ${mCodeEditor.lineCount}"
 
     private fun saveFile() {
-        if (mCurrentFile.path != mPreferences.getNewFilesName()) {
+        if (mCurrentFile.path != mPreferences.newFilesName) {
             saveFileAsync(false)
 
             val params = bundleOf(
@@ -404,7 +409,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val btnCancel: Button = dialogView.findViewById(R.id.btn_cancel)
         val btnOk: Button = dialogView.findViewById(R.id.btn_ok)
 
-        etFileName.setText(mPreferences.getNewFilesName())
+        etFileName.setText(mPreferences.newFilesName)
 
         tvSelectPath.text = folderPath ?: Const.MAIN_FOLDER
         tvSelectPath.setOnClickListener {
@@ -434,7 +439,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             mCurrentFile = file
-            mPreferences.putLastFilePath(mCurrentFile.absolutePath)
+            mPreferences.lastFilePath = mCurrentFile.absolutePath
 
             if (createNewFile) {
                 loadFileAsync()
@@ -450,6 +455,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun updateSearchFabVisibility(searchText: String?, ignoreCase: Boolean) {
+        findViewById<ViewStub>(R.id.stub_fabs)?.inflate()
+
         val fabPrevious: FloatingActionButton = findViewById(R.id.fab_previous)
         val fabNext: FloatingActionButton = findViewById(R.id.fab_next)
         val fabClose: FloatingActionButton = findViewById(R.id.fab_close)
@@ -484,25 +491,26 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun openChooser(requestCode: Int, @ChooserType chooserType: Int) {
         val extension = if (chooserType == Chooser.FILE_CHOOSER) "js" else ""
+
         Chooser(this, requestCode)
             .setFileExtension(extension)
-            .setShowHiddenFiles(mPreferences.showHiddenFiles())
+            .setShowHiddenFiles(mPreferences.showHiddenFiles)
             .setStartPath(Const.MAIN_FOLDER)
-            .setNightTheme(mPreferences.useDarkTheme())
+            .setNightTheme(mPreferences.useDarkTheme)
             .setChooserType(chooserType)
             .start()
     }
 
     private fun loadFileAsync() = launch(UI) {
         val content = try {
-            withContext(BackgroundPool) { mCurrentFile.readText() }
+            withContext(DefaultDispatcher) { mCurrentFile.readText() }
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)
             return@launch
         }
 
-        mPreferences.putLastFilePath(mCurrentFile.absolutePath)
+        mPreferences.lastFilePath = mCurrentFile.absolutePath
         mCodeEditor.scrollTo(0, 0)
 
         val chunkSize = 20000
@@ -525,7 +533,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         try {
             val fileContent = mCodeEditor.text.toString()
 
-            withContext(BackgroundPool) { mCurrentFile.writeText(fileContent) }
+            withContext(DefaultDispatcher) { mCurrentFile.writeText(fileContent) }
             mAds.showInterstitial()
             toast(R.string.file_saved)
 
@@ -540,7 +548,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     @Throws(IOException::class)
-    private fun saveConsoleFiles(fileContent: String) = async(BackgroundPool) {
+    private fun saveConsoleFiles(fileContent: String) = async {
         openFileOutput("main.js", Context.MODE_PRIVATE).use {
             it.write(fileContent.toByteArray())
         }
@@ -555,5 +563,5 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    //endregion Private Functions
+    // endregion Private Functions
 }

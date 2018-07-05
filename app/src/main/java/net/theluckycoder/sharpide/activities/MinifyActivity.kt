@@ -7,6 +7,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
+import kotlinx.coroutines.experimental.DefaultDispatcher
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
@@ -15,7 +16,6 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
@@ -36,7 +36,7 @@ class MinifyActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
-        if (Preferences(this).isFullscreen()) {
+        if (Preferences(this).isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
@@ -83,47 +83,50 @@ class MinifyActivity : AppCompatActivity() {
     fun selectFile(@Suppress("UNUSED_PARAMETER") view: View) {
         Chooser(this, 10,
             fileExtension = "js",
-            showHiddenFiles = mPreferences.showHiddenFiles(),
+            showHiddenFiles = mPreferences.showHiddenFiles,
             startPath = Const.MAIN_FOLDER,
-            useNightTheme = mPreferences.useDarkTheme())
+            useNightTheme = mPreferences.useDarkTheme)
             .start()
     }
 
     private fun obfuscateFile() = launch(UI) {
-        async(BackgroundPool) {
-            val file = File(mFilePath)
+        try {
+            async(DefaultDispatcher) {
+                val file = File(mFilePath)
 
-            val fileContent = try {
-                file.readText()
-            } catch (e: Exception) {
-                e.printStackTrace()
-                toast(R.string.error)
-                return@async
-            }
+                val fileContent = try {
+                    file.readText()
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                    ""
+                }
 
-            if (fileContent.isBlank()) {
-                toast(R.string.error_empty_file)
-                return@async
-            }
+                if (fileContent.isBlank()) {
+                    toast(R.string.error_empty_file)
+                    return@async
+                }
 
-            // uniform line endings, make them all line feed
-            fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
-                // strip leading & trailing whitespace
-                .ktReplace(" \n", "\n").ktReplace("\n ", "\n")
-                // collapse consecutive line feeds into just 1
-                .replace("/\n+/".toRegex(), "\n")
-                // remove comments
-                .replace("/\\*(?:.|[\\n])*?\\*/|//.*".toRegex(), "")
-                // remove other spaces
-                .ktReplace(" + ", "+").ktReplace(" - ", "-").ktReplace(" = ", "=")
-                .ktReplace("if ", "if").ktReplace("for ", "for").ktReplace("while ", "while")
-                .ktReplace("( ", "(")
-                // remove the new lines and tabs
-                .ktReplace("\n", "").ktReplace("\t", "")
+                // uniform line endings, make them all line feed
+                fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
+                    // strip leading & trailing whitespace
+                    .ktReplace(" \n", "\n").ktReplace("\n ", "\n")
+                    // collapse consecutive line feeds into just 1
+                    .replace("/\n+/".toRegex(), "\n")
+                    // remove comments
+                    .replace("/\\*(?:.|[\\n])*?\\*/|//.*".toRegex(), "")
+                    // remove other spaces
+                    .ktReplace(" + ", "+").ktReplace(" - ", "-").ktReplace(" = ", "=")
+                    .ktReplace("if ", "if").ktReplace("for ", "for").ktReplace("while ", "while")
+                    .ktReplace("( ", "(")
+                    // remove the new lines and tabs
+                    .ktReplace("\n", "").ktReplace("\t", "")
 
-            val newFile = File(Const.MINIFY_FOLDER + file.name)
-            newFile.writeText(fileContent)
-        }.await()
+                val newFile = File(Const.MINIFY_FOLDER + file.name)
+                newFile.writeText(fileContent)
+            }.await()
+        } catch (e: Exception) {
+            toast(R.string.error)
+        }
 
         longToast(R.string.file_minify_ready)
     }

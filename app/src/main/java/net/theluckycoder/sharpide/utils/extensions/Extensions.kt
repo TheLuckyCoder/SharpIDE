@@ -9,18 +9,7 @@ import android.support.annotation.LayoutRes
 import android.support.v4.app.ActivityCompat
 import android.util.TypedValue
 import android.view.View
-import kotlinx.coroutines.experimental.CommonPool
-import kotlinx.coroutines.experimental.CoroutineDispatcher
-import kotlinx.coroutines.experimental.newFixedThreadPoolContext
 import net.theluckycoder.sharpide.utils.Const
-
-val BackgroundPool: CoroutineDispatcher by lazy {
-    val numProcessors = Runtime.getRuntime().availableProcessors()
-    when {
-        numProcessors <= 2 -> newFixedThreadPoolContext(2, "BackgroundPool")
-        else -> CommonPool
-    }
-}
 
 fun CharSequence.ktReplace(oldString: String, newString: String): String {
     if (isEmpty() || oldString.isEmpty()) return this.toString()
@@ -38,9 +27,9 @@ fun CharSequence.ktReplace(oldString: String, newString: String): String {
     while (end != -1) {
         builder.append(this.substring(start, end)).append(newString)
         start = end + oldString.length
-        end = this.indexOf(oldString, start)
+        end = indexOf(oldString, start)
     }
-    builder.append(this.substring(start))
+    builder.append(substring(start))
 
     return builder.toString()
 }

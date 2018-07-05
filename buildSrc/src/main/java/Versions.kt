@@ -9,7 +9,7 @@ object Versions {
     internal const val kotlin_version = "1.2.50"
     internal const val kotlin_coroutines = "0.23.3"
     internal const val kotlin_anko = "0.10.5"
-    internal const val support_lib = "28.0.0-alpha1"
+    internal const val support_lib = "28.0.0-alpha3"
     internal const val crashlythics = "2.9.4"
 }
 

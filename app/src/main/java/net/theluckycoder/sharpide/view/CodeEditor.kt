@@ -23,12 +23,12 @@ import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.widget.ArrayAdapter
+import kotlinx.coroutines.experimental.DefaultDispatcher
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
-import net.theluckycoder.sharpide.utils.extensions.BackgroundPool
 import net.theluckycoder.sharpide.utils.extensions.dpToPx
 import java.util.regex.Pattern
 
@@ -49,10 +49,11 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
             "\\b(break|case|catch|class|const|continue|default|delete|do|else|export|extends|false|finally|" +
-            "for|function|if|import|in|instanceof|interface|new|null|static|super|switch|this|throw|true|try|typeof|" +
-            "var|void|while|with)\\b")
+            "for|function|if|import|in|instanceof|interface|let|new|null|static|super|switch|this|throw|true|try|" +
+            "typeof|var|void|while|with)\\b")
         private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
         private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
+        private val PATTERN_QUOTES = Pattern.compile("\"(.*?)\"|'(.*?)'")
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
     }
 
@@ -76,7 +77,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     private var mRedoStack = UndoStack()
     private val mUndoStack = UndoStack()*/
 
-    //region Constructor
+    // region Constructor
 
     constructor(context: Context) : super(context) {
         init(context)
@@ -103,7 +104,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                 dStart < dest.length) {
                 val c = source[start]
 
-                if (mPreferences.autoIndent() && c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
+                if (c == '\n') return@InputFilter autoIndent(source, dest, dStart, dEnd)
             }
 
             source
@@ -118,8 +119,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
 
             override fun afterTextChanged(e: Editable) {
-                if (mPreferences.autoCloseBrackets()) autoCloseBrackets(e, count)
-                if (mPreferences.autoCloseQuotes()) autoCloseQuotes(e, count)
+                if (mPreferences.autoCloseBrackets) autoCloseBrackets(e, count)
+                if (mPreferences.autoCloseQuotes) autoCloseQuotes(e, count)
                 cancelUpdate()
 
                 if (!mModified) return
@@ -139,7 +140,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             style = Paint.Style.FILL
             isAntiAlias = true
             color = Color.parseColor("#bbbbbb")
-            textSize = context.dpToPx(mPreferences.getFontSize())
+            textSize = context.dpToPx(mPreferences.fontSize)
         }
 
         viewTreeObserver.addOnGlobalLayoutListener {
@@ -154,17 +155,17 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         setTokenizer(CompletionTokenizer())
     }
 
-    //endregion Constructor
+    // endregion Constructor
 
     override fun onDraw(canvas: Canvas) {
-        if (mPreferences.highlightCurrentLine()) {
+        if (mPreferences.highlightCurrentLine) {
             try {
                 getLineBounds(getLine(), mLineBounds)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
 
-            val color = if (!mPreferences.useDarkTheme()) {
+            val color = if (!mPreferences.useDarkTheme) {
                 ContextCompat.getColor(context, R.color.line_highlight)
             } else {
                 ContextCompat.getColor(context, R.color.line_highlight_dark)
@@ -176,7 +177,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
         val normalPadding = context.dpToPx(6).toInt()
 
-        if (mPreferences.showLineNumbers()) {
+        if (mPreferences.showLineNumbers) {
             val padding = context.dpToPx(digitCount * 10 + 14).toInt()
             setPadding(padding, normalPadding, normalPadding, normalPadding)
 
@@ -204,7 +205,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     override fun showDropDown() {
-        if (mPreferences.showSuggestions()) super.showDropDown()
+        if (mPreferences.showSuggestions) super.showDropDown()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -240,7 +241,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         return super.onKeyDown(keyCode, event)
     }
 
-    //region Private Functions
+    // region Private Functions
 
     private fun clearSpans(e: Editable) {
         // remove foreground color spans
@@ -326,7 +327,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     private fun highlight(editable: Editable): Editable {
-        if (!mPreferences.isSyntaxHighlightingEnabled() || editable.isEmpty()) {
+        if (!mPreferences.highlightSyntax || editable.isEmpty()) {
             return editable
         }
 
@@ -365,12 +366,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
-        m = Pattern.compile("\"(.*?)\"|'(.*?)'").matcher(editable)
+        m = PATTERN_QUOTES.matcher(editable)
         while (m.find()) {
             val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
-            for (span in spans) {
-                editable.removeSpan(span)
-            }
+            for (span in spans) editable.removeSpan(span)
             editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
@@ -494,15 +493,15 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    //endregion Private Functions
+    // endregion Private Functions
 
-    //region Public Functions
+    // region Public Functions
 
     fun setTextHighlighted(text: CharSequence) = launch(UI) {
         cancelUpdate()
 
         mModified = false
-        setText(withContext(BackgroundPool) { highlight(SpannableStringBuilder(text)) })
+        setText(withContext(DefaultDispatcher) { highlight(SpannableStringBuilder(text)) })
         mModified = true
     }
 
@@ -632,7 +631,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         editableText.insert(end, "\n" + text.subSequence(start, end).toString())
     }
 
-    //endregion Public Functions
+    // endregion Public Functions
 
     /*private fun updateUndoRedoOnTextChanged(s: CharSequence, start: Int, count: Int) {
         val updateLastChange = mUpdateLastChange

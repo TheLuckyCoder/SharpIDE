@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">SharpIDE</string>
-    <string name="banner_ad_unit_id" translatable="false">ca-app-pub-1279472163660969/8935487535</string>
-
     <string name="pref_last_file_path" translatable="false">last_file_path</string>
     <string name="pref_load_last_file_key" translatable="false">load_last_file</string>
     <string name="pref_quit_confirm_key" translatable="false">quit_confirm</string>

@@ -4,13 +4,16 @@
 -allowaccessmodification
 -dontpreverify
 
+# Coroutines
+-keepclassmembernames class kotlinx.** {
+    volatile <fields>;
+}
+-keepclassmembers class  *  {
+    void $$clinit();
+}
+
 # Crashlythics
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 -keep class com.crashlytics.** { *; }
 -dontwarn com.crashlytics.**
-
-# Coroutines
--keepclassmembernames class kotlinx.** {
-    volatile <fields>;
-}

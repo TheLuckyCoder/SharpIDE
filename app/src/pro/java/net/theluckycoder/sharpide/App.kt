@@ -3,10 +3,7 @@ package net.theluckycoder.sharpide
 import android.app.Application
 import android.support.v7.app.AppCompatDelegate
 import android.util.Log
-import com.crashlytics.android.Crashlytics
-import com.crashlytics.android.core.CrashlyticsCore
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import io.fabric.sdk.android.Fabric
 import net.theluckycoder.sharpide.utils.UpdateChecker
 
 @Suppress("unused")
@@ -16,13 +13,6 @@ class App : Application() {
         super.onCreate()
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
-
-        // Set up Crashlytics, disabled for debug builds
-        val crashlyticsKit = Crashlytics.Builder()
-            .core(CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
-            .build()
-
-        Fabric.with(this, crashlyticsKit)
 
         // Setup Update Checker
         val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()

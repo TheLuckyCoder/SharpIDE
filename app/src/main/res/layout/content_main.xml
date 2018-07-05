@@ -4,6 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:clipChildren="false"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
@@ -12,44 +13,20 @@
         android:id="@+id/code_editor"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginBottom="42dp"
+        android:layout_marginBottom="46dp"
         android:background="@android:color/transparent"
         android:completionThreshold="1"
         android:gravity="top"
         android:inputType="textVisiblePassword|textMultiLine" />
 
-    <LinearLayout
+    <ViewStub
+        android:id="@+id/stub_fabs"
+        android:layout="@layout/partial_search_fabs"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:orientation="vertical"
-        app:layout_dodgeInsetEdges="bottom">
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_previous"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_arrow_up" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_next"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_arrow_down" />
-
-        <android.support.design.widget.FloatingActionButton
-            android:id="@+id/fab_close"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/fab_margin"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_close" />
-    </LinearLayout>
+        app:layout_dodgeInsetEdges="bottom" />
 
     <include layout="@layout/partial_symbols" />
 

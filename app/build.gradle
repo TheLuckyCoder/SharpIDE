@@ -4,9 +4,9 @@ apply plugin: 'io.fabric'
 
 ext {
     versionMajor = 1
-    versionMinor = 6
-    versionPatch = 8
-    versionBuild = 4
+    versionMinor = 7
+    versionPatch = 0
+    versionBuild = 2
 }
 
 android {
@@ -14,7 +14,6 @@ android {
     buildToolsVersion Versions.build_tools
 
     defaultConfig {
-        applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion Versions.min_sdk
         targetSdkVersion Versions.target_sdk
         versionName "$versionMajor.$versionMinor.$versionPatch.$versionBuild"
@@ -28,40 +27,40 @@ android {
             resValue "bool", "debug_build", "true"
             ext.enableCrashlytics = false
             ext.alwaysUpdateBuildId = false
+            aaptOptions.cruncherEnabled = false
+            versionNameSuffix "-debug"
         }
         release {
             resValue "bool", "debug_build", "false"
             minifyEnabled true
             shrinkResources true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
 
-    flavorDimensions "sdk"
+    flavorDimensions "type"
     productFlavors {
-        fastBuild {
-            dimension "sdk"
-            versionNameSuffix "-fast"
+        free {
+            dimension "type"
+            applicationId "net.theluckycoder.scriptcraft"
+            proguardFile 'proguard-rules-free.pro'
 
-            // Enable pre-dexing to produce an APK that can be tested on
-            // Android 5.0+ without the time-consuming DEX build processes.
-            minSdkVersion 21
+            resValue "string", "app_name", "SharpIDE"
+            resValue "string", "banner_ad_unit_id", "ca-app-pub-1279472163660969/8935487535"
         }
+        pro {
+            dimension "type"
+            applicationId "net.theluckycoder.sharpidepro"
+            proguardFile 'proguard-rules-pro.pro'
 
-        regular {
-            dimension "sdk"
+            resValue "string", "app_name", "SharpIDE Pro"
         }
-    }
-
-    lintOptions {
-        abortOnError false
     }
 }
 
 kotlin.experimental.coroutines "enable"
 
 ktlint {
-    version = "0.23.1"
+    version = "0.24.0"
     verbose = true
     android = true
     ignoreFailures = true
@@ -76,13 +75,13 @@ dependencies {
 
     implementation Libs.firebase_core
     implementation Libs.firebase_config
-    implementation Libs.firebase_ads
+    freeImplementation Libs.firebase_ads
 
     implementation Libs.material_chooser
     implementation Libs.license_dialog
     implementation Libs.keyboard_visibility
     implementation Libs.support_preference_fix
-    implementation(Libs.fabric_crashlytics) {
+    freeImplementation(Libs.fabric_crashlytics) {
         transitive = true
     }
 }
