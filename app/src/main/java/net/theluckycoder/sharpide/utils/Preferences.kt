@@ -15,7 +15,7 @@ class Preferences(private val context: Context) {
     val loadLastFile get() = preferences.getBoolean(string(R.string.pref_load_last_file_key), true)
 
     var lastFilePath: String
-        get() = preferences.getString(string(R.string.pref_last_file_path), Const.MAIN_FOLDER)
+        get() = preferences.getString(string(R.string.pref_last_file_path), Const.MAIN_FOLDER).orEmpty()
         set(path) { preferences.edit().putString(string(R.string.pref_last_file_path), path).apply() }
 
     val confirmAppQuit get() = preferences.getBoolean(string(R.string.pref_quit_confirm_key), true)
@@ -26,7 +26,7 @@ class Preferences(private val context: Context) {
 
     val newFilesName: String
         get() {
-            var result = preferences.getString(string(R.string.pref_new_files_name_key), "Untitled")
+            var result = preferences.getString(string(R.string.pref_new_files_name_key), "Untitled").orEmpty()
             if (!result.endsWith(".js")) result += ".js"
             return result
         }

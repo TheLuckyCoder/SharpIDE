@@ -18,9 +18,9 @@ import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
+import net.theluckycoder.sharpide.utils.extensions.longToast
+import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
-import org.jetbrains.anko.longToast
-import org.jetbrains.anko.toast
 import java.io.File
 
 class MinifyActivity : AppCompatActivity() {

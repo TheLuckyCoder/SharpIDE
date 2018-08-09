@@ -5,8 +5,8 @@ apply plugin: 'io.fabric'
 ext {
     versionMajor = 1
     versionMinor = 7
-    versionPatch = 0
-    versionBuild = 2
+    versionPatch = 1
+    versionBuild = 0
 }
 
 android {
@@ -60,7 +60,7 @@ android {
 kotlin.experimental.coroutines "enable"
 
 ktlint {
-    version = "0.24.0"
+    version = "0.27.0"
     verbose = true
     android = true
     ignoreFailures = true
@@ -69,7 +69,6 @@ ktlint {
 dependencies {
     implementation Libs.kotlin_stdlib
     implementation Libs.kotlin_coroutines
-    implementation Libs.kotlin_anko
 
     implementation Libs.libs_support
 

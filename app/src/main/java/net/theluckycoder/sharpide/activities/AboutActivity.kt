@@ -18,8 +18,8 @@ import net.theluckycoder.sharpide.BuildConfig
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.Preferences
-import org.jetbrains.anko.browse
-import org.jetbrains.anko.email
+import net.theluckycoder.sharpide.utils.extensions.browse
+import net.theluckycoder.sharpide.utils.extensions.email
 
 class AboutActivity : AppCompatActivity(), View.OnClickListener {
 

@@ -13,6 +13,7 @@ import android.support.v7.widget.AppCompatMultiAutoCompleteTextView
 import android.text.Editable
 import android.text.InputFilter
 import android.text.Layout
+import android.text.Selection
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.Spanned
@@ -30,6 +31,9 @@ import kotlinx.coroutines.experimental.withContext
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.extensions.dpToPx
+import net.theluckycoder.sharpide.utils.extensions.toast
+import net.theluckycoder.sharpide.utils.text.TextChange
+import net.theluckycoder.sharpide.utils.text.UndoStack
 import java.util.regex.Pattern
 
 class CodeEditor : AppCompatMultiAutoCompleteTextView {
@@ -72,10 +76,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     private var mColorComment = 0
     private var mColorString = 0
 
-    /*private var mIsDoingUndoRedo = false
+    private var mIsDoingUndoRedo = false
     private var mUpdateLastChange: TextChange? = null
-    private var mRedoStack = UndoStack()
-    private val mUndoStack = UndoStack()*/
+    private val mRedoStack = UndoStack()
+    private val mUndoStack = UndoStack()
 
     // region Constructor
 
@@ -112,11 +116,9 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
         addTextChangedListener(object : TextWatcher {
             private var count = 0
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-                this.count = count
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+                updateUndoRedoBeforeTextChanged(s, start,  count)
             }
-
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) = Unit
 
             override fun afterTextChanged(e: Editable) {
                 if (mPreferences.autoCloseBrackets) autoCloseBrackets(e, count)
@@ -126,6 +128,11 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                 if (!mModified) return
 
                 mUpdateHandler.postDelayed(mUpdateRunnable, 250)
+            }
+
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+                this.count = count
+                updateUndoRedoOnTextChanged(s, start, count)
             }
         })
 
@@ -235,6 +242,14 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                     duplicateLine()
                     true
                 }
+                KeyEvent.KEYCODE_Z -> {
+                    undo()
+                    true
+                }
+                KeyEvent.KEYCODE_Y -> {
+                    redo()
+                    true
+                }
                 else -> super.onKeyDown(keyCode, event)
             }
         }
@@ -248,7 +263,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         run {
             val spans = e.getSpans(0, e.length, ForegroundColorSpan::class.java)
 
-            var i = spans.size
+            var i = spans. size
             while (i-- > 0) e.removeSpan(spans[i])
         }
 
@@ -493,9 +508,86 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
+    private fun updateUndoRedoBeforeTextChanged(s: CharSequence, start: Int, count: Int) {
+        if (!mIsDoingUndoRedo) {
+            mUpdateLastChange = if (count < UndoStack.MAX_SIZE) {
+                TextChange(oldText = s.subSequence(start, start + count).toString(), start = start)
+            } else {
+                mUndoStack.removeAll()
+                mRedoStack.removeAll()
+                null
+            }
+        }
+    }
+
+    private fun updateUndoRedoOnTextChanged(s: CharSequence, start: Int, count: Int) {
+        val lastChange = mUpdateLastChange
+        if (lastChange == null || mIsDoingUndoRedo) return
+
+        if (count < UndoStack.MAX_SIZE) {
+            lastChange.newText = s.subSequence(start, start + count).toString()
+
+            if(start == lastChange.start &&
+                ((lastChange.oldText.isNotEmpty()
+                    || lastChange.newText.isNotEmpty())
+                    && lastChange.oldText != lastChange.newText)) {
+
+                mUndoStack.push(lastChange)
+                mRedoStack.removeAll()
+            }
+        } else {
+            mUndoStack.removeAll()
+            mRedoStack.removeAll()
+        }
+
+        mUpdateLastChange = null
+    }
+
+
     // endregion Private Functions
 
     // region Public Functions
+
+    fun undo() {
+        val textChange = mUndoStack.pop()
+
+        when {
+            textChange == null -> context.toast("Nothing to Undo")
+            textChange.start >= 0 -> {
+                mIsDoingUndoRedo = true
+
+                if (textChange.start > text.length) {
+                    textChange.start = text.length
+                }
+
+                var end = textChange.start + textChange.newText.length
+                if (end < 0) end = 0
+                if (end > text.length) end = text.length
+
+                text.replace(textChange.start, end, textChange.oldText)
+                Selection.setSelection(text, textChange.start + textChange.oldText.length)
+                mRedoStack.push(textChange)
+                mIsDoingUndoRedo = false
+            }
+            else -> mRedoStack.clear()
+        }
+    }
+
+    fun redo() {
+        val textChange = mRedoStack.pop()
+
+        when {
+            textChange == null -> context.toast("Nothing to Redo")
+            textChange.start >= 0 -> {
+                mIsDoingUndoRedo = true
+                text.replace(textChange.start, textChange.start + textChange.oldText.length, textChange.newText)
+                Selection.setSelection(text, textChange.start + textChange.newText.length)
+                mUndoStack.push(textChange)
+                mIsDoingUndoRedo = false
+            }
+            else -> mRedoStack.clear()
+        }
+    }
 
     fun setTextHighlighted(text: CharSequence) = launch(UI) {
         cancelUpdate()
@@ -584,7 +676,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager?
         if (clipboard == null || !clipboard.hasPrimaryClip()) return
 
-        val item = clipboard.primaryClip.getItemAt(0)
+        val item = clipboard.primaryClip?.getItemAt(0) ?: return
         val clipboardText = item.text.toString()
 
         if (clipboardText.isBlank() || selectionStart < 0 || selectionEnd < 0) return

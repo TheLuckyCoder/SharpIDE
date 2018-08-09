@@ -22,8 +22,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
-import org.jetbrains.anko.alert
+import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
 
 class ConsoleActivity : AppCompatActivity() {
 
@@ -118,10 +119,14 @@ class ConsoleActivity : AppCompatActivity() {
     private inner class MyChromeClient : WebChromeClient() {
 
         override fun onJsAlert(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert(message, "JavaScript Alert") {
-                isCancelable = false
-                positiveButton(android.R.string.ok) { result.confirm() }
-            }.show()
+            alertDialog(R.style.AppTheme_Dialog)
+                .setTitleWithColor("JavaScript Alert", R.color.textColorPrimary)
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.yes) { _, _ ->
+                    result.confirm()
+                }
+                .show()
             return true
         }
 
@@ -135,31 +140,48 @@ class ConsoleActivity : AppCompatActivity() {
             val editText = AppCompatEditText(this@ConsoleActivity).apply {
                 setText(defaultValue)
             }
-            alert(message, "JavaScript Prompt") {
-                customView = editText
-                isCancelable = false
-                positiveButton(android.R.string.ok) { result.confirm(editText.text.toString()) }
-                negativeButton(android.R.string.cancel) { result.cancel() }
-            }.show()
+            alertDialog(R.style.AppTheme_Dialog)
+                .setTitleWithColor("JavaScript Prompt", R.color.textColorPrimary)
+                .setView(editText)
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.yes) { _, _ ->
+                    result.confirm(editText.text.toString())
+                }
+                .setNegativeButton(android.R.string.no) { _, _ ->
+                    result.cancel()
+                }
+                .show()
             return true
         }
 
         override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert(message, "JavaScript Confirm") {
-                isCancelable = false
-                positiveButton(android.R.string.ok) { result.confirm() }
-                negativeButton(android.R.string.cancel) { result.cancel() }
-            }.show()
+            alertDialog(R.style.AppTheme_Dialog)
+                .setTitleWithColor("JavaScript Confirm", R.color.textColorPrimary)
+                .setMessage(message)
+                .setCancelable(false)
+                .setPositiveButton(android.R.string.yes) { _, _ ->
+                    result.confirm()
+                }
+                .setNegativeButton(android.R.string.no) { _, _ ->
+                    result.cancel()
+                }
+                .show()
             return true
         }
 
         override fun onJsBeforeUnload(view: WebView, url: String, message: String, result: JsResult): Boolean {
-            alert("$message\n\nAre you sure you want to navigate away from this page?",
-                "Confirm Navigation") {
-                isCancelable = false
-                positiveButton("Leave this page") { result.confirm() }
-                negativeButton("Stay on this page") { result.cancel() }
-            }.show()
+            alertDialog(R.style.AppTheme_Dialog)
+                .setTitleWithColor("Confirm Navigation", R.color.textColorPrimary)
+                .setMessage("$message\n\nAre you sure you want to navigate away from this page?")
+                .setCancelable(false)
+                .setPositiveButton("Leave this page") { _, _ ->
+                    result.confirm()
+                }
+                .setNegativeButton("Stay on this page") { _, _ ->
+                    result.cancel()
+                }
+                .show()
             return true
         }
 

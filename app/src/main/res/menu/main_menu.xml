@@ -3,6 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item
+        android:id="@+id/menu_undo"
+        android:icon="@drawable/ic_menu_undo"
+        android:title="@string/menu_undo"
+        app:showAsAction="always" />
+
+    <item
+        android:id="@+id/menu_redo"
+        android:icon="@drawable/ic_menu_redo"
+        android:title="@string/menu_redo"
+        app:showAsAction="always" />
+
+    <item
         android:id="@+id/menu_run"
         android:icon="@drawable/ic_menu_run"
         android:title="@string/menu_run"

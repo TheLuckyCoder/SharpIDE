@@ -42,20 +42,19 @@ import net.theluckycoder.sharpide.utils.Preferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
+import net.theluckycoder.sharpide.utils.extensions.browse
+import net.theluckycoder.sharpide.utils.extensions.bundleOf
 import net.theluckycoder.sharpide.utils.extensions.containsAny
 import net.theluckycoder.sharpide.utils.extensions.inflate
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
-import net.theluckycoder.sharpide.utils.extensions.lazyFast
+import net.theluckycoder.sharpide.utils.extensions.longToast
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
+import net.theluckycoder.sharpide.utils.extensions.startActivity
+import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import net.theluckycoder.sharpide.view.CodeEditor
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
-import org.jetbrains.anko.browse
-import org.jetbrains.anko.bundleOf
-import org.jetbrains.anko.longToast
-import org.jetbrains.anko.startActivity
-import org.jetbrains.anko.toast
 import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
@@ -72,7 +71,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val mCodeEditor by bind<CodeEditor>(R.id.code_editor)
     private val mSymbolScrollView by bind<HorizontalScrollView>(R.id.sv_symbols)
 
-    private val mFirebaseAnalytics by lazyFast { FirebaseAnalytics.getInstance(this) }
     private val mPreferences = Preferences(this)
     private val mAds = Ads(this)
     private var mSaveDialog: AlertDialog? = null
@@ -267,6 +265,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
+            R.id.menu_undo -> mCodeEditor.undo()
+            R.id.menu_redo -> mCodeEditor.redo()
             R.id.menu_run -> {
                 if (mCurrentFile.path != mPreferences.newFilesName) {
                     saveFileAsync(true)
@@ -274,7 +274,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     val params = bundleOf(
                         "size" to mCurrentFile.length(),
                         "lines" to mCodeEditor.lineCount)
-                    mFirebaseAnalytics.logEvent("file_run", params)
+                    FirebaseAnalytics.getInstance(this).logEvent("file_run", params)
                 } else {
                     saveFileAs(false)
                 }
@@ -390,7 +390,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val params = bundleOf(
                 "size" to mCurrentFile.length(),
                 "lines" to mCodeEditor.lineCount)
-            mFirebaseAnalytics.logEvent("file_save", params)
+            FirebaseAnalytics.getInstance(this).logEvent("file_save", params)
         } else {
             saveFileAs(false)
         }
@@ -473,17 +473,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    fab.visibility = View.GONE
+                    (fab.parent as View).visibility = View.GONE
                 }
             })
             fabNext.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    fab.visibility = View.GONE
+                    (fab.parent as View).visibility = View.GONE
                 }
             })
             fabClose.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
-                    fab.visibility = View.GONE
+                    (fab.parent as View).visibility = View.GONE
                 }
             })
         }

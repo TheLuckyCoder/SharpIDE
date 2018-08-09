@@ -17,3 +17,5 @@
 -keepattributes SourceFile,LineNumberTable
 -keep class com.crashlytics.** { *; }
 -dontwarn com.crashlytics.**
+
+-dontwarn androidx.**
