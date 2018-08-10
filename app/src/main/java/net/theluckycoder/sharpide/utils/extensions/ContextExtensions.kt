@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.os.Parcelable
 import android.support.annotation.ColorRes
 import android.support.annotation.StringRes
+import android.support.annotation.StyleRes
 import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
 import android.text.SpannableStringBuilder
@@ -49,10 +50,8 @@ fun Context.email(email: String, subject: String = "", text: String = ""): Boole
     return false
 }
 
-fun Context.alertDialog(title: CharSequence): AlertDialog.Builder = AlertDialog.Builder(this).setTitle(title)
-
-fun Context.alertDialog(@StringRes titleRes: Int): AlertDialog.Builder
-    = AlertDialog.Builder(this).setTitle(titleRes)
+fun Context.alertDialog(@StyleRes style: Int): AlertDialog.Builder
+    = AlertDialog.Builder(this, style)
 
 fun AlertDialog.Builder.setTitleWithColor(titleText: CharSequence, @ColorRes color: Int): AlertDialog.Builder {
     // Initialize a new foreground color span instance

@@ -17,7 +17,6 @@ object Libs {
     // Kotlin
     const val kotlin_stdlib = "org.jetbrains.kotlin:kotlin-stdlib:${Versions.kotlin_version}"
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:${Versions.kotlin_coroutines}"
-    const val kotlin_anko = "org.jetbrains.anko:anko-appcompat-v7-commons:${Versions.kotlin_anko}"
 
     // Support Libraries
     private const val support_v4 = "com.android.support:support-v4:${Versions.support_lib}"
