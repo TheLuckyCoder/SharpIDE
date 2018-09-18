@@ -5,7 +5,7 @@ import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.WindowManager
 import net.theluckycoder.sharpide.fragment.SettingsFragment
-import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.AppPreferences
 
 class SettingsActivity : AppCompatActivity() {
 
@@ -14,7 +14,7 @@ class SettingsActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
-        if (Preferences(this).isFullscreen) {
+        if (AppPreferences(this).isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)

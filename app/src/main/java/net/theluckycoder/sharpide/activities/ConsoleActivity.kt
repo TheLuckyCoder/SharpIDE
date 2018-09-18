@@ -21,7 +21,7 @@ import android.webkit.WebViewClient
 import android.widget.LinearLayout
 import android.widget.TextView
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
@@ -45,7 +45,7 @@ class ConsoleActivity : AppCompatActivity() {
             expand(fab)
         }
 
-        val preferences = Preferences(this)
+        val preferences = AppPreferences(this)
         if (preferences.isConsoleOpenByDefault) {
             expand(fab)
         }

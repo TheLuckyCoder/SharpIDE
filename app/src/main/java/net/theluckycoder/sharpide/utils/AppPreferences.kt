@@ -6,7 +6,7 @@ import android.support.annotation.StringRes
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.extensions.lazyFast
 
-class Preferences(private val context: Context) {
+class AppPreferences(private val context: Context) {
 
     private val preferences by lazyFast { PreferenceManager.getDefaultSharedPreferences(context) }
 

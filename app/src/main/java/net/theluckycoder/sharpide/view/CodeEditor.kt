@@ -24,12 +24,13 @@ import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.widget.ArrayAdapter
-import kotlinx.coroutines.experimental.DefaultDispatcher
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.android.Main
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
 import net.theluckycoder.sharpide.R
-import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.extensions.dpToPx
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.text.TextChange
@@ -45,11 +46,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             "void", "while", "with", "null", "true", "false")
 
         private val PATTERN_CLASSES = Pattern.compile(
-            "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|" +
-            "RangeError|ReferenceError|SyntaxError|TypeError|URIError|" +
-            "Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|" +
-            "Array|ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunction" +
-            "Reflect|Proxy|Intl)\\b", Pattern.MULTILINE)
+            "^[\t ]*(Object|Function|Boolean|Symbol|Error|EvalError|InternalError|RangeError|ReferenceError|" +
+                "SyntaxError|TypeError|URIError|Number|Math|Date|String|RegExp|Map|Set|WeakMap|WeakSet|Array|" +
+                "ArrayBuffer|DataView|JSON|Promise|Generator|GeneratorFunctionReflect|Proxy|Intl)\\b",
+            Pattern.MULTILINE)
         private val PATTERN_CUSTOM_CLASSES = Pattern.compile("(\\w+[ .])")
         private val PATTERN_KEYWORDS = Pattern.compile(
             "\\b(break|case|catch|class|const|continue|default|delete|do|else|export|extends|false|finally|" +
@@ -68,13 +68,13 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     private val mUpdateHandler = Handler()
     private var mModified = true
     private val mUpdateRunnable = Runnable { highlightWithoutChange(text) }
-    private val mPreferences = Preferences(context)
+    private val mPreferences = AppPreferences(context)
 
-    private var mColorNumber = 0
-    private var mColorKeyword = 0
-    private var mColorClasses = 0
-    private var mColorComment = 0
-    private var mColorString = 0
+    private val mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
+    private val mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
+    private val mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
+    private val mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
+    private val mColorString = ContextCompat.getColor(context, R.color.syntax_string)
 
     private var mIsDoingUndoRedo = false
     private var mUpdateLastChange: TextChange? = null
@@ -135,13 +135,6 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                 updateUndoRedoOnTextChanged(s, start, count)
             }
         })
-
-        // Set Syntax Colors
-        mColorNumber = ContextCompat.getColor(context, R.color.syntax_number)
-        mColorKeyword = ContextCompat.getColor(context, R.color.syntax_keyword)
-        mColorClasses = ContextCompat.getColor(context, R.color.syntax_class)
-        mColorComment = ContextCompat.getColor(context, R.color.syntax_comment)
-        mColorString = ContextCompat.getColor(context, R.color.syntax_string)
 
         with(mPaint) {
             style = Paint.Style.FILL
@@ -407,12 +400,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         return editable
     }
 
-    private fun getLine(): Int {
-        return if (selectionStart == -1 || layout == null) {
-            0
-        } else {
-            layout.getLineForOffset(selectionStart)
-        }
+    private fun getLine(): Int = if (selectionStart == -1) {
+        0
+    } else {
+        mLayout.getLineForOffset(selectionStart)
     }
 
     private fun autoIndent(source: CharSequence, dest: Spanned, dStart: Int, dEnd: Int): CharSequence {
@@ -589,11 +580,11 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    fun setTextHighlighted(text: CharSequence) = launch(UI) {
+    fun setTextHighlighted(text: CharSequence) = GlobalScope.launch(Dispatchers.Main) {
         cancelUpdate()
 
         mModified = false
-        setText(withContext(DefaultDispatcher) { highlight(SpannableStringBuilder(text)) })
+        setText(withContext(Dispatchers.Default) { highlight(SpannableStringBuilder(text)) })
         mModified = true
     }
 
@@ -724,36 +715,4 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     // endregion Public Functions
-
-    /*private fun updateUndoRedoOnTextChanged(s: CharSequence, start: Int, count: Int) {
-        val updateLastChange = mUpdateLastChange
-        updateLastChange ?: return
-        if(count < UndoStack.MAX_SIZE) {
-            updateLastChange.newText = s.subSequence(start, start + count).toString()
-            if(start == updateLastChange.start &&
-                ((updateLastChange.oldText.isNotEmpty()
-                    || updateLastChange.newText.isNotEmpty())
-                    && updateLastChange.oldText != updateLastChange.newText)) {
-                mUndoStack.push(updateLastChange)
-                mRedoStack.removeAll()
-            }
-        } else {
-            mUndoStack.removeAll()
-            mRedoStack.removeAll()
-        }
-        mUpdateLastChange = null
-    }
-
-    private fun updateUndoRedoBeforeTextChanged(s: CharSequence, start: Int, count: Int) {
-        if (count < UndoStack.MAX_SIZE) {
-            mUpdateLastChange = TextChange().apply {
-                this.oldText = s.subSequence(start, start + count).toString()
-                this.start = start
-            }
-            return
-        }
-        mUndoStack.removeAll()
-        mRedoStack.removeAll()
-        mUpdateLastChange = null;
-    }*/
 }

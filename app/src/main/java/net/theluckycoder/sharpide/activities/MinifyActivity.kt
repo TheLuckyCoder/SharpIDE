@@ -15,7 +15,7 @@ import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
-import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
 import net.theluckycoder.sharpide.utils.extensions.longToast
@@ -26,7 +26,7 @@ import java.io.File
 class MinifyActivity : AppCompatActivity() {
 
     private val obfuscateBtn by bind<Button>(R.id.btn_obfuscate)
-    private val mPreferences = Preferences(this)
+    private val mPreferences = AppPreferences(this)
     private var mFilePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +36,7 @@ class MinifyActivity : AppCompatActivity() {
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
-        if (Preferences(this).isFullscreen) {
+        if (AppPreferences(this).isFullscreen) {
             window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN)

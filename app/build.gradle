@@ -5,8 +5,8 @@ apply plugin: 'io.fabric'
 ext {
     versionMajor = 1
     versionMinor = 7
-    versionPatch = 1
-    versionBuild = 1
+    versionPatch = 2
+    versionBuild = 0
 }
 
 android {
@@ -18,7 +18,7 @@ android {
         targetSdkVersion Versions.target_sdk
         versionName "$versionMajor.$versionMinor.$versionPatch.$versionBuild"
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch * 10 + versionBuild
-        resConfigs "en", "fr", "ro", "ru"
+        resConfigs "en", "fr", "ro", "ru", "ja", "ko"
         vectorDrawables.useSupportLibrary = true
     }
 
@@ -60,7 +60,7 @@ android {
 kotlin.experimental.coroutines "enable"
 
 ktlint {
-    version = "0.27.0"
+    version = "0.28.0"
     verbose = true
     android = true
     ignoreFailures = true

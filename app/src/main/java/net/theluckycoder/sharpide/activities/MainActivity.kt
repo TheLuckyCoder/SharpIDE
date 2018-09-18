@@ -28,8 +28,9 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.DefaultDispatcher
-import kotlinx.coroutines.experimental.android.UI
+import kotlinx.coroutines.experimental.Dispatchers
+import kotlinx.coroutines.experimental.GlobalScope
+import kotlinx.coroutines.experimental.android.Main
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.withContext
@@ -38,7 +39,7 @@ import net.theluckycoder.materialchooser.ChooserType
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.Const
-import net.theluckycoder.sharpide.utils.Preferences
+import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
@@ -71,7 +72,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private val mCodeEditor by bind<CodeEditor>(R.id.code_editor)
     private val mSymbolScrollView by bind<HorizontalScrollView>(R.id.sv_symbols)
 
-    private val mPreferences = Preferences(this)
+    private val mPreferences = AppPreferences(this)
     private val mAds = Ads(this)
     private var mSaveDialog: AlertDialog? = null
     private lateinit var mCurrentFile: File
@@ -399,6 +400,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun saveFileAs(createNewFile: Boolean, folderPath: String? = null) {
         val dialogView = inflate(R.layout.dialog_new_file)
         val title = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
+
         mSaveDialog = alertDialog(R.style.AppTheme_Dialog)
             .setTitleWithColor(title, R.color.textColorPrimary)
             .setView(dialogView)
@@ -501,9 +503,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             .start()
     }
 
-    private fun loadFileAsync() = launch(UI) {
+    private fun loadFileAsync() = GlobalScope.launch(Dispatchers.Main) {
         val content = try {
-            withContext(DefaultDispatcher) { mCurrentFile.readText() }
+            withContext(Dispatchers.Default) { mCurrentFile.readText() }
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)
@@ -529,11 +531,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mCurrentFile.exists()) mAds.showInterstitial()
     }
 
-    private fun saveFileAsync(startConsole: Boolean) = launch(UI) {
+    private fun saveFileAsync(startConsole: Boolean) = GlobalScope.launch(Dispatchers.Main) {
         try {
             val fileContent = mCodeEditor.text.toString()
 
-            withContext(DefaultDispatcher) { mCurrentFile.writeText(fileContent) }
+            withContext(Dispatchers.Default) { mCurrentFile.writeText(fileContent) }
             mAds.showInterstitial()
             toast(R.string.file_saved)
 
@@ -548,7 +550,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     @Throws(IOException::class)
-    private fun saveConsoleFiles(fileContent: String) = async {
+    private fun saveConsoleFiles(fileContent: String) = GlobalScope.async {
         openFileOutput("main.js", Context.MODE_PRIVATE).use {
             it.write(fileContent.toByteArray())
         }
