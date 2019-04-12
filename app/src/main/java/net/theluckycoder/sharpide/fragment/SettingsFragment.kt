@@ -1,16 +1,17 @@
 package net.theluckycoder.sharpide.fragment
 
 import android.os.Bundle
-import android.support.v7.app.AppCompatDelegate
-import com.takisoft.fix.support.v7.preference.PreferenceFragmentCompat
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.preference.PreferenceFragmentCompat
+import androidx.preference.SwitchPreference
 import net.theluckycoder.sharpide.R
 
 class SettingsFragment : PreferenceFragmentCompat() {
 
-    override fun onCreatePreferencesFix(savedInstanceState: Bundle?, rootKey: String?) {
-        addPreferencesFromResource(R.xml.preferences)
+    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+        setPreferencesFromResource(R.xml.preferences, rootKey)
 
-        findPreference("dark_theme").setOnPreferenceClickListener {
+        findPreference<SwitchPreference>("dark_theme")?.setOnPreferenceClickListener {
             if (preferenceManager.sharedPreferences.getBoolean("dark_theme", false)) {
                 AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             } else {
@@ -21,7 +22,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
             true
         }
 
-        findPreference("fullscreen").setOnPreferenceClickListener {
+        findPreference<SwitchPreference>("fullscreen")?.setOnPreferenceClickListener {
             tryToRestartActivity()
             true
         }

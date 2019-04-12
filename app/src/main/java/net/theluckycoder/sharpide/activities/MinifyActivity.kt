@@ -2,32 +2,30 @@ package net.theluckycoder.sharpide.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.support.v7.app.AppCompatActivity
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
-import android.widget.Button
-import kotlinx.coroutines.experimental.DefaultDispatcher
-import kotlinx.coroutines.experimental.android.UI
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
+import androidx.appcompat.app.AppCompatActivity
+import kotlinx.android.synthetic.main.activity_minify.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
-import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.AppPreferences
-import net.theluckycoder.sharpide.utils.extensions.bind
-import net.theluckycoder.sharpide.utils.extensions.ktReplace
+import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.extensions.longToast
+import net.theluckycoder.sharpide.utils.extensions.replace
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import java.io.File
 
 class MinifyActivity : AppCompatActivity() {
 
-    private val obfuscateBtn by bind<Button>(R.id.btn_obfuscate)
-    private val mPreferences = AppPreferences(this)
-    private var mFilePath = ""
+    private val preferences = AppPreferences(this)
+    private var filePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -50,16 +48,16 @@ class MinifyActivity : AppCompatActivity() {
         // Init AdMob
         Ads(this).loadBanner()
 
-        obfuscateBtn.setOnClickListener { obfuscateFile() }
+        btn_obfuscate.setOnClickListener { obfuscateFile() }
 
         savedInstanceState?.let {
-            mFilePath = it.getString("filePath", "")
-            if (mFilePath.isNotEmpty()) obfuscateBtn.isEnabled = true
+            filePath = it.getString("filePath", "")
+            if (filePath.isNotEmpty()) btn_obfuscate.isEnabled = true
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
-        outState.putString("filePath", mFilePath)
+        outState.putString("filePath", filePath)
         super.onSaveInstanceState(outState)
     }
 
@@ -75,24 +73,24 @@ class MinifyActivity : AppCompatActivity() {
         data ?: return
 
         if (requestCode == 10 && resultCode == RESULT_OK) {
-            mFilePath = data.getStringExtra(Chooser.RESULT_PATH)
-            obfuscateBtn.isEnabled = true
+            filePath = data.getStringExtra(Chooser.RESULT_PATH)
+            btn_obfuscate.isEnabled = true
         }
     }
 
     fun selectFile(@Suppress("UNUSED_PARAMETER") view: View) {
         Chooser(this, 10,
             fileExtension = "js",
-            showHiddenFiles = mPreferences.showHiddenFiles,
+            showHiddenFiles = preferences.showHiddenFiles,
             startPath = Const.MAIN_FOLDER,
-            useNightTheme = mPreferences.useDarkTheme)
+            useNightTheme = preferences.useDarkTheme)
             .start()
     }
 
-    private fun obfuscateFile() = launch(UI) {
+    private fun obfuscateFile() = GlobalScope.launch(Dispatchers.Main) {
         try {
-            async(DefaultDispatcher) {
-                val file = File(mFilePath)
+            withContext(Dispatchers.Default) {
+                val file = File(filePath)
 
                 val fileContent = try {
                     file.readText()
@@ -103,31 +101,31 @@ class MinifyActivity : AppCompatActivity() {
 
                 if (fileContent.isBlank()) {
                     toast(R.string.error_empty_file)
-                    return@async
+                    return@withContext
                 }
 
                 // uniform line endings, make them all line feed
-                fileContent.ktReplace("\r\n", "\n").ktReplace("\r", "\n")
+                fileContent.replace("\r\n", "\n").replace("\r", "\n")
                     // strip leading & trailing whitespace
-                    .ktReplace(" \n", "\n").ktReplace("\n ", "\n")
+                    .replace(" \n", "\n").replace("\n ", "\n")
                     // collapse consecutive line feeds into just 1
                     .replace("/\n+/".toRegex(), "\n")
                     // remove comments
                     .replace("/\\*(?:.|[\\n])*?\\*/|//.*".toRegex(), "")
                     // remove other spaces
-                    .ktReplace(" + ", "+").ktReplace(" - ", "-").ktReplace(" = ", "=")
-                    .ktReplace("if ", "if").ktReplace("for ", "for").ktReplace("while ", "while")
-                    .ktReplace("( ", "(")
+                    .replace(" + ", "+").replace(" - ", "-").replace(" = ", "=")
+                    .replace("if ", "if").replace("for ", "for").replace("while ", "while")
+                    .replace("( ", "(")
                     // remove the new lines and tabs
-                    .ktReplace("\n", "").ktReplace("\t", "")
+                    .replace("\n", "").replace("\t", "")
 
                 val newFile = File(Const.MINIFY_FOLDER + file.name)
                 newFile.writeText(fileContent)
-            }.await()
+            }
+
+            longToast(R.string.file_minify_ready)
         } catch (e: Exception) {
             toast(R.string.error)
         }
-
-        longToast(R.string.file_minify_ready)
     }
 }

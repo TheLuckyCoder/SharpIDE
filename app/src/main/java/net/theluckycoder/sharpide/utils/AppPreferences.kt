@@ -2,7 +2,7 @@ package net.theluckycoder.sharpide.utils
 
 import android.content.Context
 import android.preference.PreferenceManager
-import android.support.annotation.StringRes
+import androidx.annotation.StringRes
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.extensions.lazyFast
 

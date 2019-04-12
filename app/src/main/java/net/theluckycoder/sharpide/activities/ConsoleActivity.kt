@@ -2,12 +2,6 @@ package net.theluckycoder.sharpide.activities
 
 import android.annotation.SuppressLint
 import android.os.Bundle
-import android.support.design.widget.FloatingActionButton
-import android.support.transition.TransitionManager
-import android.support.v4.content.ContextCompat
-import android.support.v4.view.ViewCompat
-import android.support.v7.app.AppCompatActivity
-import android.support.v7.widget.AppCompatEditText
 import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
@@ -18,19 +12,19 @@ import android.webkit.JsResult
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.LinearLayout
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.AppCompatEditText
+import androidx.core.content.ContextCompat
+import androidx.core.view.ViewCompat
+import androidx.transition.TransitionManager
+import com.google.android.material.floatingactionbutton.FloatingActionButton
+import kotlinx.android.synthetic.main.activity_console.*
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
-import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
 
 class ConsoleActivity : AppCompatActivity() {
-
-    private val webView by bind<WebView>(R.id.web_view)
-    private val windowLayout by bind<LinearLayout>(R.id.layout_window)
-    private val messageTv by bind<TextView>(R.id.tv_console_message)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,7 +32,7 @@ class ConsoleActivity : AppCompatActivity() {
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        windowLayout.visibility = View.GONE
+        layout_window.visibility = View.GONE
 
         val fab = findViewById<FloatingActionButton>(R.id.fab_expand)
         fab.setOnClickListener {
@@ -58,7 +52,7 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         // WebView Setup
-        with(webView) {
+        with(web_view) {
             loadUrl("about:blank")
             settings.javaScriptEnabled = true
             setBackgroundColor(ContextCompat.getColor(context, R.color.main_background))
@@ -68,20 +62,20 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         savedInstanceState?.let {
-            webView.restoreState(it.getBundle("webViewState"))
+            web_view.restoreState(it.getBundle("web_viewState"))
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         val state = Bundle()
-        webView.saveState(state)
-        outState?.putBundle("webViewState", state)
+        web_view.saveState(state)
+        outState.putBundle("web_viewState", state)
 
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
-        with(webView) {
+        with(web_view) {
             clearCache(true)
             clearHistory()
             clearMatches()
@@ -100,11 +94,11 @@ class ConsoleActivity : AppCompatActivity() {
     private fun expand(view: FloatingActionButton) {
         TransitionManager.beginDelayedTransition(findViewById(R.id.container))
 
-        val rotation = if (windowLayout.visibility == View.VISIBLE) {
-            windowLayout.visibility = View.GONE
+        val rotation = if (layout_window.visibility == View.VISIBLE) {
+            layout_window.visibility = View.GONE
             0f
         } else {
-            windowLayout.visibility = View.VISIBLE
+            layout_window.visibility = View.VISIBLE
             180f
         }
 
@@ -187,14 +181,14 @@ class ConsoleActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-            var text = messageTv.text.toString()
+            var text = tv_console_message.text.toString()
             if (text == getString(R.string.no_errors)) {
                 text = ""
             } else {
                 text += "\n"
             }
 
-            messageTv.text = text + "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
+            tv_console_message.text = text + "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
             return true
         }
     }

@@ -4,14 +4,13 @@ import android.Manifest
 import android.app.Activity
 import android.content.Context
 import android.content.pm.PackageManager
-import android.support.annotation.IdRes
-import android.support.annotation.LayoutRes
-import android.support.v4.app.ActivityCompat
 import android.util.TypedValue
 import android.view.View
+import androidx.annotation.LayoutRes
+import androidx.core.app.ActivityCompat
 import net.theluckycoder.sharpide.utils.Const
 
-fun CharSequence.ktReplace(oldString: String, newString: String): String {
+fun CharSequence.replace(oldString: String, newString: String): String {
     if (isEmpty() || oldString.isEmpty()) return this.toString()
 
     var start = 0
@@ -76,8 +75,6 @@ fun Activity.verifyStoragePermission() {
             arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), Const.PERMISSION_REQUEST_CODE)
     }
 }
-
-fun <T : View> Activity.bind(@IdRes res: Int): Lazy<T> = lazyFast { findViewById<T>(res) }
 
 fun <T> lazyFast(initializer: () -> T): Lazy<T> = lazy(LazyThreadSafetyMode.NONE) { initializer() }
 

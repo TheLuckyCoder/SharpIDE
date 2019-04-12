@@ -8,8 +8,6 @@ import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.os.Handler
-import android.support.v4.content.ContextCompat
-import android.support.v7.widget.AppCompatMultiAutoCompleteTextView
 import android.text.Editable
 import android.text.InputFilter
 import android.text.Layout
@@ -24,6 +22,8 @@ import android.text.style.ForegroundColorSpan
 import android.util.AttributeSet
 import android.view.KeyEvent
 import android.widget.ArrayAdapter
+import androidx.appcompat.widget.AppCompatMultiAutoCompleteTextView
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
@@ -327,9 +327,11 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    private fun highlightWithoutChange(e: Editable) {
+    private fun highlightWithoutChange(e: Editable) = GlobalScope.launch(Dispatchers.Main) {
         mModified = false
-        highlight(e)
+        withContext(Dispatchers.Default) {
+            highlight(e)
+        }
         mModified = true
     }
 
@@ -373,17 +375,17 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
+        m = PATTERN_NUMBERS.matcher(editable)
+        while (m.find()) {
+            editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(),
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+
         m = PATTERN_QUOTES.matcher(editable)
         while (m.find()) {
             val spans = editable.getSpans(m.start(), m.end(), ForegroundColorSpan::class.java)
             for (span in spans) editable.removeSpan(span)
             editable.setSpan(ForegroundColorSpan(mColorString), m.start(), m.end(),
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
-        }
-
-        m = PATTERN_NUMBERS.matcher(editable)
-        while (m.find()) {
-            editable.setSpan(ForegroundColorSpan(mColorNumber), m.start(), m.end(),
                 Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
         }
 
@@ -583,7 +585,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         cancelUpdate()
 
         mModified = false
-        setText(withContext(Dispatchers.Default) { highlight(SpannableStringBuilder(text)) })
+        val highlightedText = withContext(Dispatchers.Default) { highlight(SpannableStringBuilder(text)) }
+        setText(highlightedText)
         mModified = true
     }
 

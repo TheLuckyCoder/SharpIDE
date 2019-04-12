@@ -1,5 +1,6 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 apply plugin: 'io.fabric'
 
 ext {
@@ -13,12 +14,16 @@ android {
     compileSdkVersion Versions.compile_sdk
 
     defaultConfig {
+        applicationId "net.theluckycoder.scriptcraft"
         minSdkVersion Versions.min_sdk
         targetSdkVersion Versions.target_sdk
         versionName "$versionMajor.$versionMinor.$versionPatch.$versionBuild"
         versionCode versionMajor * 1000 + versionMinor * 100 + versionPatch * 10 + versionBuild
         resConfigs "en", "fr", "ro", "ru", "ja", "ko"
         vectorDrawables.useSupportLibrary = true
+
+        resValue "string", "app_name", "SharpIDE"
+        resValue "string", "banner_ad_unit_id", "ca-app-pub-1279472163660969/8935487535"
     }
 
     buildTypes {
@@ -31,28 +36,15 @@ android {
         }
         release {
             resValue "bool", "debug_build", "false"
+            proguardFile 'proguard-rules.pro'
             minifyEnabled true
             shrinkResources true
         }
     }
 
-    flavorDimensions "type"
-    productFlavors {
-        free {
-            dimension "type"
-            applicationId "net.theluckycoder.scriptcraft"
-            proguardFile 'proguard-rules-free.pro'
-
-            resValue "string", "app_name", "SharpIDE"
-            resValue "string", "banner_ad_unit_id", "ca-app-pub-1279472163660969/8935487535"
-        }
-        pro {
-            dimension "type"
-            applicationId "net.theluckycoder.sharpidepro"
-            proguardFile 'proguard-rules-pro.pro'
-
-            resValue "string", "app_name", "SharpIDE Pro"
-        }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
@@ -66,18 +58,19 @@ dependencies {
     implementation Libs.kotlin_stdlib
     implementation Libs.kotlin_coroutines
 
-    implementation Libs.support_appcompat
-    implementation Libs.support_design
+    implementation Libs.androidx_appcompat
+    implementation Libs.androidx_material
+    implementation Libs.androidx_preference
 
     implementation Libs.firebase_core
     implementation Libs.firebase_config
-    freeImplementation Libs.firebase_ads
+    implementation Libs.firebase_ads
 
     implementation Libs.material_chooser
     implementation Libs.license_dialog
     implementation Libs.keyboard_visibility
-    implementation Libs.support_preference_fix
-    freeImplementation(Libs.fabric_crashlytics) {
+    //implementation Libs.support_preference_fix
+    implementation(Libs.fabric_crashlytics) {
         transitive = true
     }
 }
