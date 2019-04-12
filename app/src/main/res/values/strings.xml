@@ -77,6 +77,8 @@
     <string name="menu_edit_duplicate_line">Duplicate Line</string>
     <string name="menu_edit_select_line">Select Line</string>
     <string name="menu_edit_delete_line">Delete Line</string>
+    <string name="menu_undo">Undo</string>
+    <string name="menu_redo">Redo</string>
 
     <!-- Updater -->
     <string name="updater_new_update">New version available</string>
@@ -89,9 +91,8 @@
     <string name="about_rate">Rate on Google Play</string>
     <string name="about_feedback">Feedback by Email</string>
     <string name="about_website">My Website</string>
+    <string name="about_privacy_policy">Privacy Policy</string>
     <string name="about_open_source">Open Source Licenses</string>
     <string name="permission_required">External Storage permission is required in order for the app to work</string>
     <string name="error_file_not_saved">File is not saved</string>
-    <string name="menu_undo">Undo</string>
-    <string name="menu_redo">Redo</string>
 </resources>

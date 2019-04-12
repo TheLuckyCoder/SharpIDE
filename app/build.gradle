@@ -5,13 +5,12 @@ apply plugin: 'io.fabric'
 ext {
     versionMajor = 1
     versionMinor = 7
-    versionPatch = 2
+    versionPatch = 3
     versionBuild = 0
 }
 
 android {
     compileSdkVersion Versions.compile_sdk
-    buildToolsVersion Versions.build_tools
 
     defaultConfig {
         minSdkVersion Versions.min_sdk
@@ -57,10 +56,7 @@ android {
     }
 }
 
-kotlin.experimental.coroutines "enable"
-
 ktlint {
-    version = "0.28.0"
     verbose = true
     android = true
     ignoreFailures = true
@@ -70,7 +66,8 @@ dependencies {
     implementation Libs.kotlin_stdlib
     implementation Libs.kotlin_coroutines
 
-    implementation Libs.libs_support
+    implementation Libs.support_appcompat
+    implementation Libs.support_design
 
     implementation Libs.firebase_core
     implementation Libs.firebase_config

@@ -28,23 +28,23 @@ import android.widget.HorizontalScrollView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.coroutines.experimental.Dispatchers
-import kotlinx.coroutines.experimental.GlobalScope
-import kotlinx.coroutines.experimental.android.Main
-import kotlinx.coroutines.experimental.async
-import kotlinx.coroutines.experimental.launch
-import kotlinx.coroutines.experimental.withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.materialchooser.ChooserType
 import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
-import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.AppPreferences
+import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.bind
 import net.theluckycoder.sharpide.utils.extensions.browse
 import net.theluckycoder.sharpide.utils.extensions.bundleOf
+import net.theluckycoder.sharpide.utils.extensions.checkHasPermission
 import net.theluckycoder.sharpide.utils.extensions.containsAny
 import net.theluckycoder.sharpide.utils.extensions.inflate
 import net.theluckycoder.sharpide.utils.extensions.ktReplace
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (mPreferences.loadLastFile) {
             val lastFile = File(mPreferences.lastFilePath)
 
-            if (lastFile.isFile && lastFile.canRead()) {
+            if (lastFile.isFile && lastFile.canRead() && checkHasPermission()) {
                 mCurrentFile = lastFile
                 loadFileAsync()
             }

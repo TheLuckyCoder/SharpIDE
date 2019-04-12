@@ -64,10 +64,13 @@ fun CharSequence.containsAny(searchChars: CharArray): Boolean {
 
 fun Context.inflate(@LayoutRes resource: Int): View = View.inflate(this, resource, null)
 
-fun Activity.verifyStoragePermission() {
-    val permission = ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+fun Context.checkHasPermission(): Boolean {
+    return ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) ==
+        PackageManager.PERMISSION_GRANTED
+}
 
-    if (permission != PackageManager.PERMISSION_GRANTED) {
+fun Activity.verifyStoragePermission() {
+    if (!checkHasPermission()) {
         // We don't have permission so prompt the user
         ActivityCompat.requestPermissions(this,
             arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), Const.PERMISSION_REQUEST_CODE)
