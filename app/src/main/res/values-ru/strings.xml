@@ -54,7 +54,6 @@
 
     <!-- Menu -->
     <string name="group_files">Файлы</string>
-    <string name="group_tools">Инструменты</string>
     <string name="menu_new_file">Новый файл</string>
     <string name="menu_file_info">Информация о файле</string>
     <string name="menu_save_file">Сохранить файл</string>
@@ -92,4 +91,6 @@
     <string name="pref_fullscreen_desc">Launch the application in fullscreen mode</string>
     <string name="pref_fullscreen">Fullscreen</string>
     <string name="error_file_not_saved">File is not saved</string>
+    <string name="group_other">Other</string>
+    <string name="about_privacy_policy">Privacy Policy</string>
 </resources>

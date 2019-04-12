@@ -27,12 +27,17 @@
         </menu>
     </item>
 
-    <item android:title="@string/group_tools">
+    <item android:title="@string/group_other">
         <menu>
             <item
                 android:id="@+id/menu_minify"
                 android:icon="@drawable/ic_menu_minify"
                 android:title="@string/menu_minify_tool" />
+
+            <item
+                android:id="@+id/menu_about"
+                android:icon="@drawable/ic_about_info"
+                android:title="@string/menu_about"/>
         </menu>
     </item>
 

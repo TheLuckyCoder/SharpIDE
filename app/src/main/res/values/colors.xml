@@ -10,7 +10,7 @@
     <color name="syntax_comment">#808080</color>
     <color name="syntax_string">#009b00</color>
 
-    <color name="line_highlight">#F3F3F3</color>
+    <color name="line_highlight">#F0F0F0</color>
     <color name="line_highlight_dark">#212121</color>
     <color name="gray_very_light">#e0e0e0</color>
     <color name="main_background">#eee</color>

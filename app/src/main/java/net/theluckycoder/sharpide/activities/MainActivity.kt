@@ -21,7 +21,6 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
@@ -31,7 +30,6 @@ import kotlinx.android.synthetic.main.content_main.*
 import kotlinx.android.synthetic.main.partial_symbols.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.theluckycoder.materialchooser.Chooser
@@ -83,9 +81,6 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // Set Toolbar
-        val toolbar = findViewById<Toolbar>(R.id.toolbar)
         setSupportActionBar(toolbar)
 
         // Views
@@ -211,6 +206,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     .show()
             }
             R.id.menu_minify -> startActivity<MinifyActivity>()
+            R.id.menu_about -> startActivity<AboutActivity>()
         }
 
         drawer_layout.closeDrawer(GravityCompat.START)
@@ -535,7 +531,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             toast(R.string.file_saved)
 
             if (startConsole) {
-                saveConsoleFiles(fileContent).await()
+                withContext(Dispatchers.Default) {
+                    saveConsoleFiles(fileContent)
+                }
                 startActivity<ConsoleActivity>()
             }
         } catch (e: Exception) {
@@ -545,7 +543,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     @Throws(IOException::class)
-    private fun saveConsoleFiles(fileContent: String) = GlobalScope.async {
+    private fun saveConsoleFiles(fileContent: String) {
         openFileOutput("main.js", Context.MODE_PRIVATE).use {
             it.write(fileContent.toByteArray())
         }

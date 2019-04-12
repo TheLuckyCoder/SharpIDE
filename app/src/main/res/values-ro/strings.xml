@@ -61,7 +61,6 @@
 
     <!-- Menu -->
     <string name="group_files">Fișiere</string>
-    <string name="group_tools">Unelte</string>
     <string name="menu_new_file">FIșier Nou</string>
     <string name="menu_file_info">Informații Fișier</string>
     <string name="menu_save_file">Salvează Fișierul</string>
@@ -92,4 +91,6 @@
     <string name="permission_required">Permisiunea de Stocare Externă este necesară pentru ca aplicația sa funcționeze</string>
     <string name="pref_auto_indent">Auto Indent</string>
     <string name="error_file_not_saved">File is not saved</string>
+    <string name="group_other">Altele</string>
+    <string name="about_privacy_policy">Politică de confidețialitate</string>
 </resources>
