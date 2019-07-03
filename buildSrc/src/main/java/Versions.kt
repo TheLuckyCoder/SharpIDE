@@ -4,7 +4,7 @@ object Versions {
     const val compile_sdk = 28
     const val target_sdk = 28
 
-    const val kotlin_version = "1.3.30"
+    const val kotlin_version = "1.3.40"
 }
 
 

@@ -38,6 +38,7 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.Const
+import net.theluckycoder.sharpide.utils.EditorSettings
 import net.theluckycoder.sharpide.utils.UpdateChecker
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.browse
@@ -49,6 +50,7 @@ import net.theluckycoder.sharpide.utils.extensions.longToast
 import net.theluckycoder.sharpide.utils.extensions.replace
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
 import net.theluckycoder.sharpide.utils.extensions.startActivity
+import net.theluckycoder.sharpide.utils.extensions.startActivityForResult
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
@@ -57,18 +59,20 @@ import java.io.File
 import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.Date
+import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
     private companion object {
         private const val LOAD_FILE_REQUEST = 10
         private const val CHANGE_PATH_REQUEST = 11
+        private const val SETTINGS_REQUEST_CODE = 20
     }
 
     private val preferences = AppPreferences(this)
     private val ads = Ads(this)
-    private var mSaveDialog: AlertDialog? = null
-    private lateinit var mCurrentFile: File
+    private var saveDialog: AlertDialog? = null
+    private lateinit var currentFile: File
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // Set the Theme
@@ -115,23 +119,23 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             drawer_layout.closeDrawer(GravityCompat.START)
         }
         header.findViewById<View>(R.id.header_image_settings).setOnClickListener {
-            startActivity<SettingsActivity>()
+            startActivityForResult<SettingsActivity>(SETTINGS_REQUEST_CODE)
             drawer_layout.closeDrawer(GravityCompat.START)
         }
 
         // Load preferences
-        mCurrentFile = File(preferences.newFilesName)
-        supportActionBar?.subtitle = mCurrentFile.name
+        currentFile = File(preferences.newFilesName)
+        supportActionBar?.subtitle = currentFile.name
 
         if (!Build.MANUFACTURER.equals("samsung", true)) {
             code_editor.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI
         }
-        code_editor.textSize = preferences.fontSize.toFloat()
-        if (preferences.loadLastFile) {
+        //code_editor.textSize = preferences.fontSize.toFloat()
+        if (preferences.loadLastFile && checkHasPermission()) {
             val lastFile = File(preferences.lastFilePath)
 
-            if (lastFile.isFile && lastFile.canRead() && checkHasPermission()) {
-                mCurrentFile = lastFile
+            if (lastFile.isFile && lastFile.canRead()) {
+                currentFile = lastFile
                 loadFileAsync()
             }
         }
@@ -194,7 +198,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_open -> openChooser(LOAD_FILE_REQUEST, Chooser.FILE_CHOOSER)
             R.id.menu_new -> saveFileAs(true)
             R.id.menu_file_info -> {
-                if (!mCurrentFile.exists()) {
+                if (!currentFile.exists()) {
                     longToast(R.string.error_file_not_saved)
                     return true
                 }
@@ -215,9 +219,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        data ?: return
 
         if (requestCode == LOAD_FILE_REQUEST && resultCode == RESULT_OK) {
+            data ?: return
             val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
             if (newFile.length() >= 5242880) { // if the file is bigger than 5 MB
                 longToast(R.string.file_too_big)
@@ -225,16 +229,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             if (newFile.isFile && newFile.canRead()) {
-                mCurrentFile = newFile
+                currentFile = newFile
                 loadFileAsync()
             }
         }
 
         if (requestCode == CHANGE_PATH_REQUEST && resultCode == RESULT_OK) {
-            mSaveDialog?.let {
+            data ?: return
+            saveDialog?.let {
                 it.dismiss()
                 saveFileAs(true, data.getStringExtra(Chooser.RESULT_PATH))
             }
+        }
+
+        if (requestCode == SETTINGS_REQUEST_CODE) {
+            if (preferences.useDarkTheme) {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+            } else {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+            }
+
+            code_editor.editorSettings = EditorSettings.fromPreferences(preferences)
         }
     }
 
@@ -260,11 +275,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_undo -> code_editor.undo()
             R.id.menu_redo -> code_editor.redo()
             R.id.menu_run -> {
-                if (mCurrentFile.path != preferences.newFilesName) {
+                if (currentFile.path != preferences.newFilesName) {
                     saveFileAsync(true)
 
                     val params = bundleOf(
-                        "size" to mCurrentFile.length(),
+                        "size" to currentFile.length(),
                         "lines" to code_editor.lineCount)
                     FirebaseAnalytics.getInstance(this).logEvent("file_run", params)
                 } else {
@@ -320,7 +335,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                         if (etFind.text.isEmpty()) return@setPositiveButton
 
                         val newText = code_editor.text.replace(etFind.text.toString(), etReplace.text.toString())
-                        code_editor.setText(newText)
+                        code_editor.setTextHighlighted(newText)
 
                         ads.showInterstitial()
                     }.setNegativeButton(android.R.string.cancel, null)
@@ -360,27 +375,27 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // region Private Functions
     private fun getFileSize(): String {
-        val fileSize = mCurrentFile.length().toDouble()
+        val fileSize = currentFile.length().toDouble()
 
         return when {
             fileSize < 1024 -> "${fileSize}B"
-            fileSize > 1024 && fileSize < 1024 * 1024 -> "${(Math.round(fileSize / 1024 * 100.0) / 100.0)}KB"
-            else -> "${(Math.round(fileSize / (1024 * 1204) * 100.0) / 100.0)}MB"
+            fileSize > 1024 && fileSize < 1024 * 1024 -> "${((fileSize / 1024 * 100.0).roundToInt() / 100.0)}KB"
+            else -> "${((fileSize / (1024 * 1204) * 100.0).roundToInt() / 100.0)}MB"
         }
     }
 
-    private fun getFileInfo(): String = "Name: ${mCurrentFile.nameWithoutExtension}\n" +
-        "Path: ${mCurrentFile.parent}\n" +
-        "Last Modified: ${SimpleDateFormat.getDateTimeInstance().format(Date(mCurrentFile.lastModified()))}\n" +
+    private fun getFileInfo(): String = "Name: ${currentFile.nameWithoutExtension}\n" +
+        "Path: ${currentFile.parent}\n" +
+        "Last Modified: ${SimpleDateFormat.getDateTimeInstance().format(Date(currentFile.lastModified()))}\n" +
         "Size: ${getFileSize()}\n" +
         "Lines Count: ${code_editor.lineCount}"
 
     private fun saveFile() {
-        if (mCurrentFile.path != preferences.newFilesName) {
+        if (currentFile.path != preferences.newFilesName) {
             saveFileAsync(false)
 
             val params = bundleOf(
-                "size" to mCurrentFile.length(),
+                "size" to currentFile.length(),
                 "lines" to code_editor.lineCount)
             FirebaseAnalytics.getInstance(this).logEvent("file_save", params)
         } else {
@@ -392,7 +407,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val dialogView = inflate(R.layout.dialog_new_file)
         val title = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
 
-        mSaveDialog = alertDialog(R.style.AppTheme_Dialog)
+        saveDialog = alertDialog(R.style.AppTheme_Dialog)
             .setTitleWithColor(title, R.color.textColorPrimary)
             .setView(dialogView)
             .show()
@@ -410,7 +425,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         btnCancel.setOnClickListener {
-            mSaveDialog?.dismiss()
+            saveDialog?.dismiss()
         }
 
         btnOk.setOnClickListener {
@@ -431,20 +446,20 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
 
-            mCurrentFile = file
-            preferences.lastFilePath = mCurrentFile.absolutePath
+            currentFile = file
+            preferences.lastFilePath = currentFile.absolutePath
 
             if (createNewFile) {
                 loadFileAsync()
             } else {
                 saveFileAsync(false)
-                supportActionBar?.subtitle = mCurrentFile.name
+                supportActionBar?.subtitle = currentFile.name
             }
 
-            mSaveDialog?.dismiss()
+            saveDialog?.dismiss()
         }
 
-        mSaveDialog?.show()
+        saveDialog?.show()
     }
 
     private fun updateSearchFabVisibility(searchText: String?, ignoreCase: Boolean) {
@@ -496,14 +511,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun loadFileAsync() = GlobalScope.launch(Dispatchers.Main) {
         val content = try {
-            withContext(Dispatchers.Default) { mCurrentFile.readText() }
+            withContext(Dispatchers.Default) { currentFile.readText() }
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)
             return@launch
         }
 
-        preferences.lastFilePath = mCurrentFile.absolutePath
+        preferences.lastFilePath = currentFile.absolutePath
         code_editor.scrollTo(0, 0)
 
         val chunkSize = 20000
@@ -517,18 +532,17 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             code_editor.setTextHighlighted(loaded)
         }
 
-        supportActionBar?.subtitle = mCurrentFile.name
+        supportActionBar?.subtitle = currentFile.name
 
-        if (mCurrentFile.exists()) ads.showInterstitial()
+        if (currentFile.exists()) ads.showInterstitial()
     }
 
     private fun saveFileAsync(startConsole: Boolean) = GlobalScope.launch(Dispatchers.Main) {
         try {
             val fileContent = code_editor.text.toString()
 
-            withContext(Dispatchers.Default) { mCurrentFile.writeText(fileContent) }
+            withContext(Dispatchers.Default) { currentFile.writeText(fileContent) }
             ads.showInterstitial()
-            toast(R.string.file_saved)
 
             if (startConsole) {
                 withContext(Dispatchers.Default) {
@@ -536,6 +550,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
                 startActivity<ConsoleActivity>()
             }
+            toast(R.string.file_saved)
         } catch (e: Exception) {
             e.printStackTrace()
             toast(R.string.error)

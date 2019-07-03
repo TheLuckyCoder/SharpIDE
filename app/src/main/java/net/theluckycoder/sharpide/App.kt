@@ -1,8 +1,8 @@
 package net.theluckycoder.sharpide
 
 import android.app.Application
-import androidx.appcompat.app.AppCompatDelegate
 import android.util.Log
+import androidx.appcompat.app.AppCompatDelegate
 import com.crashlytics.android.Crashlytics
 import com.crashlytics.android.core.CrashlyticsCore
 import com.google.android.gms.ads.MobileAds
@@ -36,11 +36,9 @@ class App : Application() {
         }
 
         firebaseRemoteConfig.setDefaults(remoteConfigDefaults)
-        firebaseRemoteConfig.fetch().addOnCompleteListener { task ->
-            if (task.isSuccessful) {
+        firebaseRemoteConfig.fetchAndActivate().addOnCompleteListener { task ->
+            if (task.isSuccessful)
                 Log.d("Firebase SharpIDE", "Remote config is fetched.")
-                firebaseRemoteConfig.activateFetched()
-            }
         }
     }
 }

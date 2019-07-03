@@ -48,12 +48,6 @@ android {
     }
 }
 
-ktlint {
-    verbose = true
-    android = true
-    ignoreFailures = true
-}
-
 dependencies {
     implementation Libs.kotlin_stdlib
     implementation Libs.kotlin_coroutines
