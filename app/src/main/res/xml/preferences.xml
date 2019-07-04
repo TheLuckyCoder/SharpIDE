@@ -93,14 +93,15 @@
             android:key="@string/pref_highlight_current_line_key"
             android:title="@string/pref_highlight_current_line" />
 
-        <!--<CheckBoxPreference
-            android:title="@string/pref_auto_indent"
-            android:icon="@drawable/ic_pref_auto_indent"
+        <CheckBoxPreference
             android:defaultValue="true"
-            android:key="@string/pref_auto_indent_key" />-->
+            android:icon="@drawable/ic_pref_auto_indent"
+            android:key="@string/pref_auto_indent_key"
+            android:title="@string/pref_auto_indent" />
 
         <CheckBoxPreference
             android:defaultValue="true"
+            android:icon="@drawable/ic_pref_auto_complete"
             android:key="@string/pref_code_completion_key"
             android:summary="@string/pref_code_completion_desc"
             android:title="@string/pref_code_completion" />
