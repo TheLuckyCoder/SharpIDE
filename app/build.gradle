@@ -6,7 +6,7 @@ apply plugin: 'io.fabric'
 ext {
     versionMajor = 1
     versionMinor = 7
-    versionPatch = 3
+    versionPatch = 4
     versionBuild = 0
 }
 

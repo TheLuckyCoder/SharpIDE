@@ -30,7 +30,6 @@ import net.theluckycoder.sharpide.R
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.EditorSettings
 import net.theluckycoder.sharpide.utils.extensions.dpToPx
-import net.theluckycoder.sharpide.utils.extensions.spToPx
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.text.SyntaxHighlighter
 import net.theluckycoder.sharpide.utils.text.TextChange
@@ -46,7 +45,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             "finally {\n}", "for", "function", "if () {\n}", "in", "instanceof", "new", "return", "switch () {\n}",
             "this", "throw", "try {\n}", "typeof", "var", "while", "with", "null", "true", "false")
 
-        private const val SYNTAX_HIGHLIGHTING_DELAY = 300L
+        private const val SYNTAX_HIGHLIGHTING_DELAY = 250L
+        private const val MAX_LINE_NUMBER = "000000000000"
     }
 
     private val mTextPaint = Paint()
@@ -67,7 +67,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
             if (field != value) {
                 updateSettings()
-                invalidate()
+                postInvalidate()
             }
         }
 
@@ -92,7 +92,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         setHorizontallyScrolling(true)
 
         filters = arrayOf(InputFilter { source, start, end, dest, dStart, dEnd ->
-            if (mModified &&
+            if (editorSettings.autoIndent &&
+                mModified &&
                 end - start == 1 &&
                 start < source.length &&
                 dStart < dest.length) {
@@ -107,6 +108,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
         addTextChangedListener(object : TextWatcher {
             private var count = 0
+
             override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
                 updateUndoRedoBeforeTextChanged(s, start,  count)
             }
@@ -114,10 +116,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             override fun afterTextChanged(e: Editable) {
                 if (editorSettings.closeBrackets) autoCloseBrackets(e, count)
                 if (editorSettings.closeQuotes) autoCloseQuotes(e, count)
-                mUpdateJob?.cancel()
 
                 if (!mModified) return
 
+                mUpdateJob?.cancel()
                 if (editorSettings.highlightSyntax)
                     mUpdateJob = highlightWithoutChange()
             }
@@ -149,18 +151,10 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
     // endregion Constructor
 
-    override fun enoughToFilter(): Boolean {
-        if (editorSettings.highlightSyntax)
-            return super.enoughToFilter()
-
-        return false
-    }
-
     override fun onDraw(canvas: Canvas) {
         if (editorSettings.highlightCurrentLine) {
             try {
                 getLineBounds(getLine(), mLineBounds)
-                mPaintHighlight.color = ContextCompat.getColor(context, R.color.line_highlight)
                 canvas.drawRect(mLineBounds, mPaintHighlight)
             } catch (e: Exception) {
             }
@@ -169,7 +163,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         val normalPadding = context.dpToPx(6).toInt()
 
         if (editorSettings.showLineNumbers) {
-            val leftPadding = context.dpToPx(digitCount * 10 + 14).toInt()
+            val leftPadding = mTextPaint.measureText(MAX_LINE_NUMBER, 0, digitCount).toInt() + normalPadding * 2
             setPadding(leftPadding, normalPadding, normalPadding, normalPadding)
 
             val firstLine = mLayout.getLineForVertical(scrollY)
@@ -180,7 +174,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
             }
 
             // The y position starts at the baseline of the first line
-            var positionY = baseline + (mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0))
+            var positionY = baseline + mLayout.getLineBaseline(firstLine) - mLayout.getLineBaseline(0)
             drawLineNumber(canvas, mLayout, positionY, firstLine)
 
             for (i in firstLine + 1..lastLine) {
@@ -196,7 +190,8 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     }
 
     override fun showDropDown() {
-        super.showDropDown()
+        if (editorSettings.showSuggestions)
+            super.showDropDown()
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
@@ -245,12 +240,13 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
     private fun updateSettings() {
         setDropDownBackgroundResource(R.color.main_background)
 
-        val fontSizeFloat = editorSettings.fontSize.toFloat()
-        textSize = fontSizeFloat
-        mTextPaint.textSize = context.spToPx(fontSizeFloat)
+        mPaintHighlight.color = ContextCompat.getColor(context, R.color.line_highlight)
 
-        mSyntaxHighlighter.clearSpans(text)
-        mUpdateJob = highlightWithoutChange()
+        textSize = editorSettings.fontSize.toFloat()
+        mTextPaint.textSize = context.dpToPx(editorSettings.fontSize)
+
+        mUpdateJob?.cancel()
+        highlight(text)
     }
 
     private fun autoCloseBrackets(e: Editable, count: Int) {
@@ -468,7 +464,6 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         mUpdateLastChange = null
     }
 
-
     // endregion Private Functions
 
     // region Public Functions
@@ -514,13 +509,15 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
         }
     }
 
-    fun setTextHighlighted(text: CharSequence) = GlobalScope.launch(Dispatchers.Main.immediate) {
+    fun setTextHighlighted(text: CharSequence) {
         mUpdateJob?.cancel()
 
         mModified = false
+
         val highlightedText = SpannableStringBuilder(text)
-        launch(Dispatchers.Default) { highlight(highlightedText) }
+        highlight(highlightedText)
         setText(highlightedText)
+
         mModified = true
     }
 
@@ -595,7 +592,7 @@ class CodeEditor : AppCompatMultiAutoCompleteTextView {
 
         getSelectedText()?.let {
             val clipData = ClipData.newPlainText("text", it)
-            clipboard?.primaryClip = clipData
+            clipboard?.setPrimaryClip(clipData)
         }
     }
 

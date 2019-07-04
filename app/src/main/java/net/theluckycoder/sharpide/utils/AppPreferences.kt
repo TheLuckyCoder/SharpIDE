@@ -51,5 +51,5 @@ class AppPreferences(private val context: Context) {
 
     val isFullscreen get() = preferences.getBoolean(string(R.string.pref_fullscreen_key), false)
 
-    // fun autoIndent() = preferences.getBoolean(string(R.string.pref_auto_indent_key), true)
+    val autoIndent get() = preferences.getBoolean(string(R.string.pref_auto_indent_key), true)
 }

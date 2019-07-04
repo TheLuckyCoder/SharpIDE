@@ -40,8 +40,8 @@ fun bundleOf(vararg pairs: Pair<String, Any?>) = Bundle(pairs.size).apply {
 
             // Reference arrays
             is Array<*> -> {
-                val componentType = value::class.java.componentType
-                @Suppress("UNCHECKED_CAST", "NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS") // Checked by reflection.
+                val componentType = value::class.java.componentType as Class<*>
+                @Suppress("UNCHECKED_CAST") // Checked by reflection.
                 when {
                     Parcelable::class.java.isAssignableFrom(componentType) -> {
                         putParcelableArray(key, value as Array<Parcelable>)

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -12,28 +13,29 @@
         android:padding="@dimen/activity_margin">
 
         <TextView
-            android:text="@string/obfuscation_desc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:text="@string/obfuscation_desc"
             android:textSize="18sp" />
 
-        <Button
-            android:text="@string/select_file"
+        <com.google.android.material.button.MaterialButton
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/view_margin"
             android:layout_marginBottom="@dimen/view_margin"
             android:onClick="selectFile"
-            android:textSize="16sp" />
+            android:text="@string/select_file"
+            android:textSize="16sp"
+            app:cornerRadius="18dp" />
 
-        <Button
-            style="@style/Widget.AppCompat.Button.Colored"
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_obfuscate"
-            android:text="@string/action_minify"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textSize="16sp"
-            android:enabled="false" />
+            android:enabled="false"
+            android:text="@string/action_minify"
+            android:textSize="17sp"
+            app:cornerRadius="18dp" />
     </LinearLayout>
 
     <include layout="@layout/partial_adview" />

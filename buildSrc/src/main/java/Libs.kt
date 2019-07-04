@@ -5,8 +5,8 @@ object Libs {
     const val kotlin_coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.2.2"
 
     // AndroidX Libraries
-    const val androidx_appcompat = "androidx.appcompat:appcompat:1.0.2"
-    const val androidx_material = "com.google.android.material:material:1.1.0-alpha05"
+    const val androidx_appcompat = "androidx.appcompat:appcompat:1.1.0-rc01"
+    const val androidx_material = "com.google.android.material:material:1.1.0-alpha07"
     const val androidx_preference = "androidx.preference:preference:1.1.0-rc01"
 
     // Firebase

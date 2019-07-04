@@ -8,6 +8,7 @@ data class EditorSettings(
     val highlightCurrentLine: Boolean,
     val closeBrackets: Boolean,
     val closeQuotes: Boolean,
+    val autoIndent: Boolean,
     val showSuggestions: Boolean
 ) {
 
@@ -20,6 +21,7 @@ data class EditorSettings(
             highlightCurrentLine = prefs.highlightCurrentLine,
             closeBrackets = prefs.autoCloseBrackets,
             closeQuotes = prefs.autoCloseQuotes,
+            autoIndent = prefs.autoIndent,
             showSuggestions = prefs.showSuggestions
         )
     }

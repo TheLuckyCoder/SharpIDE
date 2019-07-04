@@ -11,7 +11,7 @@
     <string name="error_empty_file">File is empty</string>
     <string name="select_file">Select File</string>
     <string name="action_minify">Minify</string>
-    <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file. Also some of the white spaces</string>
+    <string name="obfuscation_desc">All new lines, tabs and comments will be removed from the file as well as some of the spaces</string>
     <string name="directory">Directory:</string>
     <string name="no_errors">No Errors Found</string>
     <string name="error">Something went wrong</string>
