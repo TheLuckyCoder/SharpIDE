@@ -112,6 +112,6 @@ class SyntaxHighlighter(context: Context) {
         private val PATTERN_SYMBOLS = Pattern.compile("[+\\-*&^!:/|?<>=;,.]")
         private val PATTERN_NUMBERS = Pattern.compile("\\b(\\d*[.]?\\d+)\\b")
         private val PATTERN_QUOTES = Pattern.compile("\"(.*?)\"|'(.*?)'")
-        private val PATTERN_COMMENTS = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
+        val PATTERN_COMMENTS: Pattern = Pattern.compile("/\\*(?:.|[\\n\\r])*?\\*/|//.*")
     }
 }

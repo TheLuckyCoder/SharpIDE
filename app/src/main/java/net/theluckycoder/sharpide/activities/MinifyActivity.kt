@@ -17,9 +17,9 @@ import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.Const
 import net.theluckycoder.sharpide.utils.extensions.longToast
-import net.theluckycoder.sharpide.utils.extensions.replace
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
+import net.theluckycoder.sharpide.utils.text.SyntaxHighlighter
 import java.io.File
 
 class MinifyActivity : AppCompatActivity() {
@@ -30,7 +30,6 @@ class MinifyActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_minify)
-
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
@@ -104,23 +103,18 @@ class MinifyActivity : AppCompatActivity() {
                     return@withContext
                 }
 
-                // uniform line endings, make them all line feed
-                fileContent.replace("\r\n", "\n").replace("\r", "\n")
-                    // strip leading & trailing whitespace
-                    .replace(" \n", "\n").replace("\n ", "\n")
-                    // collapse consecutive line feeds into just 1
-                    .replace("/\n+/".toRegex(), "\n")
+                val result = fileContent
                     // remove comments
-                    .replace("/\\*(?:.|[\\n])*?\\*/|//.*".toRegex(), "")
+                    .replace(SyntaxHighlighter.PATTERN_COMMENTS.toRegex(), "")
+                    // remove all whitespace excluding spaces
+                    .replace("[^\\S ]+".toRegex(), "")
                     // remove other spaces
                     .replace(" + ", "+").replace(" - ", "-").replace(" = ", "=")
                     .replace("if ", "if").replace("for ", "for").replace("while ", "while")
-                    .replace("( ", "(")
-                    // remove the new lines and tabs
-                    .replace("\n", "").replace("\t", "")
+                    .replace(" (", "(").replace(") ", "")
 
-                val newFile = File(Const.MINIFY_FOLDER + file.name)
-                newFile.writeText(fileContent)
+                val newFile = File(Const.MINIFY_FOLDER, file.name)
+                newFile.writeText(result)
             }
 
             longToast(R.string.file_minify_ready)

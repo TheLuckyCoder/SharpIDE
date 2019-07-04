@@ -9,6 +9,7 @@ import android.view.View
 import androidx.annotation.LayoutRes
 import androidx.core.app.ActivityCompat
 import net.theluckycoder.sharpide.utils.Const
+import kotlin.math.max
 
 fun CharSequence.replace(oldString: String, newString: String): String {
     if (isEmpty() || oldString.isEmpty()) return this.toString()
@@ -18,11 +19,9 @@ fun CharSequence.replace(oldString: String, newString: String): String {
 
     if (end == -1) return this.toString()
 
-    var increase = newString.length - oldString.length
-    increase = if (increase < 0) 0 else increase
-    increase *= 16
+    val increase = max(0, newString.length - oldString.length)
 
-    val builder = StringBuilder(this.length + increase)
+    val builder = StringBuilder(this.length + increase * 16)
     while (end != -1) {
         builder.append(this.substring(start, end)).append(newString)
         start = end + oldString.length
