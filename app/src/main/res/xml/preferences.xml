@@ -32,7 +32,7 @@
 
         <CheckBoxPreference
             android:defaultValue="false"
-            android:icon="@drawable/ic_pref_hidden_files"
+            android:icon="@drawable/ic_pref_console_open"
             android:key="@string/pref_console_open_by_default_key"
             android:summary="@string/pref_console_open_by_default_desc"
             android:title="@string/pref_console_open_by_default" />
@@ -56,7 +56,6 @@
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/pref_category_editor">
-        <!--suppress AndroidElementNotAllowed -->
         <SeekBarPreference
             android:defaultValue="18"
             android:icon="@drawable/ic_pref_font_size"
@@ -116,6 +115,7 @@
 
         <CheckBoxPreference
             android:defaultValue="true"
+            android:icon="@drawable/ic_pref_auto_close_quotes"
             android:key="@string/pref_auto_close_quotes_key"
             android:summary="@string/pref_auto_close_quotes_desc"
             android:title="@string/pref_auto_close_quotes" />

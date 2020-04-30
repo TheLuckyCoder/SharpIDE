@@ -18,7 +18,7 @@ import android.text.style.ForegroundColorSpan
 import android.widget.Toast
 import java.io.Serializable
 
-fun Context.dip(value: Int): Float = value * resources.displayMetrics.density
+fun Context.toDp(value: Int): Int = (value * resources.displayMetrics.density).toInt()
 
 fun Context.browse(url: String, newTask: Boolean = false): Boolean {
     return try {

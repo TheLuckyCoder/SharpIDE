@@ -93,4 +93,9 @@
     <string name="error_file_not_saved">File is not saved</string>
     <string name="group_other">Other</string>
     <string name="about_privacy_policy">Privacy Policy</string>
+    <string name="menu_edit_delete_selected">Delete Selected</string>
+    <string name="menu_redo">Redo</string>
+    <string name="menu_undo">Undo</string>
+    <string name="error_save_file">File could not be saved</string>
+    <string name="error_load_file">File could not be loaded</string>
 </resources>

@@ -7,17 +7,18 @@ import android.content.pm.PackageManager
 import android.util.TypedValue
 import android.view.View
 import androidx.annotation.LayoutRes
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import net.theluckycoder.sharpide.utils.Const
 import kotlin.math.max
 
-fun CharSequence.replace(oldString: String, newString: String): String {
-    if (isEmpty() || oldString.isEmpty()) return this.toString()
+fun String.replace(oldString: String, newString: String): String {
+    if (isEmpty() || oldString.isEmpty()) return this
 
     var start = 0
     var end = this.indexOf(oldString, start)
 
-    if (end == -1) return this.toString()
+    if (end == -1) return this
 
     val increase = max(0, newString.length - oldString.length)
 
@@ -40,16 +41,15 @@ fun CharSequence.containsAny(searchChars: CharArray): Boolean {
 
     for (i in 0 until length) {
         val ch = this[i]
-        for (j in 0 until searchChars.size) {
+        for (j in searchChars.indices) {
             if (searchChars[j] == ch) {
-                if (Character.isHighSurrogate(ch)) {
+                if (ch.isHighSurrogate()) {
                     if (j == searchLast) {
                         // missing low surrogate, fine, like String.indexOf(String)
                         return true
                     }
-                    if (i < last && searchChars[j + 1] == this[i + 1]) {
+                    if (i < last && searchChars[j + 1] == this[i + 1])
                         return true
-                    }
                 } else {
                     // ch is in the Basic Multilingual Plane
                     return true
@@ -82,4 +82,12 @@ fun Context.dpToPx(dp: Int): Float =
 
 fun Context.spToPx(sp: Float): Float =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, resources.displayMetrics)
+
+fun setUseNightMode(use: Boolean) {
+    if (use) {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+    } else {
+        AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+    }
+}
 

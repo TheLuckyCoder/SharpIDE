@@ -8,136 +8,140 @@ class UndoStack {
         const val MAX_SIZE = 1048576
     }
 
-    private var mCurrentSize = 0
-    private val mStack = ArrayList<TextChange>()
+    private var currentTextSize = 0
+    private val stack = ArrayList<TextChange>()
 
     fun pop(): TextChange? {
-        val size = mStack.size
+        val size = stack.size
         if (size <= 0) {
             return null
         }
-        val item = mStack[size - 1]
-        mStack.removeAt(size - 1)
-        mCurrentSize -= item.newText.length + item.oldText.length
+        val item = stack[size - 1]
+        stack.removeAt(size - 1)
+        currentTextSize -= item.newText.length + item.oldText.length
         return item
     }
 
     fun push(item: TextChange) {
-        var i = 0
-        val delta = item.newText.length + item.oldText.length
+        val oldText = item.oldText
+        val newText = item.newText
+        val delta = newText.length + oldText.length
 
-        if (delta < MAX_SIZE) {
-            if (mStack.size > 0) {
-                val previous = mStack[mStack.size - 1]
-                var allWhitespace: Boolean
-                val toCharArray: CharArray
-                val length: Int
-                var allLettersDigits: Boolean
-                if (item.oldText.isEmpty() && item.newText.length == 1 && previous.oldText.isEmpty()) {
-                    if (previous.start + previous.newText.length != item.start) {
-                        mStack.add(item)
-                    } else if (Character.isWhitespace(item.newText[0])) {
-                        allWhitespace = true
-                        toCharArray = previous.newText.toCharArray()
-                        length = toCharArray.size
-                        while (i < length) {
-                            if (!Character.isWhitespace(toCharArray[i])) {
-                                allWhitespace = false
-                            }
-                            i++
-                        }
-                        if (allWhitespace) {
-                            previous.newText += item.newText
-                        } else {
-                            mStack.add(item)
-                        }
-                    } else if (Character.isLetterOrDigit(item.newText[0])) {
-                        allLettersDigits = true
-                        toCharArray = previous.newText.toCharArray()
-                        length = toCharArray.size
-                        while (i < length) {
-                            if (!Character.isLetterOrDigit(toCharArray[i])) {
-                                allLettersDigits = false
-                            }
-                            i++
-                        }
-                        if (allLettersDigits) {
-                            previous.newText += item.newText
-                        } else {
-                            mStack.add(item)
-                        }
-                    } else {
-                        mStack.add(item)
-                    }
-                } else if (item.oldText.length != 1 || item.newText.isNotEmpty() || previous.newText.isNotEmpty()) {
-                    mStack.add(item)
-                } else if (previous.start - 1 != item.start) {
-                    mStack.add(item)
-                } else if (Character.isWhitespace(item.oldText[0])) {
-                    allWhitespace = true
-                    toCharArray = previous.oldText.toCharArray()
-                    length = toCharArray.size
-                    while (i < length) {
-                        if (!Character.isWhitespace(toCharArray[i])) {
-                            allWhitespace = false
-                        }
-                        i++
-                    }
-                    if (allWhitespace) {
-                        previous.oldText = item.oldText + previous.oldText
-                        previous.start -= item.oldText.length
-                    } else {
-                        mStack.add(item)
-                    }
-                } else if (Character.isLetterOrDigit(item.oldText[0])) {
-                    allLettersDigits = true
-                    toCharArray = previous.oldText.toCharArray()
-                    length = toCharArray.size
-                    while (i < length) {
-                        if (!Character.isLetterOrDigit(toCharArray[i])) {
-                            allLettersDigits = false
-                        }
-                        i++
-                    }
-                    if (allLettersDigits) {
-                        previous.oldText = item.oldText + previous.oldText
-                        previous.start -= item.oldText.length
-                    } else {
-                        mStack.add(item)
-                    }
-                } else {
-                    mStack.add(item)
-                }
-            } else {
-                mStack.add(item)
-            }
-            mCurrentSize += delta
-            while (mCurrentSize > MAX_SIZE) {
-                if (!removeLast()) {
-                    return
-                }
-            }
+        if (delta >= MAX_SIZE) {
+            clear()
             return
         }
-        removeAll()
-    }
 
-    fun removeAll() {
-        mStack.removeAll(mStack)
-        mCurrentSize = 0
+        if (stack.size > 0) {
+            val previous = stack[stack.size - 1]
+            val toCharArray = previous.newText.toCharArray()
+            val length = toCharArray.size
+            var i = 0
+
+            if (oldText.isEmpty() && newText.length == 1 && previous.oldText.isEmpty()) {
+                when {
+                    previous.start + previous.newText.length != item.start -> stack.add(item)
+                    newText[0].isWhitespace() -> {
+                        var allWhitespace = true
+
+                        while (i < length) {
+                            if (!toCharArray[i].isWhitespace()) {
+                                allWhitespace = false
+                                break
+                            }
+                            i++
+                        }
+
+                        if (allWhitespace) {
+                            previous.newText += newText
+                        } else {
+                            stack.add(item)
+                        }
+                    }
+                    newText[0].isLetterOrDigit() -> {
+                        var allLettersDigits = true
+
+                        while (i < length) {
+                            if (!toCharArray[i].isLetterOrDigit()) {
+                                allLettersDigits = false
+                                break
+                            }
+                            i++
+                        }
+
+                        if (allLettersDigits) {
+                            previous.newText += newText
+                        } else {
+                            stack.add(item)
+                        }
+                    }
+                    else -> {
+                        stack.add(item)
+                    }
+                }
+            } else if (oldText.length != 1 || newText.isNotEmpty() || previous.newText.isNotEmpty()) {
+                stack.add(item)
+            } else if (previous.start - 1 != item.start) {
+                stack.add(item)
+            } else if (oldText[0].isWhitespace()) {
+                var allWhitespace = true
+
+                while (i < length) {
+                    if (!toCharArray[i].isWhitespace()) {
+                        allWhitespace = false
+                        break
+                    }
+                    i++
+                }
+
+                if (allWhitespace) {
+                    previous.oldText = oldText + previous.oldText
+                    previous.start -= oldText.length
+                } else {
+                    stack.add(item)
+                }
+            } else if (oldText[0].isLetterOrDigit()) {
+                var allLettersDigits = true
+
+                while (i < length) {
+                    if (!toCharArray[i].isLetterOrDigit()) {
+                        allLettersDigits = false
+                        break
+                    }
+                    i++
+                }
+
+                if (allLettersDigits) {
+                    previous.oldText = oldText + previous.oldText
+                    previous.start -= oldText.length
+                } else {
+                    stack.add(item)
+                }
+            } else {
+                stack.add(item)
+            }
+        } else
+            stack.add(item)
+
+        currentTextSize += delta
+        while (currentTextSize > MAX_SIZE) {
+            if (!removeLast())
+                return
+        }
     }
 
     private fun removeLast(): Boolean {
-        if (mStack.size <= 0) {
+        if (stack.size <= 0)
             return false
-        }
-        val (newText, oldText) = mStack[0]
-        mStack.removeAt(0)
-        mCurrentSize -= newText.length + oldText.length
+
+        val (newText, oldText) = stack[0]
+        stack.removeAt(0)
+        currentTextSize -= newText.length + oldText.length
         return true
     }
 
     fun clear() {
-        mStack.clear()
+        stack.clear()
+        currentTextSize = 0
     }
 }

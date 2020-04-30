@@ -3,11 +3,9 @@ package net.theluckycoder.sharpide
 import android.app.Application
 import android.util.Log
 import androidx.appcompat.app.AppCompatDelegate
-import com.crashlytics.android.Crashlytics
-import com.crashlytics.android.core.CrashlyticsCore
 import com.google.android.gms.ads.MobileAds
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
-import io.fabric.sdk.android.Fabric
+import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.UpdateChecker
 
 @Suppress("unused")
@@ -18,14 +16,15 @@ class App : Application() {
 
         AppCompatDelegate.setCompatVectorFromResourcesEnabled(true)
 
-        // Set up Crashlytics, disabled for debug builds
-        val crashlyticsKit = Crashlytics.Builder()
-            .core(CrashlyticsCore.Builder().disabled(BuildConfig.DEBUG).build())
-            .build()
+        if (AppPreferences(this).useDarkTheme) {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
+        } else {
+            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
+        }
 
-        MobileAds.initialize(this, "ca-app-pub-1279472163660969~2916940339")
+        MobileAds.initialize(this) {
+        }
 
-        Fabric.with(this, crashlyticsKit)
 
         // Setup Update Checker
         val firebaseRemoteConfig = FirebaseRemoteConfig.getInstance()
@@ -35,7 +34,7 @@ class App : Application() {
             put(UpdateChecker.KEY_CURRENT_VERSION, BuildConfig.VERSION_CODE)
         }
 
-        firebaseRemoteConfig.setDefaults(remoteConfigDefaults)
+        firebaseRemoteConfig.setDefaultsAsync(remoteConfigDefaults)
         firebaseRemoteConfig.fetchAndActivate().addOnCompleteListener { task ->
             if (task.isSuccessful)
                 Log.d("Firebase SharpIDE", "Remote config is fetched.")

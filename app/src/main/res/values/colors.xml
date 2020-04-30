@@ -13,5 +13,5 @@
     <color name="line_highlight">#F0F0F0</color>
     <color name="gray_very_light">#e0e0e0</color>
     <color name="main_background">#eee</color>
-    <color name="textColorPrimary">#000</color>
+    <color name="textColorPrimary">?android:textColorPrimary</color>
 </resources>

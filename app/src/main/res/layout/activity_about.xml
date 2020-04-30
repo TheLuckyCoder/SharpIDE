@@ -14,7 +14,7 @@
         app:popupTheme="@style/AppTheme.PopupOverlay" />
 
     <ScrollView
-        android:id="@+id/scroll_about"
+        android:id="@+id/sv_about"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize">
@@ -24,9 +24,13 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <include layout="@layout/card_about_1" />
+            <include
+                android:id="@+id/card_about_1"
+                layout="@layout/card_about_1" />
 
-            <include layout="@layout/card_about_2" />
+            <include
+                android:id="@+id/card_about_2"
+                layout="@layout/card_about_2" />
 
         </LinearLayout>
     </ScrollView>

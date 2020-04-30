@@ -34,12 +34,6 @@ class SyntaxHighlighter(context: Context) {
 
         for (i in foregroundSpans.size - 1 downTo 0)
             editable.removeSpan(foregroundSpans[i])
-
-        // remove background color spans
-        val backgroundSpans = editable.getSpans(0, editable.length, BackgroundColorSpan::class.java)
-
-        for (i in backgroundSpans.size - 1 downTo 0)
-            editable.removeSpan(backgroundSpans[i])
     }
 
     fun highlight(editable: Editable) {

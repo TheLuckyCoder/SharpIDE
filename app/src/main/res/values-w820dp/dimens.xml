@@ -1,9 +1,11 @@
 <resources>
-    <dimen name="activity_margin">64dp</dimen>
+    <dimen name="activity_horizontal_margin">128dp</dimen>
     <dimen name="view_margin">32dp</dimen>
     <dimen name="fab_margin">30dp</dimen>
     <dimen name="console_margin">16dp</dimen>
 
     <dimen name="card_margin_horizontal">128dp</dimen>
     <dimen name="card_margin_vertical">10dp</dimen>
+
+    <dimen name="about_compound_drawable_padding">64dp</dimen>
 </resources>

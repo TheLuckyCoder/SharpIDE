@@ -56,7 +56,7 @@ fun bundleOf(vararg pairs: Pair<String, Any?>) = Bundle(pairs.size).apply {
                         putSerializable(key, value)
                     }
                     else -> {
-                        val valueType = componentType!!.canonicalName
+                        val valueType = componentType.canonicalName
                         throw IllegalArgumentException(
                             "Illegal value array type $valueType for key \"$key\"")
                     }

@@ -12,4 +12,7 @@
     <string name="about_title">アプリが気に入りいただけたなら、気軽に開発者に連絡ください。</string>    <string name="about_rate">Google Play で評価</string>    <string name="about_feedback">メールにフィードバック</string>    <string name="about_website">開発者のウェブサイト</string>    <string name="about_open_source">オープン ソース ライセンス</string>    <string name="permission_required">このアプリが動作するには、外部ストレージ権限が必要です</string>    <string name="error_file_not_saved">ファイルは保存されていません</string>    <string name="menu_undo">元に戻す</string>    <string name="menu_redo">やり直す</string>
     <string name="group_other">Other</string>
     <string name="about_privacy_policy">Privacy Policy</string>
+    <string name="menu_edit_delete_selected">Delete Selected</string>
+    <string name="error_save_file">File could not be saved</string>
+    <string name="error_load_file">File could not be loaded</string>
 </resources>

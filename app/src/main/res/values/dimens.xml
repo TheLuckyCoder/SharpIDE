@@ -1,9 +1,12 @@
 <resources>
-    <dimen name="activity_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="view_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
     <dimen name="console_margin">8dp</dimen>
 
     <dimen name="card_margin_horizontal">8dp</dimen>
     <dimen name="card_margin_vertical">8dp</dimen>
+
+    <dimen name="about_compound_drawable_padding">32dp</dimen>
 </resources>

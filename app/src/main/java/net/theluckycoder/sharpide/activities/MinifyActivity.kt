@@ -6,13 +6,13 @@ import android.view.MenuItem
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import kotlinx.android.synthetic.main.activity_minify.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.databinding.ActivityMinifyBinding
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.Const
@@ -24,12 +24,14 @@ import java.io.File
 
 class MinifyActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityMinifyBinding
     private val preferences = AppPreferences(this)
     private var filePath = ""
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_minify)
+        binding = ActivityMinifyBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
         // Set Fullscreen
@@ -47,11 +49,11 @@ class MinifyActivity : AppCompatActivity() {
         // Init AdMob
         Ads(this).loadBanner()
 
-        btn_obfuscate.setOnClickListener { obfuscateFile() }
+        binding.btnObfuscate.setOnClickListener { obfuscateFile() }
 
         savedInstanceState?.let {
             filePath = it.getString("filePath", "")
-            if (filePath.isNotEmpty()) btn_obfuscate.isEnabled = true
+            if (filePath.isNotEmpty()) binding.btnObfuscate.isEnabled = true
         }
     }
 
@@ -72,17 +74,16 @@ class MinifyActivity : AppCompatActivity() {
         data ?: return
 
         if (requestCode == 10 && resultCode == RESULT_OK) {
-            filePath = data.getStringExtra(Chooser.RESULT_PATH)
-            btn_obfuscate.isEnabled = true
+            filePath = data.getStringExtra(Chooser.RESULT_PATH)!!
+            binding.btnObfuscate.isEnabled = true
         }
     }
 
     fun selectFile(@Suppress("UNUSED_PARAMETER") view: View) {
-        Chooser(this, 10,
-            fileExtension = "js",
-            showHiddenFiles = preferences.showHiddenFiles,
-            startPath = Const.MAIN_FOLDER,
-            useNightTheme = preferences.useDarkTheme)
+        Chooser(this, 10)
+            .setFileExtensions("js")
+            .setShowHiddenFiles(preferences.showHiddenFiles)
+            .setStartPath(Const.MAIN_FOLDER)
             .start()
     }
 

@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginTop="@dimen/card_margin_vertical"
-    android:layout_marginBottom="@dimen/card_margin_vertical"
     android:layout_marginLeft="@dimen/card_margin_horizontal"
+    android:layout_marginTop="@dimen/card_margin_vertical"
     android:layout_marginRight="@dimen/card_margin_horizontal"
-    card_view:cardCornerRadius="1dp"
-    card_view:cardElevation="1dp"
-    tools:showIn="@layout/activity_about"
-    tools:context=".activities.AboutActivity">
+    android:layout_marginBottom="@dimen/card_margin_vertical"
+    app:cardCornerRadius="1dp"
+    app:cardElevation="1dp"
+    tools:context=".activities.AboutActivity"
+    tools:showIn="@layout/activity_about">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -20,27 +20,28 @@
         android:clickable="true"
         android:focusable="true">
 
-        <ImageView
-            android:id="@+id/img_card_about_1"
-            android:layout_width="64dp"
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/iv_app_icon"
+            android:layout_width="72dp"
             android:layout_height="128dp"
             android:background="@color/gray_very_light"
-            android:contentDescription="@null"
+            android:contentDescription="@string/app_name"
             android:scaleType="center"
-            android:src="@mipmap/ic_launcher" />
+            app:srcCompat="@mipmap/ic_launcher" />
 
-        <RelativeLayout
-            android:layout_width="wrap_content"
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginLeft="@dimen/view_margin"
             android:layout_marginRight="@dimen/view_margin"
-            android:layout_toRightOf="@id/img_card_about_1"
-            android:layout_toEndOf="@id/img_card_about_1">
+            android:layout_toEndOf="@id/iv_app_icon"
+            android:layout_toRightOf="@id/iv_app_icon"
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/tv_card_about_1_1"
-                android:layout_width="wrap_content"
+                android:id="@+id/tv_about_title"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="@string/app_name"
                 android:textColor="@color/colorAccent"
@@ -49,15 +50,14 @@
 
             <TextView
                 android:id="@+id/tv_about_version"
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@id/tv_card_about_1_1"
                 android:layout_marginTop="@dimen/view_margin"
                 android:lineSpacingExtra="@dimen/view_margin"
-                android:text="@string/version"
-                android:textStyle="italic" />
+                android:textStyle="italic"
+                tools:text="@string/version" />
 
-        </RelativeLayout>
+        </LinearLayout>
 
     </RelativeLayout>
 

@@ -1,12 +1,11 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
-apply plugin: 'io.fabric'
+apply plugin: 'com.google.firebase.crashlytics'
 
 ext {
     versionMajor = 1
-    versionMinor = 7
-    versionPatch = 4
+    versionMinor = 8
+    versionPatch = 0
     versionBuild = 0
 }
 
@@ -26,16 +25,23 @@ android {
         resValue "string", "banner_ad_unit_id", "ca-app-pub-1279472163660969/8935487535"
     }
 
+    viewBinding {
+        enabled = true
+    }
+
     buildTypes {
         debug {
-            resValue "bool", "debug_build", "true"
+            manifestPlaceholders = [firebaseDisabled: true, crashlyticsEnabled: false]
+
             ext.enableCrashlytics = false
             ext.alwaysUpdateBuildId = false
             aaptOptions.cruncherEnabled = false
             versionNameSuffix "-debug"
+            multiDexEnabled true
         }
         release {
-            resValue "bool", "debug_build", "false"
+            manifestPlaceholders = [firebaseDisabled: false, crashlyticsEnabled: true]
+
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             minifyEnabled true
             shrinkResources true
@@ -45,6 +51,10 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
     }
 }
 
@@ -56,17 +66,16 @@ dependencies {
     implementation Libs.androidx_material
     implementation Libs.androidx_preference
 
+    implementation Libs.ktx_core
+
     implementation Libs.firebase_core
     implementation Libs.firebase_config
     implementation Libs.firebase_ads
+    implementation Libs.firebase_crashlytics
 
     implementation Libs.material_chooser
     implementation Libs.license_dialog
     implementation Libs.keyboard_visibility
-    //implementation Libs.support_preference_fix
-    implementation(Libs.fabric_crashlytics) {
-        transitive = true
-    }
 }
 
 apply plugin: 'com.google.gms.google-services'

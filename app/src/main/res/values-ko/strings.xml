@@ -12,4 +12,7 @@
     <string name="about_title">앱이 마음에 드신다면 개발자에게 언제든지 연락하세요.</string>    <string name="about_rate">Google Play에서 평가</string>    <string name="about_feedback">이메일로 피드백</string>    <string name="about_website">개발자의 웹사이트</string>    <string name="about_open_source">오픈 소스 라이선스</string>    <string name="permission_required">이 앱이 작동하려면 외부 저장소 권한이 필요합니다</string>    <string name="error_file_not_saved">파일이 저장되지 않았습니다</string>    <string name="menu_undo">실행 취소</string>    <string name="menu_redo">다시 실행</string>
     <string name="group_other">Other</string>
     <string name="about_privacy_policy">Privacy Policy</string>
+    <string name="menu_edit_delete_selected">Delete Selected</string>
+    <string name="error_save_file">File could not be saved</string>
+    <string name="error_load_file">File could not be loaded</string>
 </resources>

@@ -18,21 +18,24 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.ViewCompat
 import androidx.transition.TransitionManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
-import kotlinx.android.synthetic.main.activity_console.*
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.databinding.ActivityConsoleBinding
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.extensions.alertDialog
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
 
 class ConsoleActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityConsoleBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_console)
+        binding = ActivityConsoleBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        layout_window.visibility = View.GONE
+        binding.layoutWindow.visibility = View.GONE
 
         val fab = findViewById<FloatingActionButton>(R.id.fab_expand)
         fab.setOnClickListener {
@@ -52,7 +55,7 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         // WebView Setup
-        with(web_view) {
+        with(binding.webView) {
             loadUrl("about:blank")
             settings.javaScriptEnabled = true
             setBackgroundColor(ContextCompat.getColor(context, R.color.main_background))
@@ -62,20 +65,20 @@ class ConsoleActivity : AppCompatActivity() {
         }
 
         savedInstanceState?.let {
-            web_view.restoreState(it.getBundle("web_viewState"))
+            binding.webView.restoreState(it.getBundle("web_viewState"))
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         val state = Bundle()
-        web_view.saveState(state)
+        binding.webView.saveState(state)
         outState.putBundle("web_viewState", state)
 
         super.onSaveInstanceState(outState)
     }
 
     override fun onDestroy() {
-        with(web_view) {
+        with(binding.webView) {
             clearCache(true)
             clearHistory()
             clearMatches()
@@ -94,11 +97,12 @@ class ConsoleActivity : AppCompatActivity() {
     private fun expand(view: FloatingActionButton) {
         TransitionManager.beginDelayedTransition(findViewById(R.id.container))
 
-        val rotation = if (layout_window.visibility == View.VISIBLE) {
-            layout_window.visibility = View.GONE
+        val layoutWindow = binding.layoutWindow
+        val rotation = if (layoutWindow.visibility == View.VISIBLE) {
+            layoutWindow.visibility = View.GONE
             0f
         } else {
-            layout_window.visibility = View.VISIBLE
+            layoutWindow.visibility = View.VISIBLE
             180f
         }
 
@@ -181,14 +185,14 @@ class ConsoleActivity : AppCompatActivity() {
 
         @SuppressLint("SetTextI18n")
         override fun onConsoleMessage(consoleMessage: ConsoleMessage): Boolean {
-            var text = tv_console_message.text.toString()
+            var text = binding.tvConsoleMessage.text.toString()
             if (text == getString(R.string.no_errors)) {
                 text = ""
             } else {
                 text += "\n"
             }
 
-            tv_console_message.text = text + "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
+            binding.tvConsoleMessage.text = text + "Line " + consoleMessage.lineNumber() + ": " + consoleMessage.message()
             return true
         }
     }

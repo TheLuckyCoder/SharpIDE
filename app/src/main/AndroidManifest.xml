@@ -10,7 +10,6 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
         android:name=".App"
@@ -18,12 +17,13 @@
         android:fullBackupContent="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
+        android:requestLegacyExternalStorage="true"
         android:supportsRtl="true"
         android:theme="@style/AppTheme"
         tools:ignore="GoogleAppIndexingWarning">
+
         <activity
             android:name=".activities.MainActivity"
-            android:configChanges="orientation|screenSize"
             android:theme="@style/AppTheme.Launcher"
             android:windowSoftInputMode="stateHidden|adjustResize">
             <intent-filter>
@@ -32,33 +32,36 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <meta-data
-                android:name="android.app.shortcuts"
-                android:resource="@xml/shortcuts" />
         </activity>
+
         <activity
             android:name=".activities.MinifyActivity"
             android:label="@string/menu_minify_tool" />
+
         <activity
             android:name=".activities.SettingsActivity"
             android:label="@string/title_settings" />
+
         <activity
             android:name=".activities.ConsoleActivity"
             android:label="@string/title_console" />
+
         <activity
             android:name=".activities.AboutActivity"
             android:label="@string/menu_about"
             android:theme="@style/AppTheme.About" />
 
         <meta-data
-            android:name="io.fabric.ApiKey"
-            android:value="ea25ea11669561e79d0807ee3d412d48855da448" />
-        <meta-data
-            android:name="firebase_analytics_collection_deactivated"
-            android:value="@bool/debug_build" />
-        <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-1279472163660969~2916940339" />
+
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="${firebaseDisabled}" />
+
+        <meta-data
+            android:name="firebase_crashlytics_collection_enabled"
+            android:value="${crashlyticsEnabled}" />
 
         <!-- Fix crash caused by Firebase Ads using Apache library -->
         <uses-library

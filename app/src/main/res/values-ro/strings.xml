@@ -20,7 +20,7 @@
     <string name="text_to_replace">Text de înlocuit</string>
     <string name="text_to_replace_with">Text de înlocuit cu</string>
     <string name="text_to_find">Text de găsit</string>
-    <string name="ignore_case">Ignore Case</string>
+    <string name="ignore_case">Ignoră capitalizarea</string>
     <string name="file_too_big">Fișierul este prea mare</string>
     <string name="file_minify_ready">Minified file saved in SharpIDE/Minify folder</string>
     <string name="action_apply">Aplică</string>
@@ -69,7 +69,7 @@
     <string name="menu_find">Găsește</string>
     <string name="menu_run">Rulează</string>
     <string name="menu_minify_tool">Minify Tool</string>
-    <string name="menu_go_to_line">Du-te La Linie</string>
+    <string name="menu_go_to_line">Dute La Linia</string>
     <string name="menu_about">Despre</string>
     <string name="menu_edit">Editare</string>
     <string name="menu_edit_duplicate_line">Duplichează Linia</string>
@@ -88,9 +88,14 @@
     <string name="about_feedback">Feedback prin Email</string>
     <string name="about_website">Website-ul meu</string>
     <string name="about_open_source">Licențe Open Source</string>
-    <string name="permission_required">Permisiunea de Stocare Externă este necesară pentru ca aplicația sa funcționeze</string>
+    <string name="permission_required">Permisiunea de Stocare Externă este necesară pentru ca aplicația să funcționeze</string>
     <string name="pref_auto_indent">Auto Indent</string>
-    <string name="error_file_not_saved">File is not saved</string>
+    <string name="error_file_not_saved">Fișierul nu este salvat</string>
     <string name="group_other">Altele</string>
     <string name="about_privacy_policy">Politică de confidețialitate</string>
+    <string name="menu_edit_delete_selected">Delete Selected</string>
+    <string name="menu_redo">Redo</string>
+    <string name="menu_undo">Undo</string>
+    <string name="error_save_file">Fișierul nu a putut fi salvat</string>
+    <string name="error_load_file">Fișierul nu a putut fi încărcat</string>
 </resources>

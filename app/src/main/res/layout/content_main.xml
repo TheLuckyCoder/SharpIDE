@@ -9,25 +9,27 @@
     tools:context=".activities.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <net.theluckycoder.sharpide.view.CodeEditor
-        android:id="@+id/code_editor"
+    <net.theluckycoder.sharpide.view.Editor
+        android:id="@+id/editor"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_marginBottom="46dp"
-        android:background="@android:color/transparent"
-        android:completionThreshold="1"
-        android:gravity="top"
-        android:inputType="textVisiblePassword|textMultiLine" />
+        android:layout_height="match_parent" />
 
     <ViewStub
         android:id="@+id/stub_fabs"
-        android:layout="@layout/partial_search_fabs"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
+        android:layout="@layout/partial_search_fabs"
         app:layout_dodgeInsetEdges="bottom" />
 
-    <include layout="@layout/partial_symbols" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rv_symbols"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:background="@color/main_background"
+        android:fillViewport="true"
+        android:visibility="gone" />
 
 </FrameLayout>

@@ -1,9 +1,7 @@
 package net.theluckycoder.sharpide.activities
 
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
 import android.view.Menu
@@ -11,30 +9,28 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewStub
 import android.view.WindowManager
-import android.view.inputmethod.EditorInfo
-import android.widget.Button
-import android.widget.CheckBox
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.GravityCompat
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.analytics.FirebaseAnalytics
-import kotlinx.android.synthetic.main.activity_main.*
-import kotlinx.android.synthetic.main.content_main.*
-import kotlinx.android.synthetic.main.partial_symbols.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import net.theluckycoder.materialchooser.Chooser
 import net.theluckycoder.materialchooser.ChooserType
+import net.theluckycoder.sharpide.EditorFile
 import net.theluckycoder.sharpide.R
+import net.theluckycoder.sharpide.adapter.SymbolsAdapter
+import net.theluckycoder.sharpide.databinding.ActivityMainBinding
+import net.theluckycoder.sharpide.databinding.DialogFindBinding
+import net.theluckycoder.sharpide.databinding.DialogGotoLineBinding
+import net.theluckycoder.sharpide.databinding.DialogNewFileBinding
+import net.theluckycoder.sharpide.databinding.DialogReplaceBinding
 import net.theluckycoder.sharpide.utils.Ads
 import net.theluckycoder.sharpide.utils.AppPreferences
 import net.theluckycoder.sharpide.utils.Const
@@ -45,111 +41,110 @@ import net.theluckycoder.sharpide.utils.extensions.browse
 import net.theluckycoder.sharpide.utils.extensions.bundleOf
 import net.theluckycoder.sharpide.utils.extensions.checkHasPermission
 import net.theluckycoder.sharpide.utils.extensions.containsAny
-import net.theluckycoder.sharpide.utils.extensions.inflate
+import net.theluckycoder.sharpide.utils.extensions.lazyFast
 import net.theluckycoder.sharpide.utils.extensions.longToast
-import net.theluckycoder.sharpide.utils.extensions.replace
 import net.theluckycoder.sharpide.utils.extensions.setTitleWithColor
+import net.theluckycoder.sharpide.utils.extensions.setUseNightMode
 import net.theluckycoder.sharpide.utils.extensions.startActivity
 import net.theluckycoder.sharpide.utils.extensions.startActivityForResult
 import net.theluckycoder.sharpide.utils.extensions.toast
 import net.theluckycoder.sharpide.utils.extensions.verifyStoragePermission
 import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEvent
+import net.yslibrary.android.keyboardvisibilityevent.KeyboardVisibilityEventListener
 import net.yslibrary.android.keyboardvisibilityevent.util.UIUtil
 import java.io.File
 import java.io.IOException
-import java.text.SimpleDateFormat
-import java.util.Date
-import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    private companion object {
-        private const val LOAD_FILE_REQUEST = 10
-        private const val CHANGE_PATH_REQUEST = 11
-        private const val SETTINGS_REQUEST_CODE = 20
-    }
+    private lateinit var binding: ActivityMainBinding
+    private val editor by lazyFast { binding.content.editor }
 
     private val preferences = AppPreferences(this)
     private val ads = Ads(this)
     private var saveDialog: AlertDialog? = null
-    private lateinit var currentFile: File
+    private lateinit var editorFile: EditorFile
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        binding = ActivityMainBinding.inflate(layoutInflater)
         // Set the Theme
         setTheme(R.style.AppTheme_NoActionBar)
-        if (preferences.useDarkTheme) {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-        } else {
-            AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-        }
+        setUseNightMode(preferences.useDarkTheme)
 
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        setSupportActionBar(toolbar)
+        setContentView(binding.root)
+        setSupportActionBar(binding.toolbar)
 
-        // Views
-        val symbolLayout = findViewById<LinearLayout>(R.id.layout_symbols)
-        for (i in 0 until symbolLayout.childCount) {
-            symbolLayout.getChildAt(i).setOnClickListener { view ->
-                val selection = code_editor.selectionStart
-                if (selection != -1) {
-                    code_editor.text.insert(selection, (view as TextView).text.toString())
-                }
-            }
-        }
-
+        /// Views
         // Set up Drawer Layout
-        val toggle = object : ActionBarDrawerToggle(this, drawer_layout, toolbar, 0, 0) {
+        val toggle = object : ActionBarDrawerToggle(this, binding.drawerLayout, binding.toolbar, 0, 0) {
             override fun onDrawerSlide(drawerView: View, slideOffset: Float) {
                 super.onDrawerSlide(drawerView, slideOffset)
 
                 UIUtil.hideKeyboard(this@MainActivity)
-                code_editor.clearFocus()
+                editor.editText.clearFocus()
             }
         }
-        drawer_layout.addDrawerListener(toggle)
+        binding.drawerLayout.addDrawerListener(toggle)
         toggle.syncState()
 
+        // Symbols
+        val symbolsAdapter = SymbolsAdapter {
+            val selection = editor.editText.selectionStart
+
+            if (selection != -1)
+                editor.editText.text.insert(selection, it)
+        }
+        val symbolsLinearManager = LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+        binding.content.rvSymbols.apply {
+            adapter = symbolsAdapter
+            layoutManager = symbolsLinearManager
+            setHasFixedSize(true)
+        }
+
         // Setup Navigation View
-        val navigationView = findViewById<NavigationView>(R.id.nav_view)
-        navigationView.setNavigationItemSelectedListener(this)
-        val header = navigationView.getHeaderView(0)
+        binding.navView.setNavigationItemSelectedListener(this)
+        val header = binding.navView.getHeaderView(0)
         header.findViewById<View>(R.id.header_layout_main).setOnClickListener {
             startActivity<AboutActivity>()
-            drawer_layout.closeDrawer(GravityCompat.START)
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
         }
         header.findViewById<View>(R.id.header_image_settings).setOnClickListener {
             startActivityForResult<SettingsActivity>(SETTINGS_REQUEST_CODE)
-            drawer_layout.closeDrawer(GravityCompat.START)
-        }
-
-        // Load preferences
-        currentFile = File(preferences.newFilesName)
-        supportActionBar?.subtitle = currentFile.name
-
-        if (!Build.MANUFACTURER.equals("samsung", true)) {
-            code_editor.imeOptions = EditorInfo.IME_FLAG_NO_EXTRACT_UI
-        }
-        //code_editor.textSize = preferences.fontSize.toFloat()
-        if (preferences.loadLastFile && checkHasPermission()) {
-            val lastFile = File(preferences.lastFilePath)
-
-            if (lastFile.isFile && lastFile.canRead()) {
-                currentFile = lastFile
-                loadFileAsync()
-            }
+            binding.drawerLayout.closeDrawer(GravityCompat.START)
         }
 
         // Check for permission
         verifyStoragePermission()
         File(Const.MAIN_FOLDER).mkdirs()
 
-        // Setup Keyboard Checker
-        KeyboardVisibilityEvent.setEventListener(this) { isOpen ->
-            if (preferences.showSymbolsBar) {
-                sv_symbols.visibility = if (isOpen && code_editor.isFocused) View.VISIBLE else View.GONE
+        val loadedFile = savedInstanceState?.getParcelable<EditorFile>(STATE_EDITOR_FILE)
+
+        // Load preferences
+        if (loadedFile == null) {
+            editorFile = EditorFile(File(preferences.newFilesName))
+
+            if (preferences.loadLastFile && checkHasPermission()) {
+                val lastFile = File(preferences.lastFilePath)
+
+                if (lastFile.isFile && lastFile.canRead()) {
+                    editorFile = EditorFile(lastFile)
+                    loadCurrentFile()
+                }
             }
+        } else {
+            editorFile = loadedFile
         }
+        supportActionBar?.subtitle = editorFile.name
+        editor.setEditorSettings(EditorSettings.fromPreferences(preferences))
+
+        // Setup Keyboard Checker
+        KeyboardVisibilityEvent.setEventListener(this, this, object : KeyboardVisibilityEventListener {
+            override fun onVisibilityChanged(isOpen: Boolean) {
+                if (preferences.showSymbolsBar)
+                    binding.content.rvSymbols.isVisible = isOpen && editor.editText.isFocused
+            }
+        })
 
         // Setup Update Checker
         UpdateChecker {
@@ -166,6 +161,11 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         ads.loadInterstitial()
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        outState.putParcelable(STATE_EDITOR_FILE, editorFile)
+        super.onSaveInstanceState(outState)
+    }
+
     override fun onResume() {
         super.onResume()
         if (preferences.isFullscreen) {
@@ -177,18 +177,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onBackPressed() {
         when {
-            drawer_layout.isDrawerOpen(GravityCompat.START) -> drawer_layout.closeDrawer(GravityCompat.START)
+            binding.drawerLayout.isDrawerOpen(GravityCompat.START) ->
+                binding.drawerLayout.closeDrawer(GravityCompat.START)
             preferences.confirmAppQuit -> {
                 alertDialog(R.style.AppTheme_Dialog)
-                    .setTitleWithColor(R.string.app_name, R.color.textColorPrimary)
+                    .setTitle(R.string.app_name)
                     .setMessage(R.string.quit_confirm)
                     .setPositiveButton(android.R.string.yes) { _, _ ->
                         finish()
                     }.setNegativeButton(android.R.string.no, null)
                     .show()
+                return
             }
-            else -> return super.onBackPressed()
         }
+
+        return super.onBackPressed()
     }
 
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
@@ -198,14 +201,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_open -> openChooser(LOAD_FILE_REQUEST, Chooser.FILE_CHOOSER)
             R.id.menu_new -> saveFileAs(true)
             R.id.menu_file_info -> {
-                if (!currentFile.exists()) {
+                if (!editorFile.isSavedToDisk()) {
                     longToast(R.string.error_file_not_saved)
                     return true
                 }
 
                 alertDialog(R.style.AppTheme_Dialog)
-                    .setTitleWithColor(R.string.menu_file_info, R.color.textColorPrimary)
-                    .setMessage(getFileInfo())
+                    .setTitle(R.string.menu_file_info)
+                    .setMessage(editorFile.computeFileInfo(editor.lineCount))
                     .setPositiveButton(R.string.action_close, null)
                     .show()
             }
@@ -213,7 +216,7 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             R.id.menu_about -> startActivity<AboutActivity>()
         }
 
-        drawer_layout.closeDrawer(GravityCompat.START)
+        binding.drawerLayout.closeDrawer(GravityCompat.START)
         return true
     }
 
@@ -222,15 +225,15 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         if (requestCode == LOAD_FILE_REQUEST && resultCode == RESULT_OK) {
             data ?: return
-            val newFile = File(data.getStringExtra(Chooser.RESULT_PATH))
+            val newFile = File(data.getStringExtra(Chooser.RESULT_PATH)!!)
             if (newFile.length() >= 5242880) { // if the file is bigger than 5 MB
                 longToast(R.string.file_too_big)
                 return
             }
 
             if (newFile.isFile && newFile.canRead()) {
-                currentFile = newFile
-                loadFileAsync()
+                editorFile = EditorFile(newFile)
+                loadCurrentFile()
             }
         }
 
@@ -243,13 +246,9 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         if (requestCode == SETTINGS_REQUEST_CODE) {
-            if (preferences.useDarkTheme) {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
-            } else {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
-            }
+            setUseNightMode(preferences.useDarkTheme)
 
-            code_editor.editorSettings = EditorSettings.fromPreferences(preferences)
+            editor.setEditorSettings(EditorSettings.fromPreferences(preferences))
         }
     }
 
@@ -260,7 +259,8 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 finish()
             } else {
                 File(Const.MAIN_FOLDER).mkdir()
-                loadFileAsync()
+                // TODO: Should we really?
+                //loadCurrentFile()
             }
         }
     }
@@ -271,88 +271,96 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        val et = editor.editText
         when (item.itemId) {
-            R.id.menu_undo -> code_editor.undo()
-            R.id.menu_redo -> code_editor.redo()
+            R.id.menu_undo -> et.undo()
+            R.id.menu_redo -> et.redo()
             R.id.menu_run -> {
-                if (currentFile.path != preferences.newFilesName) {
-                    saveFileAsync(true)
+                if (editorFile.isSavedToDisk()) {
+                    saveFileForConsole()
 
                     val params = bundleOf(
-                        "size" to currentFile.length(),
-                        "lines" to code_editor.lineCount)
+                        "size" to editorFile.file.length(),
+                        "lines" to editor.lineCount
+                    )
                     FirebaseAnalytics.getInstance(this).logEvent("file_run", params)
                 } else {
                     saveFileAs(false)
                 }
             }
-            R.id.menu_find -> {
-                val dialogView = inflate(R.layout.dialog_find)
-
-                alertDialog(R.style.AppTheme_Dialog)
-                    .setTitleWithColor(R.string.menu_find, R.color.textColorPrimary)
-                    .setView(dialogView)
-                    .setPositiveButton(R.string.action_apply) { _, _ ->
-                        val etFind: EditText = dialogView.findViewById(R.id.et_find)
-                        val cbIgnoreCase: CheckBox = dialogView.findViewById(R.id.cb_ignore_case)
-
-                        if (etFind.text.isEmpty()) return@setPositiveButton
-
-                        updateSearchFabVisibility(etFind.text.toString(), cbIgnoreCase.isChecked)
-
-                        ads.showInterstitial()
-                    }.setNegativeButton(android.R.string.cancel, null)
-                    .show()
-            }
             R.id.menu_go_to_line -> {
-                val dialogView = inflate(R.layout.dialog_goto_line)
+                val dialogBinding = DialogGotoLineBinding.inflate(layoutInflater, null, false)
 
                 alertDialog(R.style.AppTheme_Dialog)
                     .setTitle(R.string.menu_go_to_line)
-                    .setView(dialogView)
+                    .setView(dialogBinding.root)
                     .setPositiveButton(R.string.action_apply) { _, _ ->
-                        val etLine: EditText = dialogView.findViewById(R.id.et_line)
+                        val lineText = dialogBinding.etLine.text?.toString()
+                        val line = lineText?.toIntOrNull()
 
-                        if (etLine.text.isEmpty()) return@setPositiveButton
+                        if (line != null) {
+                            et.goToLine(line)
 
-                        code_editor.goToLine(etLine.text.toString().toInt())
+                            ads.showInterstitial()
+                        }
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .show()
+            }
+            R.id.menu_find -> {
+                val dialogBinding = DialogFindBinding.inflate(layoutInflater, null, false)
 
-                        ads.showInterstitial()
-                    }.setNegativeButton(android.R.string.cancel, null)
+                alertDialog(R.style.AppTheme_Dialog)
+                    .setTitle(R.string.menu_find)
+                    .setView(dialogBinding.root)
+                    .setPositiveButton(R.string.action_apply) { _, _ ->
+                        val searchText = dialogBinding.etFind.text?.toString()
+
+                        if (!searchText.isNullOrBlank()) {
+                            updateSearchFabVisibility(searchText, dialogBinding.cbIgnoreCase.isChecked)
+
+                            ads.showInterstitial()
+                        }
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
                     .show()
             }
             R.id.menu_replace_all -> {
-                val dialogView = inflate(R.layout.dialog_replace)
+                val dialogBinding = DialogReplaceBinding.inflate(layoutInflater, null, false)
 
                 alertDialog(R.style.AppTheme_Dialog)
-                    .setTitleWithColor(R.string.replace_all, R.color.textColorPrimary)
                     .setTitle(R.string.replace_all)
-                    .setView(dialogView)
+                    .setTitle(R.string.replace_all)
+                    .setView(dialogBinding.root)
                     .setPositiveButton(R.string.replace_all) { _, _ ->
-                        val etFind: EditText = dialogView.findViewById(R.id.et_find)
-                        val etReplace: EditText = dialogView.findViewById(R.id.et_replace)
+                        val searchText = dialogBinding.etFind.text?.toString()
 
-                        if (etFind.text.isEmpty()) return@setPositiveButton
+                        if (!searchText.isNullOrBlank()) {
+                            val replaceText = dialogBinding.etReplace.text?.toString().orEmpty()
+                            val newText = editor.text.replace(searchText, replaceText)
+                            editor.text = newText
 
-                        val newText = code_editor.text.replace(etFind.text.toString(), etReplace.text.toString())
-                        code_editor.setTextHighlighted(newText)
-
-                        ads.showInterstitial()
-                    }.setNegativeButton(android.R.string.cancel, null)
+                            ads.showInterstitial()
+                        }
+                    }
+                    .setNegativeButton(android.R.string.cancel, null)
                     .show()
             }
-            R.id.menu_edit_cut -> code_editor.cut()
-            R.id.menu_edit_copy -> code_editor.copy()
-            R.id.menu_edit_paste -> code_editor.paste()
-            R.id.menu_edit_select_line -> code_editor.selectLine()
-            R.id.menu_edit_select_all -> code_editor.selectAll()
-            R.id.menu_edit_delete_line -> code_editor.deleteLine()
-            R.id.menu_edit_duplicate_line -> code_editor.duplicateLine()
+            R.id.menu_edit_cut -> et.cut()
+            R.id.menu_edit_copy -> et.copy()
+            R.id.menu_edit_paste -> et.paste()
+            R.id.menu_edit_select_line -> et.selectLine()
+            R.id.menu_edit_select_all -> et.selectAll()
+            R.id.menu_edit_delete_line -> et.deleteLine()
+            R.id.menu_edit_delete_selected -> et.deleteSelected()
+            R.id.menu_edit_duplicate_line -> et.duplicateLine()
         }
         return super.onOptionsItemSelected(item)
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        val et = editor.editText
+
         if (event.isCtrlPressed) {
             return when (keyCode) {
                 KeyEvent.KEYCODE_S -> {
@@ -367,6 +375,33 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     openChooser(LOAD_FILE_REQUEST, Chooser.FILE_CHOOSER)
                     true
                 }
+                KeyEvent.KEYCODE_X -> {
+                    et.cut()
+                    true
+                }
+                KeyEvent.KEYCODE_C -> {
+                    et.copy()
+                    true
+                }
+                KeyEvent.KEYCODE_V -> {
+                    et.paste()
+                    true
+                }
+                KeyEvent.KEYCODE_A -> {
+                    et.selectAll()
+                    true
+                }
+                KeyEvent.KEYCODE_D -> {
+                    et.duplicateLine()
+                    true
+                }
+                KeyEvent.KEYCODE_Z -> {
+                    if (event.isShiftPressed)
+                        et.redo()
+                    else
+                        et.undo()
+                    true
+                }
                 else -> super.onKeyDown(keyCode, event)
             }
         }
@@ -374,29 +409,23 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     // region Private Functions
-    private fun getFileSize(): String {
-        val fileSize = currentFile.length().toDouble()
-
-        return when {
-            fileSize < 1024 -> "${fileSize}B"
-            fileSize > 1024 && fileSize < 1024 * 1024 -> "${((fileSize / 1024 * 100.0).roundToInt() / 100.0)}KB"
-            else -> "${((fileSize / (1024 * 1204) * 100.0).roundToInt() / 100.0)}MB"
-        }
-    }
-
-    private fun getFileInfo(): String = "Name: ${currentFile.nameWithoutExtension}\n" +
-        "Path: ${currentFile.parent}\n" +
-        "Last Modified: ${SimpleDateFormat.getDateTimeInstance().format(Date(currentFile.lastModified()))}\n" +
-        "Size: ${getFileSize()}\n" +
-        "Lines Count: ${code_editor.lineCount}"
-
     private fun saveFile() {
-        if (currentFile.path != preferences.newFilesName) {
-            saveFileAsync(false)
+        if (editorFile.isSavedToDisk()) {
+            GlobalScope.launch(Dispatchers.Main.immediate) {
+                try {
+                    editorFile.saveFileAsync(editor.text)
+                    supportActionBar?.subtitle = editorFile.name
+                    toast(R.string.file_saved)
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                    toast(R.string.error)
+                }
+            }
 
             val params = bundleOf(
-                "size" to currentFile.length(),
-                "lines" to code_editor.lineCount)
+                "size" to editorFile.file.length(),
+                "lines" to editor.lineCount
+            )
             FirebaseAnalytics.getInstance(this).logEvent("file_save", params)
         } else {
             saveFileAs(false)
@@ -404,38 +433,34 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun saveFileAs(createNewFile: Boolean, folderPath: String? = null) {
-        val dialogView = inflate(R.layout.dialog_new_file)
+        val dialogBinding = DialogNewFileBinding.inflate(layoutInflater, null, false)
         val title = if (createNewFile) R.string.create_new_file else R.string.menu_save_file_as
 
         saveDialog = alertDialog(R.style.AppTheme_Dialog)
-            .setTitleWithColor(title, R.color.textColorPrimary)
-            .setView(dialogView)
+            .setTitle(title)
+            .setView(dialogBinding.root)
             .show()
 
-        val etFileName: EditText = dialogView.findViewById(R.id.et_file_name)
-        val tvSelectPath: TextView = dialogView.findViewById(R.id.tv_select_path)
-        val btnCancel: Button = dialogView.findViewById(R.id.btn_cancel)
-        val btnOk: Button = dialogView.findViewById(R.id.btn_ok)
+        dialogBinding.etFileName.setText(preferences.newFilesName)
 
-        etFileName.setText(preferences.newFilesName)
-
-        tvSelectPath.text = folderPath ?: Const.MAIN_FOLDER
-        tvSelectPath.setOnClickListener {
+        dialogBinding.tvSelectPath.text = folderPath ?: Const.MAIN_FOLDER
+        dialogBinding.tvSelectPath.setOnClickListener {
             openChooser(CHANGE_PATH_REQUEST, Chooser.FOLDER_CHOOSER)
         }
 
-        btnCancel.setOnClickListener {
+        dialogBinding.btnCancel.setOnClickListener {
             saveDialog?.dismiss()
         }
 
-        btnOk.setOnClickListener {
-            if (etFileName.text.containsAny("|\\?*<\":>+[]/'".toCharArray())) {
+        dialogBinding.btnOk.setOnClickListener {
+            val fileName = dialogBinding.etFileName.text?.toString().orEmpty()
+            if (fileName.containsAny(INVALID_FILE_NAME_SYMBOLS)) {
                 toast(R.string.invalid_file_name)
-                etFileName.error = getString(R.string.invalid_file_name)
+                dialogBinding.etFileName.error = getString(R.string.invalid_file_name)
                 return@setOnClickListener
             }
 
-            val file = File(tvSelectPath.text.toString() + etFileName.text.toString())
+            val file = File(dialogBinding.tvSelectPath.text.toString(), fileName)
             if (!file.exists() && createNewFile) {
                 try {
                     file.createNewFile()
@@ -446,17 +471,29 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
 
-            currentFile = file
-            preferences.lastFilePath = currentFile.absolutePath
+            editorFile = EditorFile(file)
+            preferences.lastFilePath = file.absolutePath
 
             if (createNewFile) {
-                loadFileAsync()
+                loadCurrentFile()
             } else {
-                saveFileAsync(false)
-                supportActionBar?.subtitle = currentFile.name
+                GlobalScope.launch(Dispatchers.Main.immediate) {
+                    try {
+                        editorFile.saveFileAsync(editor.text)
+                        toast(R.string.file_saved)
+                        supportActionBar?.subtitle = editorFile.name
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        toast(R.string.error)
+                    }
+                }
             }
 
             saveDialog?.dismiss()
+        }
+
+        saveDialog?.setOnDismissListener {
+            saveDialog = null
         }
 
         saveDialog?.show()
@@ -473,27 +510,21 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             fabPrevious.show()
             fabNext.show()
             fabClose.show()
-            sv_symbols.visibility = View.GONE
+            binding.content.rvSymbols.visibility = View.GONE
 
-            fabPrevious.setOnClickListener { code_editor.findPreviousText(searchText, ignoreCase) }
-            fabNext.setOnClickListener { code_editor.findText(searchText, ignoreCase) }
+            fabPrevious.setOnClickListener { editor.editText.findPreviousText(searchText, ignoreCase) }
+            fabNext.setOnClickListener { editor.editText.findText(searchText, ignoreCase) }
             fabClose.setOnClickListener { updateSearchFabVisibility(null, false) }
         } else {
-            fabPrevious.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
+            val listener = object : FloatingActionButton.OnVisibilityChangedListener() {
                 override fun onHidden(fab: FloatingActionButton) {
                     (fab.parent as View).visibility = View.GONE
                 }
-            })
-            fabNext.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
-                override fun onHidden(fab: FloatingActionButton) {
-                    (fab.parent as View).visibility = View.GONE
-                }
-            })
-            fabClose.hide(object : FloatingActionButton.OnVisibilityChangedListener() {
-                override fun onHidden(fab: FloatingActionButton) {
-                    (fab.parent as View).visibility = View.GONE
-                }
-            })
+            }
+
+            fabPrevious.hide(listener)
+            fabNext.hide(listener)
+            fabClose.hide(listener)
         }
     }
 
@@ -501,77 +532,59 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val extension = if (chooserType == Chooser.FILE_CHOOSER) "js" else ""
 
         Chooser(this, requestCode)
-            .setFileExtension(extension)
+            .setFileExtensions(extension)
             .setShowHiddenFiles(preferences.showHiddenFiles)
             .setStartPath(Const.MAIN_FOLDER)
-            .setNightTheme(preferences.useDarkTheme)
             .setChooserType(chooserType)
             .start()
     }
 
-    private fun loadFileAsync() = GlobalScope.launch(Dispatchers.Main) {
-        val content = try {
-            withContext(Dispatchers.Default) { currentFile.readText() }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            toast(R.string.error)
-            return@launch
-        }
-
-        preferences.lastFilePath = currentFile.absolutePath
-        code_editor.scrollTo(0, 0)
-
-        val chunkSize = 20000
-        val loaded = StringBuilder()
-
-        if (content.length > chunkSize) {
-            loaded.append(content.substring(0, chunkSize))
-            code_editor.setTextHighlighted(loaded)
-        } else {
-            loaded.append(content)
-            code_editor.setTextHighlighted(loaded)
-        }
-
-        supportActionBar?.subtitle = currentFile.name
-
-        if (currentFile.exists()) ads.showInterstitial()
-    }
-
-    private fun saveFileAsync(startConsole: Boolean) = GlobalScope.launch(Dispatchers.Main) {
-        try {
-            val fileContent = code_editor.text.toString()
-
-            withContext(Dispatchers.Default) { currentFile.writeText(fileContent) }
-            ads.showInterstitial()
-
-            if (startConsole) {
-                withContext(Dispatchers.Default) {
-                    saveConsoleFiles(fileContent)
-                }
-                startActivity<ConsoleActivity>()
+    private fun loadCurrentFile() {
+        GlobalScope.launch(Dispatchers.Main.immediate) {
+            val content = EditorFile.loadFileAsync(editorFile)
+            if (content == null) {
+                toast(R.string.error_load_file)
+                return@launch
             }
-            toast(R.string.file_saved)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            toast(R.string.error)
+
+            preferences.lastFilePath = editorFile.file.absolutePath
+            editor.editText.scrollTo(0, 0)
+
+            val chunkSize = 20000
+            val loaded = StringBuilder()
+
+            if (content.length > chunkSize) {
+                loaded.append(content.substring(0, chunkSize))
+                editor.text = loaded.toString()
+            } else {
+                loaded.append(content)
+                editor.text = loaded.toString()
+            }
+
+            supportActionBar?.subtitle = editorFile.name
         }
     }
 
-    @Throws(IOException::class)
-    private fun saveConsoleFiles(fileContent: String) {
-        openFileOutput("main.js", Context.MODE_PRIVATE).use {
-            it.write(fileContent.toByteArray())
-        }
-
-        if (!fileList().contains("index.html")) {
-            openFileOutput("index.html", Context.MODE_PRIVATE).use {
-                val content = "<!DOCTYPE html><html><head>" +
-                    "<script type=\"text/javascript\" src=\"main.js\"></script>" +
-                    "</head><body></body></html>"
-                it.write(content.toByteArray())
+    private fun saveFileForConsole() {
+        GlobalScope.launch(Dispatchers.Main.immediate) {
+            if (editorFile.saveFileForConsoleAsync(editor.text, applicationContext)) {
+                startActivity<ConsoleActivity>()
+                toast(R.string.file_saved)
+            } else {
+                toast(R.string.error_file_not_saved)
             }
         }
     }
 
     // endregion Private Functions
+
+    private companion object {
+        private const val LOAD_FILE_REQUEST = 10
+        private const val CHANGE_PATH_REQUEST = 11
+        private const val SETTINGS_REQUEST_CODE = 20
+
+        private const val STATE_EDITOR_FILE = "state_editor_file"
+
+        val INVALID_FILE_NAME_SYMBOLS = "|\\?*<\":>+[]/'".toCharArray()
+    }
 }
